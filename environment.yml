@@ -180,6 +180,7 @@ dependencies:
   - zlib=1.2.11=h0b31af3_1006
   - zstd=1.4.4=h4b3e974_3
   - pip:
+    - mpl-axes-aligner==1.1
     - pyqt5-sip==4.19.18
     - pyqtchart==5.12
     - pyqtwebengine==5.12.1
