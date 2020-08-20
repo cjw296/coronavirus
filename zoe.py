@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, date
 
-from dateutil.parser import parse as parse_date
 from matplotlib import ticker, transforms
 from mpl_axes_aligner import align
 from numpy import nan
@@ -12,6 +11,7 @@ import pandas as pd
 import requests
 
 from constants import base_path
+from download import find_latest
 from geo import convert_df
 from plotting import geoplot_bokeh, save_to_disk
 
@@ -148,8 +148,7 @@ def plot_study_evolution(start_date, days=None):
 
 
 def latest_map_data():
-    path = sorted(base_path.glob(f'zoe_prevalence_map_*.pickle'), reverse=True)[0]
-    dt = parse_date(str(path).rsplit('_')[-2]).date()
+    path, dt = find_latest('zoe_prevalence_map_*.pickle', index=-2)
     df = read_pickle(path)
     gdf = convert_df(df, 'the_geom_webmercator')
     return dt, gdf

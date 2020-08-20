@@ -1,4 +1,7 @@
+from dateutil.parser import parse as parse_date
 import requests
+
+from constants import base_path
 
 
 def download(url, path):
@@ -6,3 +9,9 @@ def download(url, path):
     assert response.status_code==200
     with path.open('wb') as target:
         target.write(response.content)
+
+
+def find_latest(glob, index):
+    path = sorted(base_path.glob(glob), reverse=True)[0]
+    dt = parse_date(str(path.stem).rsplit('_')[index]).date()
+    return path, dt

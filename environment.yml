@@ -181,6 +181,7 @@ dependencies:
   - zstd=1.4.4=h4b3e974_3
   - pip:
     - mpl-axes-aligner==1.1
+    - pygifsicle==1.0.1
     - pyqt5-sip==4.19.18
     - pyqtchart==5.12
     - pyqtwebengine==5.12.1

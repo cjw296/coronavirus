@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from functools import lru_cache
 
 import geopandas
 from matplotlib.ticker import MaxNLocator
@@ -111,16 +112,27 @@ def recent_phe_data_summed(latest_date, by, days=7, field=code):
     return recent_grouped
 
 
-def map_data(for_date):
-
+@lru_cache
+def load_population():
     population = pd.DataFrame({'population': json.load((base_path / 'population.json').open())})
     population.index.name = code
+    return population
+
+
+@lru_cache
+def load_geoms():
+    return geopandas.read_file(str(base_path / 'ltlas_v1.geojson')).to_crs("EPSG:3857")
+
+
+def map_data(for_date):
+
+    population = load_population()
 
     recent_cases = recent_phe_data_summed(for_date, by=ltla)
     recent_pct = pd.merge(recent_cases, population, how='outer', on=code)
     recent_pct['% of population'] = 100 * recent_pct[cases] / recent_pct['population']
 
-    geoms = geopandas.read_file(str(base_path / 'ltlas_v1.geojson')).to_crs("EPSG:3857")
+    geoms = load_geoms
     phe_recent_geo = pd.merge(
         geoms, recent_pct, how='outer', left_on='lad19cd', right_on='Area code'
     )
