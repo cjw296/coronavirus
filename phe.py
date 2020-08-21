@@ -1,9 +1,9 @@
 import json
 from datetime import timedelta, date
-from functools import lru_cache
+from functools import lru_cache, partial
 
 import geopandas
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +27,8 @@ def data_for_date(dt, areas):
     return data.reindex([str(date.date()) for date in labels], fill_value=0)
 
 
-def plot_diff(ax, for_date, data, previous_date, previous_data, diff_ylims=None):
+def plot_diff(ax, for_date, data, previous_date, previous_data,
+              diff_ylims=None, diff_log_scale=None):
     diff = data.sub(previous_data, fill_value=0)
     diff.plot(
         ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis',
@@ -40,6 +41,9 @@ def plot_diff(ax, for_date, data, previous_date, previous_data, diff_ylims=None)
     ax.yaxis.grid(True)
     if diff_ylims:
         ax.set_ylim(diff_ylims)
+    if diff_log_scale:
+        ax.set_yscale('symlog')
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%d"))
     ax.axhline(y=0, color='k')
 
 
@@ -82,15 +86,16 @@ def plot_stacked_bars(ax, data, uncertain_days, title=None):
     ax.legend(loc='upper left')
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1, diff_ylims=None, image_path=None,
-               title=None):
+def plot_with_diff(for_date, data_for_date, uncertain_days,
+                   diff_days=1, diff_ylims=None, diff_log_scale=False,
+                   image_path=None, title=None):
     previous_date = for_date - timedelta(days=diff_days)
 
-    data = data_for_date(for_date, areas)
+    data = data_for_date(for_date)
     previous_data = None
     while previous_data is None and previous_date > date(2020, 1, 1):
         try:
-            previous_data = data_for_date(previous_date, areas)
+            previous_data = data_for_date(previous_date)
         except FileNotFoundError:
             previous_date -= timedelta(days=1)
 
@@ -108,13 +113,21 @@ def plot_areas(for_date, areas, uncertain_days, diff_days=1, diff_ylims=None, im
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.5)
 
-    plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims)
+    plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
     plot_stacked_bars(axes[0], data, uncertain_days, title)
     if image_path:
         plt.savefig(image_path / f'{for_date}.png', dpi=90)
         plt.close()
     else:
         plt.show()
+
+
+def plot_areas(for_date, areas, uncertain_days, diff_days=1):
+    plot_with_diff(
+        for_date,
+        partial(data_for_date, areas=areas),
+        uncertain_days, diff_days
+    )
 
 
 def recent_phe_data_summed(latest_date, by, days=7, field=code):
