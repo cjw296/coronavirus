@@ -14,12 +14,15 @@ from constants import base_path, utla, specimen_date, area, cases, lockdown, rel
 from plotting import geoplot_bokeh, save_to_disk
 
 
-def data_for_date(dt, areas):
+def data_for_date(dt, areas=None, area_types=utla):
     path = base_path / f'coronavirus-cases_{dt}.csv'
     df = pd.read_csv(path)
-    by_area = df[df['Area type'].isin(utla) & df['Area code'].isin(areas)]
+    area_filter = df['Area type'].isin(area_types)
+    if areas is not None:
+        area_filter &= df['Area code'].isin(areas)
+    by_area = df[area_filter]
     if by_area.empty:
-        raise ValueError(f'No for {areas} in {path}')
+        raise ValueError(f'No {area_types} for {areas} in {path}')
     data = by_area[[specimen_date, area, cases]].pivot_table(
         values=cases, index=[specimen_date], columns=area
     ).fillna(0)

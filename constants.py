@@ -1,6 +1,8 @@
 from datetime import date
 from pathlib import Path
 
+nation = ['Nation', 'nation']
+region = ['Region', 'region']
 ltla = ['Lower tier local authority', 'ltla']
 utla = ['Upper tier local authority', 'utla']
 
