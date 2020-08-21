@@ -71,9 +71,8 @@ def main():
 
     render = partial(render_dt, data_date)
 
-    durations = np.full((len(dates)+1,), 0.05)
+    durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
-    durations[-2] = 3
 
     parallel_render('pngs-phe', render, dates, list(durations))
 
