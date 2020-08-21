@@ -41,7 +41,9 @@ def main():
     dates = []
     for path in sorted(base_path.glob('coronavirus-cases_*-*-*.csv')):
         dates.append(parse_date(path.stem.split('_')[-1]).date())
-    parallel_render('animated_cases', partial(render, **areas[args.area]), dates, duration=0.12)
+    parallel_render(f'animated_cases_{args.area}',
+                    partial(render, **areas[args.area]),
+                    dates, duration=0.12)
 
 
 if __name__ == '__main__':
