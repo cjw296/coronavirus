@@ -37,13 +37,14 @@ def render(date, image_path, **kw):
 def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=areas.keys())
+    parser.add_argument('duration', type=float, default=0.1)
     args = parser.parse_args()
     dates = []
     for path in sorted(base_path.glob('coronavirus-cases_*-*-*.csv')):
         dates.append(parse_date(path.stem.split('_')[-1]).date())
     parallel_render(f'animated_cases_{args.area}',
                     partial(render, **areas[args.area]),
-                    dates, duration=0.12)
+                    dates, duration=args.duration)
 
 
 if __name__ == '__main__':
