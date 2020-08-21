@@ -38,7 +38,8 @@ def plot_diff(ax, for_date, data, previous_date, previous_data, diff_ylims=None)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
-    ax.set_ylim(diff_ylims)
+    if diff_ylims:
+        ax.set_ylim(diff_ylims)
     ax.axhline(y=0, color='k')
 
 
