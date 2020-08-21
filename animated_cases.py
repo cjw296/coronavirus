@@ -37,7 +37,7 @@ def render(date, image_path, **kw):
 def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=areas.keys())
-    parser.add_argument('duration', type=float, default=0.1)
+    parser.add_argument('--duration', type=float, default=0.1)
     args = parser.parse_args()
     dates = []
     for path in sorted(base_path.glob('coronavirus-cases_*-*-*.csv')):
