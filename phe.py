@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import timedelta, date
 from functools import lru_cache
 
 import geopandas
@@ -15,10 +15,11 @@ from plotting import geoplot_bokeh, save_to_disk
 
 
 def data_for_date(dt, areas):
-    df = pd.read_csv(base_path / f'coronavirus-cases_{dt}.csv')
+    path = base_path / f'coronavirus-cases_{dt}.csv'
+    df = pd.read_csv(path)
     by_area = df[df['Area type'].isin(utla) & df['Area code'].isin(areas)]
     if by_area.empty:
-        raise ValueError('No matching data!')
+        raise ValueError(f'No for {areas} in {path}')
     data = by_area[[specimen_date, area, cases]].pivot_table(
         values=cases, index=[specimen_date], columns=area
     ).fillna(0)
@@ -26,18 +27,18 @@ def data_for_date(dt, areas):
     return data.reindex([str(date.date()) for date in labels], fill_value=0)
 
 
-def plot_diff(ax, for_date, data, previous_date, previous_data, areas):
+def plot_diff(ax, for_date, data, previous_date, previous_data, diff_ylims=None):
     diff = data.sub(previous_data, fill_value=0)
     diff.plot(
         ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis',
         title=f'Change between reports on {previous_date} and {for_date}', legend=False
     )
     fix_x_dates(ax)
-    #     ax.yaxis.set_minor_locator(MultipleLocator(base=1.0))
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
+    ax.set_ylim(diff_ylims)
     ax.axhline(y=0, color='k')
 
 
@@ -50,8 +51,9 @@ def fix_x_dates(ax):
     ax.xaxis.set_ticklabels(labels)
 
 
-def plot_stacked_bars(ax, data, uncertain_days):
-    data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False)
+def plot_stacked_bars(ax, data, uncertain_days, title=None):
+    data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False,
+              title=title)
     ax.set_ylabel(cases)
 
     mean = data.sum(axis=1).rolling(7).mean()
@@ -64,8 +66,13 @@ def plot_stacked_bars(ax, data, uncertain_days):
     ax.axvline(x=data.index.get_loc(str(lockdown)), color='r', linestyle='-', label='Lockdown')
     ax.axvline(x=data.index.get_loc(str(lockdown + timedelta(days=21))), color='r', linestyle='--',
                label='Lockdown + 3 weeks')
-    ax.axvline(x=data.index.get_loc(str(relax_2)), color='orange', linestyle='-',
-               label='Relaxed Lockdown')
+    try:
+        relax_2_loc = data.index.get_loc(str(relax_2))
+    except KeyError:
+        pass
+    else:
+        ax.axvline(x=relax_2_loc, color='orange', linestyle='-',
+                   label='Relaxed Lockdown')
 
     latest_average = mean.iloc[-uncertain_days - 1]
     ax.axhline(y=latest_average, color='grey', linestyle=':',
@@ -74,18 +81,22 @@ def plot_stacked_bars(ax, data, uncertain_days):
     ax.legend(loc='upper left')
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1):
+def plot_areas(for_date, areas, uncertain_days, diff_days=1, diff_ylims=None, image_path=None,
+               title=None):
     previous_date = for_date - timedelta(days=diff_days)
 
     data = data_for_date(for_date, areas)
     previous_data = None
-    while previous_data is None:
+    while previous_data is None and previous_date > date(2020, 1, 1):
         try:
             previous_data = data_for_date(previous_date, areas)
         except FileNotFoundError:
             previous_date -= timedelta(days=1)
 
-    labels = [str(date.date()) for date in
+    if previous_data is None:
+        previous_data= data
+
+    labels = [str(dt.date()) for dt in
               pd.date_range(start=min(previous_data.index.min(), data.index.min()),
                             end=max(previous_data.index.max(), data.index.max()))]
     data = data.reindex(labels, fill_value=0)
@@ -96,9 +107,13 @@ def plot_areas(for_date, areas, uncertain_days, diff_days=1):
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.5)
 
-    plot_diff(axes[1], for_date, data, previous_date, previous_data, areas)
-    plot_stacked_bars(axes[0], data, uncertain_days)
-    plt.show()
+    plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims)
+    plot_stacked_bars(axes[0], data, uncertain_days, title)
+    if image_path:
+        plt.savefig(image_path / f'{for_date}.png', dpi=90)
+        plt.close()
+    else:
+        plt.show()
 
 
 def recent_phe_data_summed(latest_date, by, days=7, field=code):

@@ -1,15 +1,12 @@
-import concurrent.futures
 from datetime import timedelta
 from functools import lru_cache, partial
 
-import imageio
-from dateutil.parser import parse as parse_date
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pygifsicle import optimize
-from tqdm import tqdm
+from dateutil.parser import parse as parse_date
 
+from animated import parallel_render
 from constants import base_path, ltla, code, cases, specimen_date
 from download import find_latest
 from phe import load_geoms, load_population
@@ -27,7 +24,7 @@ def read_data(data_date):
 
 
 # use a lower max here as we're smoothing to 14 days.
-def render_dt(data_date, image_path, frame_date, vmax=0.01):
+def render_dt(data_date, frame_date, image_path, vmax=0.01):
     df = read_data(data_date)
     dt = str(frame_date.date())
     data = df[df[specimen_date] == dt]
@@ -72,32 +69,13 @@ def main():
     to_date = parse_date(df[specimen_date].max()) - timedelta(days=5)
     dates = pd.date_range(from_date, to_date)
 
-    image_path = base_path / 'pngs-phe'
-    image_path.mkdir(exist_ok=True)
+    render = partial(render_dt, data_date)
 
-    render = partial(render_dt, data_date, image_path)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        tuple(tqdm(executor.map(render, dates), total=len(dates), desc='rendering'))
-
-    data = list(tqdm((imageio.imread(filename) for filename in sorted(image_path.iterdir())
-                      if filename.stem >= from_date), total=len(dates), desc='reading'))
-    data.append(data[-1])
-
-    print('saving...')
-
-    durations = np.full((len(data),), 0.05)
+    durations = np.full((len(dates)+1,), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
     durations[-2] = 3
 
-    imageio.mimsave(
-        base_path / 'phe.gif',
-        data,
-        duration=list(durations)
-    )
-
-    print('shrinking...')
-
-    optimize(str(base_path / 'phe.gif'))
+    parallel_render('pngs-phe', render, dates, list(durations))
 
 
 if __name__ == '__main__':
