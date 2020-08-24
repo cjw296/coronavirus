@@ -4,14 +4,18 @@ from functools import partial
 from dateutil.parser import parse as parse_date
 
 from animated import parallel_render
-from constants import base_path, my_areas, london_areas, region
+from constants import base_path, my_areas, london_areas, region, oxfordshire
 from phe import plot_with_diff, data_for_date
 
 
 areas = dict(
-    my_area = dict(
+    my_area=dict(
         diff_ylims=[-2, 10],
         data_for_date=partial(data_for_date, areas=my_areas)
+    ),
+    oxford=dict(
+        diff_ylims=None,
+        data_for_date=partial(data_for_date, areas=[oxfordshire])
     ),
     london=dict(
         diff_ylims=[-10, 50],
