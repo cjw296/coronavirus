@@ -164,7 +164,7 @@ def map_data(for_date):
     recent_pct = pd.merge(recent_cases, population, how='outer', on=code)
     recent_pct['% of population'] = 100 * recent_pct[cases] / recent_pct['population']
 
-    geoms = load_geoms
+    geoms = load_geoms()
     phe_recent_geo = pd.merge(
         geoms, recent_pct, how='outer', left_on='lad19cd', right_on='Area code'
     )
