@@ -2,15 +2,17 @@ import json
 from datetime import timedelta, date
 from functools import lru_cache, partial
 
-import geopandas
+from dateutil.parser import parse as parse_date
 from matplotlib.ticker import MaxNLocator, FormatStrFormatter
-
+import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from constants import base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla, \
+from constants import (
+    base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla,
     phe_vmax
+)
 from plotting import geoplot_bokeh, save_to_disk
 
 
@@ -59,13 +61,13 @@ def fix_x_dates(ax):
     ax.xaxis.set_ticklabels(labels)
 
 
-def plot_stacked_bars(ax, data, uncertain_days, title=None):
+def plot_stacked_bars(ax, data, average_end, title=None):
     data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False,
               title=title)
     ax.set_ylabel(cases)
 
     mean = data.sum(axis=1).rolling(7).mean()
-    mean[-uncertain_days:] = np.NaN
+    mean.loc[str(average_end):] = np.NaN
     mean.plot(ax=ax, color='k', label='7 day average', rot=-90)
 
     fix_x_dates(ax)
@@ -82,7 +84,7 @@ def plot_stacked_bars(ax, data, uncertain_days, title=None):
         ax.axvline(x=relax_2_loc, color='orange', linestyle='-',
                    label='Relaxed Lockdown')
 
-    latest_average = mean.iloc[-uncertain_days - 1]
+    latest_average = mean.loc[str(average_end-timedelta(days=1))]
     ax.axhline(y=latest_average, color='grey', linestyle=':',
                label=f'Latest average: {latest_average:.1f}')
 
@@ -91,7 +93,7 @@ def plot_stacked_bars(ax, data, uncertain_days, title=None):
 
 def plot_with_diff(for_date, data_for_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
-                   image_path=None, title=None):
+                   image_path=None, title=None, to_date=None):
     previous_date = for_date - timedelta(days=diff_days)
 
     data = data_for_date(for_date)
@@ -105,9 +107,14 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
     if previous_data is None:
         previous_data= data
 
+    average_end = parse_date(data.index.max()).date()-timedelta(days=uncertain_days)
+    end_dates = [previous_data.index.max(), data.index.max()]
+    if to_date:
+        end_dates.append(str(to_date))
+
     labels = [str(dt.date()) for dt in
               pd.date_range(start=min(previous_data.index.min(), data.index.min()),
-                            end=max(previous_data.index.max(), data.index.max()))]
+                            end=max(end_dates))]
     data = data.reindex(labels, fill_value=0)
     previous_data = previous_data.reindex(labels, fill_value=0)
 
@@ -117,7 +124,7 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
     fig.subplots_adjust(hspace=0.5)
 
     plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
-    plot_stacked_bars(axes[0], data, uncertain_days, title)
+    plot_stacked_bars(axes[0], data, average_end, title)
     if image_path:
         plt.savefig(image_path / f'{for_date}.png', dpi=90)
         plt.close()

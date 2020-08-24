@@ -36,6 +36,7 @@ def render(date, image_path, **kw):
             diff_log_scale=True,
             image_path=image_path,
             title='Evolution of PHE case reporting',
+            to_date=date.today(),
             **kw
         )
     except Exception as e:
