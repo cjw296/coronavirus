@@ -11,6 +11,8 @@ from constants import base_path, ltla, code, cases, specimen_date
 from download import find_latest
 from phe import load_geoms, load_population
 
+rolling_days = 14
+
 # use a lower max here as we're smoothing.
 vmax = 0.01
 
@@ -20,7 +22,7 @@ def read_data(data_date):
     df = pd.read_csv(base_path / f'coronavirus-cases_{data_date}.csv')
     df = df[df['Area type'].isin(ltla)][[code, specimen_date, cases]]
     pivoted = df.pivot_table(values=cases, index=[specimen_date], columns=code)
-    return pivoted.fillna(0).ewm(span=40).mean().unstack().reset_index(name=cases)
+    return pivoted.fillna(0).rolling(rolling_days).mean().unstack().reset_index(name=cases)
 
 
 def render_dt(data_date, frame_date, image_path):
@@ -44,8 +46,8 @@ def render_dt(data_date, frame_date, image_path):
         legend_kwds={'fraction': 0.02,
                      'anchor': (0, 0),
                      'format': '%.3f',
-                     'label': f'number of new cases, EWMA spanning '
-                              f'40 days as % of area population'},
+                     'label': f'number or new cases, {rolling_days} '
+                              f'day rolling average as % of area population'},
         missing_kwds={'color': 'lightgrey'},
     )
     ax.set_axis_off()
