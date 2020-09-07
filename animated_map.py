@@ -13,6 +13,8 @@ from phe import load_geoms, load_population
 
 rolling_days = 14
 
+# use a lower max here as we're smoothing.
+vmax = 0.01
 
 @lru_cache
 def read_data(data_date):
@@ -23,8 +25,7 @@ def read_data(data_date):
     return pivoted.fillna(0).rolling(rolling_days).mean().unstack().reset_index(name=cases)
 
 
-# use a lower max here as we're smoothing to 14 days.
-def render_dt(data_date, frame_date, image_path, vmax=0.01):
+def render_dt(data_date, frame_date, image_path):
     df = read_data(data_date)
     dt = str(frame_date.date())
     data = df[df[specimen_date] == dt]
