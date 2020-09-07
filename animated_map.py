@@ -67,7 +67,7 @@ def main():
     df = read_data(data_date)
 
     from_date = '2020-03-07'
-    to_date = parse_date(df[specimen_date].max()) - timedelta(days=5)
+    to_date = df[specimen_date].max()
     dates = pd.date_range(from_date, to_date)
 
     render = partial(render_dt, data_date)
