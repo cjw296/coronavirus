@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from datetime import timedelta
 from functools import lru_cache, partial
 
@@ -63,12 +64,16 @@ def render_dt(data_date, frame_date, image_path):
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument('--from-date', default='2020-03-07')
+    parser.add_argument('--exclude-days', default=2, type=int)
+    args = parser.parse_args()
+
     _, data_date = find_latest('coronavirus-cases_*-*-*.csv', index=-1)
     df = read_data(data_date)
 
-    from_date = '2020-03-07'
-    to_date = df[specimen_date].max()
-    dates = pd.date_range(from_date, to_date)
+    to_date = parse_date(df[specimen_date].max()) - timedelta(days=args.exclude_days)
+    dates = pd.date_range(args.from_date, to_date)
 
     render = partial(render_dt, data_date)
 
