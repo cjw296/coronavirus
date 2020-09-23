@@ -132,10 +132,10 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1):
+def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla):
     plot_with_diff(
         for_date,
-        partial(data_for_date, areas=areas),
+        partial(data_for_date, areas=areas, area_types=area_types),
         uncertain_days, diff_days
     )
 
