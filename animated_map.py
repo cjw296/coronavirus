@@ -15,7 +15,7 @@ from phe import load_geoms, load_population
 rolling_days = 14
 
 # use a lower max here as we're smoothing.
-vmax = 0.01
+vmax = 0.015
 
 @lru_cache
 def read_data(data_date):
