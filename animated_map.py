@@ -8,7 +8,7 @@ import pandas as pd
 from dateutil.parser import parse as parse_date
 
 from animated import parallel_render
-from constants import base_path, ltla, code, cases, specimen_date
+from constants import base_path, ltla, code, cases, specimen_date, relax_2
 from download import find_latest
 from phe import load_geoms, load_population
 
@@ -65,7 +65,8 @@ def render_dt(data_date, frame_date, image_path):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--from-date', default='2020-03-07')
+    parser.add_argument('--from-date', default=str(relax_2),
+                        help='2020-03-07: data start, 2020-07-02: end of lockdown')
     parser.add_argument('--exclude-days', default=2, type=int)
     args = parser.parse_args()
 
