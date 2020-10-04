@@ -66,9 +66,11 @@ def plot_stacked_bars(ax, data, average_end, title=None):
               title=title)
     ax.set_ylabel(cases)
 
-    mean = data.sum(axis=1).rolling(7).mean()
-    mean.loc[str(average_end):] = np.NaN
-    mean.plot(ax=ax, color='k', label='7 day average', rot=-90)
+    mean = None
+    if average_end is not None:
+        mean = data.sum(axis=1).rolling(7).mean()
+        mean.loc[str(average_end):] = np.NaN
+        mean.plot(ax=ax, color='k', label='7 day average', rot=-90)
 
     fix_x_dates(ax)
     ax.yaxis.grid(True)
@@ -84,9 +86,10 @@ def plot_stacked_bars(ax, data, average_end, title=None):
         ax.axvline(x=relax_2_loc, color='orange', linestyle='-',
                    label='Relaxed Lockdown')
 
-    latest_average = mean.loc[str(average_end-timedelta(days=1))]
-    ax.axhline(y=latest_average, color='grey', linestyle=':',
-               label=f'Latest average: {latest_average:.1f}')
+    if mean is not None:
+        latest_average = mean.loc[str(average_end-timedelta(days=1))]
+        ax.axhline(y=latest_average, color='grey', linestyle=':',
+                   label=f'Latest average: {latest_average:.1f}')
 
     ax.legend(loc='upper left')
 
@@ -105,9 +108,12 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
             previous_date -= timedelta(days=1)
 
     if previous_data is None:
-        previous_data= data
+        previous_data = data
 
-    average_end = parse_date(data.index.max()).date()-timedelta(days=uncertain_days)
+    if uncertain_days is None:
+        average_end = None
+    else:
+        average_end = parse_date(data.index.max()).date()-timedelta(days=uncertain_days)
     end_dates = [previous_data.index.max(), data.index.max()]
     if to_date:
         end_dates.append(str(to_date))
