@@ -2,4 +2,4 @@ Exploring UK data on coronovirus cases.
 
 Static charts are in the notebooks, just view them on GitHub.
 
-Interactive plots available on https://cjw296.github.io/coronavirus.
+Interactive plots available on [https://cjw296.github.io/coronavirus](https://cjw296.github.io/coronavirus/zoe_phe.html).
