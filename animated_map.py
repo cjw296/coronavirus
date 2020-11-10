@@ -15,15 +15,20 @@ from phe import load_geoms, load_population
 rolling_days = 14
 
 # use a lower max here as we're smoothing.
-vmax = 0.015
+vmax = 100
+
+per100k = 'per100k'
+population = 'population'
 
 @lru_cache
 def read_data(data_date):
     # so we only load it once per process!
     df = pd.read_csv(base_path / f'coronavirus-cases_{data_date}.csv')
     df = df[df['Area type'].isin(ltla)][[code, specimen_date, cases]]
-    pivoted = df.pivot_table(values=cases, index=[specimen_date], columns=code)
-    return pivoted.fillna(0).rolling(rolling_days).mean().unstack().reset_index(name=cases)
+    df = pd.merge(df, load_population(), on=code)
+    df[per100k] = 100_000 * df[cases] / df[population]
+    pivoted = df.pivot_table(values=per100k, index=[specimen_date], columns=code)
+    return pivoted.fillna(0).rolling(rolling_days).mean().unstack().reset_index(name=per100k)
 
 
 def render_dt(data_date, frame_date, image_path):
@@ -31,24 +36,21 @@ def render_dt(data_date, frame_date, image_path):
     dt = str(frame_date.date())
     data = df[df[specimen_date] == dt]
 
-    current_pct = pd.merge(data, load_population(), how='outer', on=code).dropna()
-    current_pct['% of population'] = 100 * current_pct[cases] / current_pct['population']
-
-    current_pct_geo = pd.merge(load_geoms(), current_pct, how='outer', left_on='lad19cd',
+    current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
                                right_on='Area code')
 
     fig, ax = plt.subplots(figsize=(10, 10))
     ax = current_pct_geo.plot(
         ax=ax,
-        column='% of population',
+        column=per100k,
         k=10,
         cmap='Reds', vmin=0, vmax=vmax,
         legend=True,
         legend_kwds={'fraction': 0.02,
                      'anchor': (0, 0),
-                     'format': '%.3f',
+                     'format': '%.0f',
                      'label': f'number or new cases, {rolling_days} '
-                              f'day rolling average as % of area population'},
+                              f'day rolling average of new cases per 100,000 people'},
         missing_kwds={'color': 'lightgrey'},
     )
     ax.set_axis_off()
@@ -56,9 +58,9 @@ def render_dt(data_date, frame_date, image_path):
     ax.set_xlim(-600000, 200000)
     ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
     fig.tight_layout(rect=(0, .05, 1, 1))
-    text = fig.text(0.19, 0.05,
-                    f'@chriswithers13 - '
-                    f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
+    fig.text(0.19, 0.05,
+             f'@chriswithers13 - '
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
     plt.savefig(image_path / f'{dt}.png', dpi=90)
     plt.close()
 
