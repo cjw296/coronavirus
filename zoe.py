@@ -15,7 +15,7 @@ from download import find_latest
 from geo import convert_df
 from plotting import geoplot_bokeh, save_to_disk
 
-api_key = 'P6G8DgjFF94mduMkA_VroQ'
+api_key = 'iTsdIq-t8_cElnLjNmoRLA'
 cases = 'corrected_covid_positive'
 new_algo_date = date(2020, 7, 9)
 
