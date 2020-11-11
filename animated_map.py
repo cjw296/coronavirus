@@ -94,14 +94,13 @@ def render_dt(data_date, frame_date, image_path):
         missing_kwds={'color': 'lightgrey'},
     )
     ax.set_axis_off()
-    ax.set_ylim(6400000, 7500000)
+    ax.set_ylim(6460000, 7550000)
     ax.set_xlim(-600000, 200000)
     ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
-    fig.tight_layout(rect=(0, .05, 1, 1))
-    fig.text(0.19, 0.05,
+    fig.text(0.25, 0.09,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
-    plt.savefig(image_path / f'{dt}.png', dpi=90)
+    plt.savefig(image_path / f'{dt}.png', dpi=90, bbox_inches='tight')
     plt.close()
 
 
