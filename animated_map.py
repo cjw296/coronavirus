@@ -14,8 +14,6 @@ from phe import load_geoms, load_population
 
 rolling_days = 14
 
-# use a lower max here as we're smoothing.
-vmax = 100
 
 per100k = 'per100k'
 population = 'population'
@@ -39,6 +37,7 @@ def render_dt(data_date, frame_date, image_path):
     current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
                                right_on='Area code')
 
+    vmax = int(data[per100k].max())
     fig, ax = plt.subplots(figsize=(10, 10))
     ax = current_pct_geo.plot(
         ax=ax,
