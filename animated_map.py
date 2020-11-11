@@ -47,7 +47,6 @@ def render_dt(data_date, frame_date, image_path):
         cmap='Reds', vmin=0, vmax=vmax,
         legend=True,
         legend_kwds={'fraction': 0.02,
-                     'anchor': (0, 0),
                      'format': '%.0f',
                      'label': f'number or new cases, {rolling_days} '
                               f'day rolling average of new cases per 100,000 people'},
