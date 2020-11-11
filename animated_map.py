@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse as parse_date
+from matplotlib.colors import LinearSegmentedColormap
 
 from animated import parallel_render
 from constants import base_path, ltla, code, cases, specimen_date, relax_2
@@ -14,9 +15,49 @@ from phe import load_geoms, load_population
 
 rolling_days = 14
 
-
 per100k = 'per100k'
 population = 'population'
+
+transitions = [
+    dict(vmax=0,  color=(0.97, 0.97, 0.94)),
+    dict(vmax=5,  color=(255/255, 230/255, 0/255)),
+    dict(vmax=30, color=(255/255, 143/255, 31/255)),
+    dict(vmax=90, color=(0.7, 0, 0)),
+    dict(vmax=200, color=(0, 0, 0)),
+]
+
+
+def make_plot_params_lookup(ts):
+    lookup = {}
+    transition = ts[0]
+    bands = [(transition['vmax'], transition['color'])]
+    i = 0
+    transition = None
+    for vmax in range(0, 130):
+        if transition is None or (vmax > transition['vmax'] and i < len(ts)-1):
+            i += 1
+            transition = ts[i]
+            transition_vmax = transition['vmax']
+            bands.append((transition_vmax, transition['color']))
+
+        colours = [(threshold / vmax if vmax else 0, colour)
+                   for threshold, colour in bands[:-1]]
+        prev_vmax, prev_colour = bands[-2]
+        final_vmax, final_colour = bands[-1]
+        try:
+            factor = (vmax-prev_vmax)/(final_vmax-prev_vmax)
+        except ZeroDivisionError:
+            factor = 0
+        colours.append((1, tuple(
+            pc+(fc-pc)*factor for fc, pc in zip(final_colour, prev_colour)
+        )))
+
+        lookup[vmax] = LinearSegmentedColormap.from_list(f'cmap{i}', colours)
+    return lookup
+
+
+cmap_lookup = make_plot_params_lookup(transitions)
+
 
 @lru_cache
 def read_data(data_date):
@@ -38,12 +79,13 @@ def render_dt(data_date, frame_date, image_path):
                                right_on='Area code')
 
     vmax = int(data[per100k].max())
+
     fig, ax = plt.subplots(figsize=(10, 10))
     ax = current_pct_geo.plot(
         ax=ax,
         column=per100k,
         k=10,
-        cmap='Reds', vmin=0, vmax=vmax,
+        cmap=cmap_lookup[vmax], vmin=0, vmax=vmax,
         legend=True,
         legend_kwds={'fraction': 0.02,
                      'format': '%.0f',
