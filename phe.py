@@ -11,7 +11,7 @@ import pandas as pd
 
 from constants import (
     base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla,
-    phe_vmax
+    phe_vmax, per100k
 )
 from plotting import geoplot_bokeh, save_to_disk
 
@@ -146,15 +146,24 @@ def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla):
     )
 
 
-def recent_phe_data_summed(latest_date, by, days=7, field=code):
+def recent_phe_data_summed(latest_date, by, days=7):
+    fields = [code, area]
     earliest_date = str(latest_date-timedelta(days=days))
     df = pd.read_csv(base_path / f'coronavirus-cases_{latest_date}.csv',
                      parse_dates=[specimen_date])
     la_data = df[df['Area type'].isin(by)][[area, code, specimen_date, cases]]
-    recent = la_data[la_data[specimen_date]>=earliest_date]
-    recent_grouped= recent.groupby(field).agg({cases: 'sum', specimen_date: 'max'})
-    recent_grouped['recent_days'] = days
-    return recent_grouped
+    recent = la_data[la_data[specimen_date] >= earliest_date]
+    recent_grouped = recent.groupby(list(fields)).agg({cases: 'sum', specimen_date: 'max'})
+    recent_grouped.reset_index(level=1, inplace=True)
+
+    population = load_population()
+    recent_pct = pd.merge(recent_grouped, population, how='outer', on=code)
+    fraction = recent_pct[cases] / recent_pct['population']
+    recent_pct[per100k] = 100_000 * fraction
+    recent_pct['% of population'] = 100 * fraction
+
+    recent_pct['recent_days'] = days
+    return recent_pct
 
 
 @lru_cache
@@ -171,11 +180,7 @@ def load_geoms():
 
 def map_data(for_date):
 
-    population = load_population()
-
-    recent_cases = recent_phe_data_summed(for_date, by=ltla)
-    recent_pct = pd.merge(recent_cases, population, how='outer', on=code)
-    recent_pct['% of population'] = 100 * recent_pct[cases] / recent_pct['population']
+    recent_pct = recent_phe_data_summed(for_date, by=ltla)
 
     geoms = load_geoms()
     phe_recent_geo = pd.merge(

@@ -15,6 +15,7 @@ code = 'Area code'
 specimen_date = 'Specimen date'
 cases = 'Daily lab-confirmed cases'
 people_tested = 'Daily number of people tested'
+per100k = 'cases per 100,000 people'
 
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
