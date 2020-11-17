@@ -12,9 +12,9 @@ dependencies:
   - boost-cpp=1.72.0=hdf9ef73_0
   - brotlipy=0.7.0=py38h64e0658_1000
   - bzip2=1.0.8=h0b31af3_2
-  - ca-certificates=2020.6.20=hecda079_0
+  - ca-certificates=2020.11.8=h033912b_0
   - cairo=1.16.0=hec6a9b0_1003
-  - certifi=2020.6.20=py38h32f6830_0
+  - certifi=2020.11.8=py38h50d1736_0
   - cffi=1.14.0=py38h356ff06_0
   - cfitsio=3.470=hddc9c06_5
   - chardet=3.0.4=py38h32f6830_1006
@@ -30,6 +30,7 @@ dependencies:
   - descartes=1.1.0=py_4
   - entrypoints=0.3=py38h32f6830_1001
   - expat=2.2.9=h4a8c4bd_2
+  - ffmpeg=4.2.3=hd0c0d6a_0
   - fiona=1.8.13=py38he71f6a4_0
   - fontconfig=2.13.1=h6b1039f_1001
   - freetype=2.10.2=h8da9a1a_0
@@ -41,12 +42,15 @@ dependencies:
   - gettext=0.19.8.1=h46ab8bc_1002
   - giflib=5.2.1=h0b31af3_2
   - glib=2.64.2=h577aef8_1
+  - gmp=6.2.0=h4a8c4bd_2
+  - gnutls=3.6.13=hc269f14_0
   - hdf4=4.2.13=h84186c3_1003
   - hdf5=1.10.6=nompi_h3e39495_100
   - holoviews=1.13.2=pyh9f0ad1d_0
   - icu=64.2=h6de7cb9_1
   - idna=2.9=py_1
   - imageio=2.8.0=py_0
+  - imageio-ffmpeg=0.4.2=py_0
   - importlib-metadata=1.6.0=py38h32f6830_0
   - importlib_metadata=1.6.0=0
   - ipykernel=5.2.1=py38h23f93f0_0
@@ -55,6 +59,7 @@ dependencies:
   - ipywidgets=7.5.1=py_0
   - jedi=0.17.0=py38h32f6830_0
   - jinja2=2.11.2=pyh9f0ad1d_0
+  - joblib=0.17.0=py_0
   - jpeg=9c=h1de35cc_1001
   - json-c=0.13.1=h575e443_1002
   - jsonschema=3.2.0=py38h32f6830_1
@@ -65,6 +70,7 @@ dependencies:
   - kealib=1.4.13=h40102fb_1
   - kiwisolver=1.2.0=py38ha0d09dd_0
   - krb5=1.17.1=h1752a42_0
+  - lame=3.100=h1de35cc_1001
   - libblas=3.8.0=16_openblas
   - libcblas=3.8.0=16_openblas
   - libclang=9.0.1=default_hf57f61e_0
@@ -92,22 +98,27 @@ dependencies:
   - libxml2=2.9.10=h53d96d6_0
   - llvm-openmp=10.0.0=h28b9765_0
   - lz4-c=1.9.2=h4a8c4bd_1
+  - mapclassify=2.3.0=py_0
   - markdown=3.2.2=py_0
   - markupsafe=1.1.1=py38h64e0658_1
   - matplotlib=3.2.1=0
   - matplotlib-base=3.2.1=py38h1300a51_0
   - mistune=0.8.4=py38h64e0658_1001
+  - moviepy=1.0.1=py_0
   - munch=2.5.0=py_0
   - nbconvert=5.6.1=py38h32f6830_1
   - nbformat=5.0.6=py_0
   - ncurses=6.1=h0a44026_1002
+  - nettle=3.4.1=h3efe00b_1002
+  - networkx=2.5=py_0
   - notebook=6.0.3=py38h32f6830_0
   - nspr=4.20=h0a44026_1000
   - nss=3.47=hc0980d9_0
   - numpy=1.18.4=py38h1f821a2_0
   - olefile=0.46=py_0
+  - openh264=2.1.1=hd174df1_0
   - openjpeg=2.3.1=h254dc36_3
-  - openssl=1.1.1g=h0b31af3_0
+  - openssl=1.1.1h=haf1e3a3_0
   - packaging=20.1=py_0
   - pandas=1.0.3=py38h5fc983b_1
   - pandoc=2.9.2.1=0
@@ -124,6 +135,7 @@ dependencies:
   - poppler=0.87.0=h3232a60_1
   - poppler-data=0.4.9=1
   - postgresql=12.2=h62ab893_1
+  - proglog=0.1.9=py_0
   - proj=7.0.0=hbce2d5c_4
   - prometheus_client=0.7.1=py_0
   - prompt-toolkit=3.0.5=py_0
@@ -152,6 +164,8 @@ dependencies:
   - readline=8.0=hcfe32e1_0
   - requests=2.23.0=pyh8c360ce_2
   - rtree=0.9.4=py38h08f867b_1
+  - scikit-learn=0.22.1=py38h3dc85bc_1
+  - scipy=1.4.1=py38h38b60c6_3
   - send2trash=1.5.0=py_0
   - setuptools=46.3.1=py38h32f6830_0
   - shapely=1.7.0=py38h5b1fbde_3
@@ -172,6 +186,7 @@ dependencies:
   - webencodings=0.5.1=py_1
   - wheel=0.34.2=py_1
   - widgetsnbextension=3.5.1=py38_0
+  - x264=1!152.20180806=h1de35cc_0
   - xerces-c=3.2.2=h8f8adb3_1004
   - xz=5.2.5=h0b31af3_0
   - yaml=0.2.4=h0b31af3_0

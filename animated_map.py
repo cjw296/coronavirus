@@ -109,6 +109,7 @@ def main():
     parser.add_argument('--from-date', default=str(relax_2),
                         help='2020-03-07: data start, 2020-07-02: end of lockdown')
     parser.add_argument('--exclude-days', default=7, type=int)
+    parser.add_argument('--output', choices=output_types.keys(), default='gif')
     args = parser.parse_args()
 
     _, data_date = find_latest('coronavirus-cases_*-*-*.csv', index=-1)
@@ -122,7 +123,7 @@ def main():
     durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
 
-    parallel_render('pngs-phe', render, dates, list(durations))
+    parallel_render('pngs-phe', render, dates, list(durations), args.output)
 
 
 if __name__ == '__main__':
