@@ -22,7 +22,7 @@ testing = date(2020, 4, 30)
 relax_1 = date(2020, 5, 11)
 relax_2 = date(2020, 7, 4)
 
-phe_vmax = 0.1
+phe_vmax = None
 
 brighton = 'E06000043'
 west_sussex = 'E10000032'
