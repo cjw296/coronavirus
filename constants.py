@@ -17,6 +17,17 @@ cases = 'Daily lab-confirmed cases'
 people_tested = 'Daily number of people tested'
 per100k = 'cases per 100,000 people'
 
+area_code = 'areaCode'
+area_name = 'areaName'
+area_type = 'areaType'
+new_cases_by_specimen_date = 'newCasesBySpecimenDate'
+new_admissions = "newAdmissions"
+new_deaths_by_death_date = 'newDeaths28DaysByDeathDate'
+new_tests_by_publish_date = 'newTestsByPublishDate'
+release_timestamp = 'releaseTimestamp'
+
+overview = 'overview'
+
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
 relax_1 = date(2020, 5, 11)
