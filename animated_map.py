@@ -91,7 +91,7 @@ def main():
     durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
 
-    parallel_render('pngs-phe', render, dates, list(durations), args.output)
+    parallel_render('animated_map', render, dates, list(durations), args.output)
 
 
 if __name__ == '__main__':
