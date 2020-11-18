@@ -6,10 +6,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse as parse_date
-from matplotlib.colors import LinearSegmentedColormap, SymLogNorm, LogNorm
+from matplotlib.colors import SymLogNorm
+from matplotlib.dates import MonthLocator, DateFormatter
 
-from animated import parallel_render, output_types
-from constants import base_path, ltla, code, cases, specimen_date, relax_2, per100k
+from animated import parallel_render
+from constants import base_path, ltla, code, cases, specimen_date, relax_2, per100k, new_admissions, \
+    new_deaths_by_death_date, lockdown1, lockdown2
 from download import find_latest
 from phe import load_geoms, load_population
 
@@ -19,7 +21,7 @@ population = 'population'
 
 
 @lru_cache
-def read_data(data_date):
+def read_map_data(data_date):
     # so we only load it once per process!
     df = pd.read_csv(base_path / f'coronavirus-cases_{data_date}.csv')
     df = df[df['Area type'].isin(ltla)][[code, specimen_date, cases]]
@@ -33,15 +35,13 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def render_dt(data_date, frame_date, image_path, vmax=200, linthresh=30):
-    df = read_data(data_date)
+def render_map(ax, data_date, frame_date, vmax=200, linthresh=30):
+    df = read_map_data(data_date)
     dt = str(frame_date.date())
     data = df[df[specimen_date] == dt]
 
     current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
                                right_on='Area code')
-
-    fig, ax = plt.subplots(figsize=(10, 10))
 
     ax = current_pct_geo.plot(
         ax=ax,
@@ -65,7 +65,41 @@ def render_dt(data_date, frame_date, image_path, vmax=200, linthresh=30):
     ax.set_ylim(6460000, 7550000)
     ax.set_xlim(-600000, 200000)
     ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
-    fig.text(0.25, 0.09,
+
+
+@lru_cache
+def read_lines_data(data_date, earliest_date, to_date):
+    # so we only load it once per process!
+    path, _ = find_latest(f'phe_overview_{data_date}_*.pickle', index=-1)
+    overview_data = pd.read_pickle(path)
+    overview_data = overview_data.set_index(pd.to_datetime(overview_data['date'])).sort_index()
+    admissions_deaths = overview_data[[new_admissions, new_deaths_by_death_date]]
+    return admissions_deaths.rolling(14).mean().loc[earliest_date:to_date]
+
+
+def render_lines(ax, data_date, frame_date, earliest_date, to_date):
+    data = read_lines_data(data_date, earliest_date, to_date)
+    ax = data.plot(ax=ax, color=['darkblue', 'black'])
+    for lockdown in lockdown1, lockdown2:
+        ax.axvspan(*lockdown, facecolor='black', alpha=0.2)
+    ax.legend(['hospitalised', 'died', 'lockdown'])
+    ax.axvline(frame_date, color='red')
+    ax.minorticks_off()
+    xaxis = ax.get_xaxis()
+    xaxis.label.set_visible(False)
+    xaxis.set_major_locator(MonthLocator(interval=1))
+    xaxis.set_major_formatter(DateFormatter('%b'))
+    ax.yaxis.tick_right()
+
+
+def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
+    dt = str(frame_date.date())
+    fig, (map_ax, lines_ax) = plt.subplots(
+        figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
+    )
+    render_map(map_ax, data_date, frame_date)
+    render_lines(lines_ax, data_date, frame_date, earliest_date, to_date)
+    fig.text(0.25, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
     plt.savefig(image_path / f'{dt}.png', dpi=90, bbox_inches='tight')
@@ -81,12 +115,14 @@ def main():
     args = parser.parse_args()
 
     _, data_date = find_latest('coronavirus-cases_*-*-*.csv', index=-1)
-    df = read_data(data_date)
+    df = read_map_data(data_date)
 
     to_date = parse_date(df[specimen_date].max()) - timedelta(days=args.exclude_days)
-    dates = pd.date_range(args.from_date, to_date)
+    earliest_date = parse_date(df[specimen_date].min())
+    from_date = '2020-03-07' if args.from_date == 'start' else args.from_date
+    dates = pd.date_range(from_date, to_date)
 
-    render = partial(render_dt, data_date)
+    render = partial(render_dt, data_date, earliest_date, to_date)
 
     durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)

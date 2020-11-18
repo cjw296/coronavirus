@@ -28,10 +28,14 @@ release_timestamp = 'releaseTimestamp'
 
 overview = 'overview'
 
+
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
 relax_1 = date(2020, 5, 11)
 relax_2 = date(2020, 7, 4)
+
+lockdown1 = (lockdown, relax_2)
+lockdown2 = (date(2020, 11, 5), date(2020, 12, 2))
 
 phe_vmax = None
 
