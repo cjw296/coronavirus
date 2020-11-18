@@ -14,7 +14,10 @@ from constants import base_path
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
-                    output: Union[str, callable] = 'gif'):
+                    outputs: str = 'gif'):
+
+    # do this up front to catch typos cheaply:
+    outputs = [output_types[output] for output in outputs.split(',')]
 
     image_path = base_path / name
     if image_path.exists():
@@ -33,18 +36,17 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
     image_paths.append(image_paths[-1])
     duration.append(3)
 
-    if not callable(output):
-        output = output_types[output]
-    output(name, image_paths, duration)
-
-
-def output_gif(name, image_paths, durations):
-    # another still last frame to help twitter's broken gif playback
-    image_paths.append(image_paths[-1])
-    durations.append(3)
-
     data = list(tqdm((imageio.imread(filename) for filename in image_paths),
                      total=len(image_paths), desc='loading'))
+
+    for output in outputs:
+        output(name, data, duration)
+
+
+def output_gif(name, data, durations):
+    # another still last frame to help twitter's broken gif playback
+    data.append(data[-1])
+    durations.append(3)
 
     print('saving...')
     gif_path = base_path / (name+'.gif')
@@ -54,10 +56,9 @@ def output_gif(name, image_paths, durations):
     optimize(str(gif_path))
 
 
-def output_mp4(name, image_paths, durations):
+def output_mp4(name, data, durations):
     # load the images
-    clips = list(tqdm((ImageClip(str(p), duration=d) for (p, d) in zip(image_paths, durations)),
-                      total=len(image_paths), desc='loading'))
+    clips = [ImageClip(data, duration=d) for (data, d) in zip(data, durations)]
     # save the mp4
     movie = concatenate_videoclips(clips, method="chain")
     movie.write_videofile(str(base_path / (name + '.mp4')),

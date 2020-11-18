@@ -77,7 +77,7 @@ def main():
     parser.add_argument('--from-date', default=str(relax_2),
                         help='2020-03-07: data start, 2020-07-02: end of lockdown')
     parser.add_argument('--exclude-days', default=7, type=int)
-    parser.add_argument('--output', choices=output_types.keys(), default='gif')
+    parser.add_argument('--output', default='gif')
     args = parser.parse_args()
 
     _, data_date = find_latest('coronavirus-cases_*-*-*.csv', index=-1)
