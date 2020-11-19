@@ -8,10 +8,11 @@ import pandas as pd
 from dateutil.parser import parse as parse_date
 from matplotlib.colors import SymLogNorm
 from matplotlib.dates import MonthLocator, DateFormatter
+from matplotlib.ticker import FuncFormatter
 
 from animated import parallel_render
 from constants import base_path, ltla, code, cases, specimen_date, relax_2, per100k, new_admissions, \
-    new_deaths_by_death_date, lockdown1, lockdown2
+    new_deaths_by_death_date, lockdown1, lockdown2, new_virus_tests
 from download import find_latest
 from phe import load_geoms, load_population
 
@@ -73,23 +74,40 @@ def read_lines_data(data_date, earliest_date, to_date):
     path, _ = find_latest(f'phe_overview_{data_date}_*.pickle', index=-1)
     overview_data = pd.read_pickle(path)
     overview_data = overview_data.set_index(pd.to_datetime(overview_data['date'])).sort_index()
-    admissions_deaths = overview_data[[new_admissions, new_deaths_by_death_date]]
+    admissions_deaths = overview_data[[new_admissions, new_deaths_by_death_date, new_virus_tests]]
     return admissions_deaths.rolling(14).mean().loc[earliest_date:to_date]
 
 
 def render_lines(ax, data_date, frame_date, earliest_date, to_date):
     data = read_lines_data(data_date, earliest_date, to_date)
-    ax = data.plot(ax=ax, color=['darkblue', 'black'])
+    outcomes_ax = ax.twinx()
+    tests_ax = ax
+
+    data.plot(ax=outcomes_ax,
+              y=[new_admissions, new_deaths_by_death_date],
+              color=['darkblue', 'black'], legend=False)
+
+    data.plot(ax=tests_ax,
+              y=new_virus_tests,
+              color='darkgreen', legend=False)
+
     for lockdown in lockdown1, lockdown2:
-        ax.axvspan(*lockdown, facecolor='black', alpha=0.2)
-    ax.legend(['hospitalised', 'died', 'lockdown'])
+        lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2)
+
+    lines = outcomes_ax.get_lines() + tests_ax.get_lines() + [lockdown_obj]
+    ax.legend(lines, ['hospitalised', 'died', 'tests', 'lockdown'])
     ax.axvline(frame_date, color='red')
     ax.minorticks_off()
+
+    outcomes_ax.tick_params(axis='y', labelcolor='darkblue')
+    outcomes_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y/1_000:.0f}k"))
+    tests_ax.tick_params(axis='y', labelcolor='darkgreen')
+    tests_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y/1_000_000:.1f}m"))
+
     xaxis = ax.get_xaxis()
     xaxis.label.set_visible(False)
     xaxis.set_major_locator(MonthLocator(interval=1))
     xaxis.set_major_formatter(DateFormatter('%b'))
-    ax.yaxis.tick_right()
 
 
 def render_dt(data_date, earliest_date, to_date, frame_date, image_path):

@@ -24,6 +24,7 @@ new_cases_by_specimen_date = 'newCasesBySpecimenDate'
 new_admissions = "newAdmissions"
 new_deaths_by_death_date = 'newDeaths28DaysByDeathDate'
 new_tests_by_publish_date = 'newTestsByPublishDate'
+new_virus_tests = 'newVirusTests'
 release_timestamp = 'releaseTimestamp'
 
 overview = 'overview'
