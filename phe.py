@@ -1,19 +1,76 @@
+import concurrent.futures
 import json
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from functools import lru_cache, partial
+from urllib.parse import parse_qs, urlparse
 
+import requests
 from dateutil.parser import parse as parse_date
 from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from constants import (
     base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla,
-    phe_vmax, per100k
+    phe_vmax, per100k, release_timestamp
 )
 from plotting import geoplot_bokeh, save_to_disk
+
+
+def get(filters, structure, **params):
+    _params={
+        'filters':';'.join(f'{k}={v}' for (k, v) in filters.items()),
+        'structure': json.dumps({element:element for element in structure}),
+    }
+    _params.update(params)
+    response = requests.get('https://api.coronavirus.data.gov.uk/v1/data', timeout=20, params=_params)
+    if response.status_code != 200:
+        raise ValueError(f'{response.status_code}:{response.content}')
+    return response.json()
+
+
+def pickle(name, df):
+    for_dates = df[release_timestamp].unique()
+    assert len(for_dates) == 1, for_dates
+    for_date, = for_dates
+    path = base_path / f'phe_{name}_{for_date}_{datetime.now():%Y-%m-%d-%H-%M}.pickle'
+    df.to_pickle(path)
+    return path
+
+
+def query(filters, structure, max_workers=None, **params):
+    page = 1
+    response = get(filters, structure, page=page, **params)
+    result = response['data']
+    max_page = int(parse_qs(urlparse(response['pagination']['last']).query)['page'][0])
+    if max_page > 1:
+        t = tqdm(total=max_page)
+        t.update(1)
+        todo = range(2, max_page+1)
+        attempt = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers or max_page-1) as executor:
+            while todo:
+                attempt += 1
+                bad = []
+                t.set_postfix({'errors': len(bad), 'attempt': attempt})
+                futures = {executor.submit(get, filters, structure, page=page, **params): page
+                           for page in todo}
+                for future in concurrent.futures.as_completed(futures):
+                    page = futures[future]
+                    try:
+                        response = future.result()
+                    except Exception as exc:
+                        bad.append(page)
+                        t.set_postfix({'errors': len(bad), 'attempt': attempt})
+                    else:
+                        result.extend(response['data'])
+                        t.update(1)
+                todo = bad
+        t.close()
+    return pd.DataFrame(result)
 
 
 def data_for_date(dt, areas=None, area_types=utla):
