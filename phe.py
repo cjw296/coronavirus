@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 from dateutil.parser import parse as parse_date
-from matplotlib.ticker import MaxNLocator, FormatStrFormatter
+from matplotlib.ticker import MaxNLocator, StrMethodFormatter, LogLocator, SymmetricalLogLocator
 import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 from constants import (
     base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla,
-    phe_vmax, per100k, release_timestamp
+    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2
 )
 from plotting import geoplot_bokeh, save_to_disk
 
@@ -97,7 +97,6 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
         title=f'Change between reports on {previous_date} and {for_date}', legend=False
     )
     fix_x_dates(ax)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
@@ -105,7 +104,9 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
         ax.set_ylim(diff_ylims)
     if diff_log_scale:
         ax.set_yscale('symlog')
-        ax.yaxis.set_major_formatter(FormatStrFormatter("%d"))
+    else:
+        ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', integer=True))
+    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
     ax.axhline(y=0, color='k')
 
 
@@ -118,10 +119,12 @@ def fix_x_dates(ax):
     ax.xaxis.set_ticklabels(labels)
 
 
-def plot_stacked_bars(ax, data, average_end, title=None):
+def plot_stacked_bars(ax, data, average_end, title=None, ylim=None):
     data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False,
               title=title)
     ax.set_ylabel(cases)
+    if ylim:
+        ax.set_ylim((0, ylim))
 
     mean = None
     if average_end is not None:
@@ -131,29 +134,28 @@ def plot_stacked_bars(ax, data, average_end, title=None):
 
     fix_x_dates(ax)
     ax.yaxis.grid(True)
+    ax.yaxis.tick_right()
+    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
 
-    ax.axvline(x=data.index.get_loc(str(lockdown)), color='r', linestyle='-', label='Lockdown')
-    ax.axvline(x=data.index.get_loc(str(lockdown + timedelta(days=21))), color='r', linestyle='--',
-               label='Lockdown + 3 weeks')
-    try:
-        relax_2_loc = data.index.get_loc(str(relax_2))
-    except KeyError:
-        pass
-    else:
-        ax.axvline(x=relax_2_loc, color='orange', linestyle='-',
-                   label='Relaxed Lockdown')
+    for i, lockdown in enumerate((lockdown1, lockdown2), start=1):
+        labels = (data.index.get_loc(str(d))
+                  if str(d) in data.index
+                  else data.index.get_loc(data.index.max())+1
+                  for d in lockdown)
+        ax.axvspan(*labels, color='black', alpha=0.05,
+                   zorder=-1000, label=f'lockdown {i}')
 
     if mean is not None:
         latest_average = mean.loc[str(average_end-timedelta(days=1))]
-        ax.axhline(y=latest_average, color='grey', linestyle=':',
-                   label=f'Latest average: {latest_average:.1f}')
+        ax.axhline(y=latest_average, color='blue', linestyle=':',
+                   label=f'Latest average: {latest_average:.0f}')
 
     ax.legend(loc='upper left')
 
 
 def plot_with_diff(for_date, data_for_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
-                   image_path=None, title=None, to_date=None):
+                   image_path=None, title=None, to_date=None, ylim=None):
     previous_date = for_date - timedelta(days=diff_days)
 
     data = data_for_date(for_date)
@@ -187,9 +189,9 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
     fig.subplots_adjust(hspace=0.5)
 
     plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
-    plot_stacked_bars(axes[0], data, average_end, title)
+    plot_stacked_bars(axes[0], data, average_end, title, ylim)
     if image_path:
-        plt.savefig(image_path / f'{for_date}.png', dpi=90)
+        plt.savefig(image_path / f'{for_date}.png', dpi=90, bbox_inches='tight')
         plt.close()
     else:
         plt.show()

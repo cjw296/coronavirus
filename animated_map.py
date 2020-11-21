@@ -10,8 +10,8 @@ from matplotlib.colors import SymLogNorm
 from matplotlib.dates import MonthLocator, DateFormatter
 from matplotlib.ticker import FuncFormatter
 
-from animated import parallel_render
-from constants import base_path, ltla, code, cases, specimen_date, relax_2, per100k, new_admissions, \
+from animated import parallel_render, add_date_arg
+from constants import base_path, ltla, code, cases, specimen_date, per100k, new_admissions, \
     new_deaths_by_death_date, lockdown1, lockdown2, new_virus_tests
 from download import find_latest
 from phe import load_geoms, load_population
@@ -126,8 +126,7 @@ def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--from-date', default=str(relax_2),
-                        help='2020-03-07: data start, 2020-07-02: end of lockdown')
+    add_date_arg(parser)
     parser.add_argument('--exclude-days', default=7, type=int)
     parser.add_argument('--output', default='gif')
     args = parser.parse_args()
@@ -137,8 +136,7 @@ def main():
 
     to_date = parse_date(df[specimen_date].max()) - timedelta(days=args.exclude_days)
     earliest_date = parse_date(df[specimen_date].min())
-    from_date = '2020-03-07' if args.from_date == 'start' else args.from_date
-    dates = pd.date_range(from_date, to_date)
+    dates = pd.date_range(args.from_date, to_date)
 
     render = partial(render_dt, data_date, earliest_date, to_date)
 
