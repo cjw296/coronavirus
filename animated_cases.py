@@ -10,7 +10,7 @@ from phe import plot_with_diff, data_for_date
 
 areas = dict(
     my_area=dict(
-        diff_ylims=[-2, 20],
+        diff_ylims=[-2, 200],
         data_for_date=partial(data_for_date, areas=my_areas)
     ),
     oxford=dict(
