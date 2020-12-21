@@ -22,9 +22,9 @@ population = 'population'
 
 
 @lru_cache
-def read_map_data(data_date):
+def read_map_data(path):
     # so we only load it once per process!
-    df = pd.read_csv(base_path / f'coronavirus-cases_{data_date}.csv')
+    df = pd.read_csv(path)
     df = df[df['Area type'].isin(ltla)][[code, specimen_date, cases]]
     df = pd.merge(df, load_population(), on=code)
     df[per100k] = 100_000 * df[cases] / df[population]
@@ -36,8 +36,8 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def render_map(ax, data_date, frame_date, vmax=200, linthresh=30):
-    df = read_map_data(data_date)
+def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
+    df = read_map_data(data_path)
     dt = str(frame_date.date())
     data = df[df[specimen_date] == dt]
 
@@ -110,12 +110,12 @@ def render_lines(ax, data_date, frame_date, earliest_date, to_date):
     xaxis.set_major_formatter(DateFormatter('%b'))
 
 
-def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
+def render_dt(data_path, data_date, earliest_date, to_date, frame_date, image_path):
     dt = str(frame_date.date())
     fig, (map_ax, lines_ax) = plt.subplots(
         figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
     )
-    render_map(map_ax, data_date, frame_date)
+    render_map(map_ax, data_path, frame_date)
     render_lines(lines_ax, data_date, frame_date, earliest_date, to_date)
     fig.text(0.25, 0.08,
              f'@chriswithers13 - '
@@ -131,14 +131,14 @@ def main():
     parser.add_argument('--output', default='gif')
     args = parser.parse_args()
 
-    _, data_date = find_latest('coronavirus-cases_*-*-*.csv', index=-1)
-    df = read_map_data(data_date)
+    data_path, data_date = find_latest('coronavirus-cases_*-*-*.csv')
+    df = read_map_data(data_path)
 
     to_date = parse_date(df[specimen_date].max()) - timedelta(days=args.exclude_days)
     earliest_date = parse_date(df[specimen_date].min())
     dates = pd.date_range(args.from_date, to_date)
 
-    render = partial(render_dt, data_date, earliest_date, to_date)
+    render = partial(render_dt, data_path, data_date, earliest_date, to_date)
 
     durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
