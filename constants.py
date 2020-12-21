@@ -1,10 +1,12 @@
 from datetime import date
 from pathlib import Path
 
+overview = 'overview'
 nation = ['Nation', 'nation']
 region = ['Region', 'region']
 ltla = ['Lower tier local authority', 'ltla']
 utla = ['Upper tier local authority', 'utla']
+msoa = 'msoa'
 
 cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-cases_latest.{data_type}'
 
@@ -27,8 +29,13 @@ new_tests_by_publish_date = 'newTestsByPublishDate'
 new_virus_tests = 'newVirusTests'
 release_timestamp = 'releaseTimestamp'
 
-overview = 'overview'
+new_admissions_sum = 'newAdmissionsRollingSum'
+new_cases_sum = 'newCasesBySpecimenDateRollingSum'
+new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
+unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 
+new_cases_rate = 'newCasesBySpecimenDateRollingRate'
+new_cases_change = 'newCasesBySpecimenDateChange'
 
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
