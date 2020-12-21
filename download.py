@@ -11,7 +11,7 @@ def download(url, path):
         target.write(response.content)
 
 
-def find_latest(glob, index):
+def find_latest(glob, date_index=-1):
     path = sorted(base_path.glob(glob), reverse=True)[0]
-    dt = parse_date(str(path.stem).rsplit('_')[index]).date()
+    dt = parse_date(str(path.stem).rsplit('_')[date_index]).date()
     return path, dt

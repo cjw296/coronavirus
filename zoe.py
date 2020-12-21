@@ -148,7 +148,7 @@ def plot_study_evolution(start_date, days=None):
 
 
 def latest_map_data():
-    path, dt = find_latest('zoe_prevalence_map_*.pickle', index=-2)
+    path, dt = find_latest('zoe_prevalence_map_*.pickle', date_index=-2)
     df = read_pickle(path)
     gdf = convert_df(df, 'the_geom_webmercator')
     return dt, gdf

@@ -71,7 +71,7 @@ def render_map(ax, data_date, frame_date, vmax=200, linthresh=30):
 @lru_cache
 def read_lines_data(data_date, earliest_date, to_date):
     # so we only load it once per process!
-    path, _ = find_latest(f'phe_overview_{data_date}_*.pickle', index=-1)
+    path, _ = find_latest(f'phe_overview_{data_date}_*.pickle')
     overview_data = pd.read_pickle(path)
     overview_data = overview_data.set_index(pd.to_datetime(overview_data['date'])).sort_index()
     admissions_deaths = overview_data[[new_admissions, new_deaths_by_death_date, new_virus_tests]]
