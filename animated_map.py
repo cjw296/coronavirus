@@ -128,7 +128,7 @@ def main():
     parser = ArgumentParser()
     add_date_arg(parser)
     parser.add_argument('--exclude-days', default=7, type=int)
-    parser.add_argument('--output', default='gif')
+    parser.add_argument('--output', default='mp4')
     args = parser.parse_args()
 
     data_path, data_date = find_latest('coronavirus-cases_*-*-*.csv')
