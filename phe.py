@@ -73,6 +73,23 @@ def query(filters, structure, max_workers=None, **params):
     return pd.DataFrame(result)
 
 
+def download(name, area_type, *metrics, area_name=None):
+    _params = {
+        'areaType': area_type,
+        'metric': metrics,
+        'format': 'csv',
+    }
+    if area_name:
+        _params['areaName'] = area_name
+    response = requests.get(
+        'https://api.coronavirus.data.gov.uk/v2/data', timeout=20, params=_params)
+    if response.status_code != 200:
+        raise ValueError(f'{response.status_code}:{response.content}')
+    path = (base_path / f'{name}_{date.today()}.csv')
+    path.write_bytes(response.content)
+    return path
+
+
 def data_for_date(dt, areas=None, area_types=utla):
     path = base_path / f'coronavirus-cases_{dt}.csv'
     df = pd.read_csv(path)
