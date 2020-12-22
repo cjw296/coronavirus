@@ -83,4 +83,5 @@ def lookup(text):
 def add_date_arg(parser):
 
     parser.add_argument('--from-date', default=str(relax_2), type=lookup,
-                        help='2020-03-07: data start, 2020-07-02: end of lockdown')
+                        help='data release dates. '
+                             '2020-03-07: data start, 2020-07-02: end of lockdown')

@@ -47,6 +47,8 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=areas.keys())
     add_date_arg(parser)
+    parser.add_argument('--earliest',
+                        help='min for x-axis. 2020-08-01 good for start of second wave')
     parser.add_argument('--duration', type=float, default=0.1)
     args = parser.parse_args()
     from_date = parse_date(args.from_date).date()
@@ -59,7 +61,7 @@ def main():
     data = areas[args.area]['data_for_date'](dates[0])
     max_sum = data.sum(axis=1).max()
     parallel_render(f'animated_cases_{args.area}',
-                    partial(render, ylim=max_sum, **areas[args.area]),
+                    partial(render, ylim=max_sum, earliest=args.earliest, **areas[args.area]),
                     dates, duration=args.duration)
 
 

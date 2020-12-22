@@ -107,7 +107,10 @@ def data_for_date(dt, areas=None, area_types=utla):
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None):
+              diff_ylims=None, diff_log_scale=None, earliest=None):
+    if earliest:
+        data = data.loc[str(earliest):]
+        previous_data = previous_data.loc[str(earliest):]
     diff = data.sub(previous_data, fill_value=0)
     diff.plot(
         ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis',
@@ -136,7 +139,9 @@ def fix_x_dates(ax):
     ax.xaxis.set_ticklabels(labels)
 
 
-def plot_stacked_bars(ax, data, average_end, title=None, ylim=None):
+def plot_stacked_bars(ax, data, average_end, title=None, ylim=None, earliest=None):
+    if earliest:
+        data = data.loc[str(earliest):]
     data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False,
               title=title)
     ax.set_ylabel(cases)
@@ -172,7 +177,8 @@ def plot_stacked_bars(ax, data, average_end, title=None, ylim=None):
 
 def plot_with_diff(for_date, data_for_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
-                   image_path=None, title=None, to_date=None, ylim=None):
+                   image_path=None, title=None, to_date=None, ylim=None,
+                   earliest=None):
     previous_date = for_date - timedelta(days=diff_days)
 
     data = data_for_date(for_date)
@@ -205,8 +211,11 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.5)
 
-    plot_diff(axes[1], for_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
-    plot_stacked_bars(axes[0], data, average_end, title, ylim)
+    plot_diff(
+        axes[1], for_date, data, previous_date, previous_data,
+        diff_ylims, diff_log_scale, earliest
+    )
+    plot_stacked_bars(axes[0], data, average_end, title, ylim, earliest)
     if image_path:
         plt.savefig(image_path / f'{for_date}.png', dpi=90, bbox_inches='tight')
         plt.close()
@@ -214,11 +223,11 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla):
+def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla, earliest=None):
     plot_with_diff(
         for_date,
         partial(data_for_date, areas=areas, area_types=area_types),
-        uncertain_days, diff_days
+        uncertain_days, diff_days, earliest=earliest
     )
 
 
