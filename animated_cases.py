@@ -23,7 +23,7 @@ areas = dict(
     ),
     regions=dict(
         data_for_date=partial(data_for_date, area_types=region),
-        diff_ylims=[-10, 10_000],
+        diff_ylims=[-10, 13_000],
     )
 )
 
