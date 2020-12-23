@@ -5,33 +5,24 @@ from functools import lru_cache, partial
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from dateutil.parser import parse as parse_date
 from matplotlib.colors import SymLogNorm
-from matplotlib.dates import MonthLocator, DateFormatter
-from matplotlib.ticker import FuncFormatter
-
-from animated import parallel_render, add_date_arg
-from constants import ltla, code, cases, specimen_date, per100k, new_admissions, \
-    new_deaths_by_death_date, lockdown1, lockdown2, new_virus_tests
-from constants import code, per100k, date_col, new_cases_by_specimen_date, population, area_code
-from download import find_latest
-from phe import load_geoms, load_population, plot_summary
 
 import series as s
+from animated import parallel_render, add_date_arg
+from constants import code, per100k, date_col, new_cases_by_specimen_date, population, area_code
+from download import find_latest
+from phe import load_geoms, load_population, plot_summary, read_csv
 
 rolling_days = 14
 
 
-
 @lru_cache
-def read_map_data(path):
-    # so we only load it once per process!
-    df = pd.read_csv(path)
-    df = df[df['Area type'].isin(ltla)][[code, specimen_date, cases]]
-    df = pd.merge(df, load_population(), on=code)
-    df[per100k] = 100_000 * df[cases] / df[population]
-    pivoted = df.pivot_table(values=per100k, index=[specimen_date], columns=code)
-    return pivoted.fillna(0).rolling(rolling_days).mean().unstack().reset_index(name=per100k)
+def read_map_data(data_path):
+    df = read_csv(data_path, metrics=[area_code, new_cases_by_specimen_date])
+    df = df.reset_index().merge(load_population(), left_on=area_code, right_on=code)
+    df[per100k] = 100_000 * df[new_cases_by_specimen_date] / df[population]
+    pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
+    return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k)
 
 
 def round_nearest(a, nearest):
@@ -40,11 +31,10 @@ def round_nearest(a, nearest):
 
 def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
     df = read_map_data(data_path)
-    dt = str(frame_date.date())
-    data = df[df[specimen_date] == dt]
+    data = df[df[date_col] == frame_date]
 
     current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
-                               right_on='Area code')
+                               right_on=area_code)
 
     ax = current_pct_geo.plot(
         ax=ax,
@@ -65,8 +55,8 @@ def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
         missing_kwds={'color': 'lightgrey'},
     )
     ax.set_axis_off()
-    ax.set_ylim(6460000, 7550000)
-    ax.set_xlim(-600000, 200000)
+    ax.set_ylim(6_460_000, 8_000_000)
+    ax.set_xlim(-900_000, 200_000)
     ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
 
 
@@ -92,11 +82,11 @@ def main():
     parser.add_argument('--output', default='mp4')
     args = parser.parse_args()
 
-    data_path, data_date = find_latest('coronavirus-cases_*-*-*.csv')
+    data_path, data_date = find_latest('ltla_*.csv')
     df = read_map_data(data_path)
 
-    to_date = parse_date(df[specimen_date].max()) - timedelta(days=args.exclude_days)
-    earliest_date = parse_date(df[specimen_date].min())
+    to_date = df[date_col].max() - timedelta(days=args.exclude_days)
+    earliest_date = df[date_col].min()
     dates = pd.date_range(args.from_date, to_date)
 
     render = partial(render_dt, data_path, data_date, earliest_date, to_date)
