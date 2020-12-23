@@ -11,10 +11,12 @@ from matplotlib.dates import MonthLocator, DateFormatter
 from matplotlib.ticker import FuncFormatter
 
 from animated import parallel_render, add_date_arg
-from constants import base_path, ltla, code, cases, specimen_date, per100k, new_admissions, \
+from constants import ltla, code, cases, specimen_date, per100k, new_admissions, \
     new_deaths_by_death_date, lockdown1, lockdown2, new_virus_tests
 from download import find_latest
-from phe import load_geoms, load_population
+from phe import load_geoms, load_population, plot_summary
+
+import series as s
 
 rolling_days = 14
 
@@ -68,55 +70,14 @@ def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
     ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
 
 
-@lru_cache
-def read_lines_data(data_date, earliest_date, to_date):
-    # so we only load it once per process!
-    path, _ = find_latest(f'phe_overview_{data_date}_*.pickle')
-    overview_data = pd.read_pickle(path)
-    overview_data = overview_data.set_index(pd.to_datetime(overview_data['date'])).sort_index()
-    admissions_deaths = overview_data[[new_admissions, new_deaths_by_death_date, new_virus_tests]]
-    return admissions_deaths.rolling(14).mean().loc[earliest_date:to_date]
-
-
-def render_lines(ax, data_date, frame_date, earliest_date, to_date):
-    data = read_lines_data(data_date, earliest_date, to_date)
-    outcomes_ax = ax.twinx()
-    tests_ax = ax
-
-    data.plot(ax=outcomes_ax,
-              y=[new_admissions, new_deaths_by_death_date],
-              color=['darkblue', 'black'], legend=False)
-
-    data.plot(ax=tests_ax,
-              y=new_virus_tests,
-              color='darkgreen', legend=False)
-
-    for lockdown in lockdown1, lockdown2:
-        lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2)
-
-    lines = outcomes_ax.get_lines() + tests_ax.get_lines() + [lockdown_obj]
-    ax.legend(lines, ['hospitalised', 'died', 'tests', 'lockdown'])
-    ax.axvline(frame_date, color='red')
-    ax.minorticks_off()
-
-    outcomes_ax.tick_params(axis='y', labelcolor='darkblue')
-    outcomes_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y/1_000:.0f}k"))
-    tests_ax.tick_params(axis='y', labelcolor='darkgreen')
-    tests_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y/1_000_000:.1f}m"))
-
-    xaxis = ax.get_xaxis()
-    xaxis.label.set_visible(False)
-    xaxis.set_major_locator(MonthLocator(interval=1))
-    xaxis.set_major_formatter(DateFormatter('%b'))
-
-
 def render_dt(data_path, data_date, earliest_date, to_date, frame_date, image_path):
     dt = str(frame_date.date())
     fig, (map_ax, lines_ax) = plt.subplots(
         figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
     )
     render_map(map_ax, data_path, frame_date)
-    render_lines(lines_ax, data_date, frame_date, earliest_date, to_date)
+    plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
+                 series=(s.new_admissions_sum, s.new_deaths_sum))
     fig.text(0.25, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')

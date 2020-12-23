@@ -4,19 +4,21 @@ from datetime import timedelta, date, datetime
 from functools import lru_cache, partial
 from urllib.parse import parse_qs, urlparse
 
-import requests
-from dateutil.parser import parse as parse_date
-from matplotlib.ticker import MaxNLocator, StrMethodFormatter, LogLocator, SymmetricalLogLocator
 import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import requests
+from dateutil.parser import parse as parse_date
+from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
 from tqdm.auto import tqdm
 
+import series as s
 from constants import (
-    base_path, utla, specimen_date, area, cases, lockdown, relax_2, code, ltla,
-    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2
+    base_path, utla, specimen_date, area, cases, code, ltla,
+    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col
 )
+from download import find_latest
 from plotting import geoplot_bokeh, save_to_disk
 
 
@@ -285,3 +287,53 @@ def plot_map(phe_recent_geo, phe_recent_title):
             ('Percentage', '@{% of population}{1.111}%'),
         ])
     save_to_disk(p, "phe.html", title=phe_recent_title)
+
+
+def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,
+                 series=(s.new_cases_sum, s.new_admissions_sum, s.new_deaths_sum),
+                 tested_formatter=lambda y, pos: f"{y / 1_000_000:.1f}m"):
+    all_series = [s.unique_people_tested_sum] + list(series)
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(16, 10))
+        fig.set_facecolor('white')
+
+    tests_ax = ax
+    outcomes_ax = ax = tests_ax.twinx()
+
+    if data_date is None:
+        data_path, data_date = find_latest('england_*.csv')
+    else:
+        data_path = base_path / f'england_{data_date}.csv'
+
+    data = pd.read_csv(data_path, index_col=[date_col], parse_dates=[date_col],
+                       usecols=[date_col] + [s_.metric for s_ in all_series])
+    data.sort_index(inplace=True)
+    data = data.loc[earliest_date:to_date] / 7
+
+    data.plot(ax=tests_ax,
+              y=s.unique_people_tested_sum.metric,
+              color=s.unique_people_tested_sum.color, legend=False)
+
+    data.plot(ax=outcomes_ax,
+              y=[s_.metric for s_ in series],
+              color=[s_.color for s_ in series], legend=False)
+
+    for lockdown in lockdown1, lockdown2:
+        lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2, zorder=0)
+
+    lines = tests_ax.get_lines() + outcomes_ax.get_lines() + [lockdown_obj]
+    ax.legend(lines, [s_.label for s_ in all_series]+['lockdown'],
+              loc='upper left', framealpha=1)
+    ax.set_title(f'7 day moving average of PHE data as of {data_date:%d %b %Y}')
+    if frame_date:
+        ax.axvline(frame_date, color='red')
+    ax.minorticks_off()
+
+    outcomes_ax.tick_params(axis='y', labelcolor=s.new_admissions_sum.color)
+    outcomes_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000:.0f}k"))
+    tests_ax.tick_params(axis='y', labelcolor=s.unique_people_tested_sum.color)
+    tests_ax.yaxis.set_major_formatter(FuncFormatter(tested_formatter))
+
+    xaxis = ax.get_xaxis()
+    xaxis.label.set_visible(False)
