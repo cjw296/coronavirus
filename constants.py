@@ -43,6 +43,7 @@ testing = date(2020, 4, 30)
 relax_1 = date(2020, 5, 11)
 relax_2 = date(2020, 7, 4)
 second_wave = date(2020, 8, 1)
+data_start = date(2020, 3, 7)
 
 lockdown1 = (lockdown, relax_2)
 lockdown2 = (date(2020, 11, 5), date(2020, 12, 2))

@@ -10,7 +10,7 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
 from tqdm import tqdm
 
-from constants import base_path, relax_2
+from constants import base_path, relax_2, second_wave, data_start
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
@@ -75,9 +75,14 @@ output_types = {
     'gif': output_gif,
 }
 
+special_dates = {text: str(dt) for dt, text in (
+    (data_start, 'start'),
+    (second_wave, 'second-wave')
+)}
+
 
 def lookup(text):
-    return '2020-03-07' if text == 'start' else text
+    return special_dates.get(text, text)
 
 
 def add_date_arg(parser):
