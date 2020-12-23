@@ -263,7 +263,9 @@ def recent_phe_data_summed(latest_date, by, days=7):
 
 @lru_cache
 def load_population():
-    population = pd.DataFrame({'population': json.load((base_path / 'population.json').open())})
+    # from http://coronavirus.data.gov.uk/downloads/data/population.json
+    population = json.load((base_path / 'population.json').open())['general']
+    population = pd.DataFrame({'population': population})
     population.index.name = code
     return population
 
