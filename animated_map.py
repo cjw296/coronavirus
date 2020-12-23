@@ -13,6 +13,7 @@ from matplotlib.ticker import FuncFormatter
 from animated import parallel_render, add_date_arg
 from constants import ltla, code, cases, specimen_date, per100k, new_admissions, \
     new_deaths_by_death_date, lockdown1, lockdown2, new_virus_tests
+from constants import code, per100k, date_col, new_cases_by_specimen_date, population, area_code
 from download import find_latest
 from phe import load_geoms, load_population, plot_summary
 
@@ -20,7 +21,6 @@ import series as s
 
 rolling_days = 14
 
-population = 'population'
 
 
 @lru_cache
