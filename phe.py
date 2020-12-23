@@ -328,6 +328,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
         data_path = base_path / f'england_{data_date}.csv'
 
     data = read_csv(data_path, earliest_date, to_date, [s_.metric for s_ in all_series]) / 7
+    if to_date > data.index.max():
+        data = data.reindex(pd.date_range(data.index.min(), to_date))
 
     data.plot(ax=tests_ax,
               y=s.unique_people_tested_sum.metric,
