@@ -100,6 +100,17 @@ def download(name, area_type, *metrics, area_name=None, check_release_date=True,
     return path
 
 
+def read_csv(data_path, start=None, end=None, metrics=None):
+    kw = {}
+    if metrics:
+        kw['usecols'] = [date_col] + metrics
+    data = pd.read_csv(data_path, index_col=[date_col], parse_dates=[date_col], **kw)
+    data.sort_index(inplace=True)
+    if start or end:
+        data = data.loc[start:end]
+    return data
+
+
 def data_for_date(dt, areas=None, area_types=utla):
     path = base_path / f'coronavirus-cases_{dt}.csv'
     df = pd.read_csv(path)
@@ -316,10 +327,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     else:
         data_path = base_path / f'england_{data_date}.csv'
 
-    data = pd.read_csv(data_path, index_col=[date_col], parse_dates=[date_col],
-                       usecols=[date_col] + [s_.metric for s_ in all_series])
-    data.sort_index(inplace=True)
-    data = data.loc[earliest_date:to_date] / 7
+    data = read_csv(data_path, earliest_date, to_date, [s_.metric for s_ in all_series]) / 7
 
     data.plot(ax=tests_ax,
               y=s.unique_people_tested_sum.metric,
