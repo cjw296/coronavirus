@@ -312,7 +312,7 @@ def plot_map(phe_recent_geo, phe_recent_title):
 
 def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,
                  series=(s.new_cases_sum, s.new_admissions_sum, s.new_deaths_sum),
-                 tested_formatter=lambda y, pos: f"{y / 1_000_000:.1f}m"):
+                 tested_formatter=lambda y, pos: f"{y / 1_000_000:.1f}m", title=True):
     all_series = [s.unique_people_tested_sum] + list(series)
 
     if ax is None:
@@ -343,7 +343,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     lines = tests_ax.get_lines() + outcomes_ax.get_lines() + [lockdown_obj]
     ax.legend(lines, [s_.label for s_ in all_series]+['lockdown'],
               loc='upper left', framealpha=1)
-    ax.set_title(f'7 day moving average of PHE data as of {data_date:%d %b %Y}')
+    if title:
+        ax.set_title(f'7 day moving average of PHE data as of {data_date:%d %b %Y}')
     if frame_date:
         ax.axvline(frame_date, color='red')
     ax.minorticks_off()

@@ -77,7 +77,7 @@ def render_dt(data_path, data_date, earliest_date, to_date, frame_date, image_pa
     )
     render_map(map_ax, data_path, frame_date)
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
-                 series=(s.new_admissions_sum, s.new_deaths_sum))
+                 series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
     fig.text(0.25, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
