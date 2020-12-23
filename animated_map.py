@@ -57,7 +57,7 @@ def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
     ax.set_axis_off()
     ax.set_ylim(6_460_000, 8_000_000)
     ax.set_xlim(-900_000, 200_000)
-    ax.set_title(f'PHE lab-confirmed cases for specimens dated {frame_date:%d %b %Y}')
+    ax.set_title(f'COVID-19 cases for specimens dated {frame_date:%d %b %Y}')
 
 
 def render_dt(data_path, data_date, earliest_date, to_date, frame_date, image_path):
