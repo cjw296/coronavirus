@@ -96,6 +96,8 @@ west_berks = 'E06000037'
 bracknell = 'E06000036'
 oxfordshire = 'E10000025'
 
+dorset = 'E06000059'
+
 southwark = 'E09000028'
 lambeth = 'E09000022'
 westminster = 'E09000033'
