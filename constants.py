@@ -35,6 +35,7 @@ new_admissions_sum = 'newAdmissionsRollingSum'
 new_cases_sum = 'newCasesBySpecimenDateRollingSum'
 new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
+unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
