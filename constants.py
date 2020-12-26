@@ -1,11 +1,6 @@
 from datetime import date
 from pathlib import Path
 
-nation_types = ['Nation', 'nation']
-region_types = ['Region', 'region']
-ltla_types = ['Lower tier local authority', 'ltla']
-utla_types = ['Upper tier local authority', 'utla']
-
 overview = 'overview'
 nation = 'nation'
 region = 'region'

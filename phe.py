@@ -15,9 +15,10 @@ from tqdm.auto import tqdm
 
 import series as s
 from constants import (
-    base_path, utla_types, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
+    base_path, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
     lockdown2, date_col, area_code, population,
-    area_name, new_cases_by_specimen_date, pct_population, ltla_types, second_wave
+    area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
+    ltla, utla
 )
 from download import find_latest
 
@@ -113,13 +114,22 @@ def read_csv(data_path, start=None, end=None, metrics=None):
     return data
 
 
+area_type_filters = {
+    nation: ['Nation', 'nation'],
+    region: ['Region', 'region'],
+    ltla: ['Lower tier local authority', 'ltla'],
+    utla: ['Upper tier local authority', 'utla'],
+}
+
+
 def best_data_for(metrics, dt='*', days=None):
     data_path, data_date = find_latest(f'ltla_{dt}.csv')
     start = data_date-timedelta(days=days) if days else None
     return read_csv(data_path, start, metrics=metrics), data_date
 
 
-def data_for_date(dt, areas=None, area_types=utla_types):
+def data_for_date(dt, areas=None, area_type=ltla):
+    area_types = area_type_filters[area_type]
     path = base_path / f'coronavirus-cases_{dt}.csv'
     df = pd.read_csv(path)
     area_filter = df['Area type'].isin(area_types)
@@ -253,11 +263,11 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_types=ltla_types,
+def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_type=ltla,
                earliest=second_wave):
     plot_with_diff(
         for_date,
-        partial(data_for_date, areas=areas, area_types=area_types),
+        partial(data_for_date, areas=areas, area_type=area_type),
         uncertain_days, diff_days, earliest=earliest
     )
 
