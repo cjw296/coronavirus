@@ -10,7 +10,7 @@ msoa = 'msoa'
 
 cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-cases_latest.{data_type}'
 
-base_path = Path('~/Downloads').expanduser()
+base_path = Path('~/coronavirus/data').expanduser()
 base = str(base_path)
 area = 'Area name'
 code = 'Area code'
