@@ -346,7 +346,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     ax.legend(lines, [s_.label for s_ in all_series]+['lockdown'],
               loc='upper left', framealpha=1)
     if title:
-        ax.set_title(f'7 day moving average of PHE data as of {data_date:%d %b %Y}')
+        ax.set_title(f'7 day moving average of PHE data for England as of {data_date:%d %b %Y}')
     if frame_date:
         ax.axvline(frame_date, color='red')
     ax.minorticks_off()
