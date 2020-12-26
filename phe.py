@@ -103,11 +103,11 @@ def download(name, area_type, *metrics, area_name=None, release=None, format='cs
     return path
 
 
-def read_csv(data_path, start=None, end=None, metrics=None):
+def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
     kw = {}
     if metrics:
         kw['usecols'] = [date_col] + metrics
-    data = pd.read_csv(data_path, index_col=[date_col], parse_dates=[date_col], **kw)
+    data = pd.read_csv(data_path, index_col=index_col, parse_dates=[date_col], **kw)
     data.sort_index(inplace=True)
     if start or end:
         data = data.loc[start:end]
@@ -122,28 +122,41 @@ area_type_filters = {
 }
 
 
-def best_data_for(metrics, dt='*', days=None):
-    data_path, data_date = find_latest(f'ltla_{dt}.csv')
-    start = data_date-timedelta(days=days) if days else None
-    return read_csv(data_path, start, metrics=metrics), data_date
+def best_data(dt='*', days=None, area_type=ltla):
+    try:
+        data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
+    except FileNotFoundError:
+        data_path, data_date = find_latest(f'coronavirus-cases_{dt}.csv')
+        data = pd.read_csv(data_path)
+        data = data[data['Area type'].isin(area_type_filters[area_type])]
+        if data.empty:
+            raise FileNotFoundError(f'No {area_type} in {data_path}')
+        data.rename(inplace=True, columns={
+            area: area_name,
+            specimen_date: date_col,
+            cases: new_cases_by_specimen_date,
+        })
+    else:
+        data = read_csv(data_path)
+
+    if days:
+        start = datetime.combine(data_date - timedelta(days=days), datetime.min.time())
+        data = data[data[date_col] >= start]
+
+    return data, data_date
 
 
 def data_for_date(dt, areas=None, area_type=ltla):
-    area_types = area_type_filters[area_type]
-    path = base_path / f'coronavirus-cases_{dt}.csv'
-    df = pd.read_csv(path)
-    area_filter = df['Area type'].isin(area_types)
-    if areas is not None:
-        area_filter &= df['Area code'].isin(areas)
-    by_area = df[area_filter]
-    if by_area.empty:
-        raise ValueError(f'No {area_types} for {areas} in {path}')
-    # nb: cases here!
-    data = by_area[[specimen_date, area, cases]].pivot_table(
-        values=cases, index=[specimen_date], columns=area
+    data, _ = best_data(dt, area_type=area_type)
+    if areas:
+        data = data[data[area_code].isin(areas)]
+    if data.empty:
+        raise ValueError(f'No {area_type} for {areas} available')
+    data = data.pivot_table(
+        values=new_cases_by_specimen_date, index=[date_col], columns=area_name
     ).fillna(0)
     labels = pd.date_range(start=data.index.min(), end=data.index.max())
-    return data.reindex([str(date.date()) for date in labels], fill_value=0)
+    return data.reindex([str(dt.date()) for dt in labels], fill_value=0)
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
@@ -289,10 +302,7 @@ def add_per_100k(df, source_cols, dest_cols=(per100k,)):
 
 
 def recent_phe_data_summed(latest_date, days=7):
-    recent, _ = best_data_for(
-        [area_name, area_code, new_cases_by_specimen_date], dt=latest_date, days=days
-    )
-    recent.reset_index(inplace=True)
+    recent, _ = best_data(latest_date, days=days)
     recent_grouped = recent.groupby([area_code, area_name]).agg(
         {new_cases_by_specimen_date: 'sum', date_col: 'max'}
     )
@@ -347,7 +357,9 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     else:
         data_path = base_path / f'england_{data_date}.csv'
 
-    data = read_csv(data_path, earliest_date, to_date, [s_.metric for s_ in all_series]) / 7
+    data = read_csv(
+        data_path, earliest_date, to_date, [s_.metric for s_ in all_series], index_col=[date_col]
+    ) / 7
     if to_date and to_date > data.index.max():
         data = data.reindex(pd.date_range(data.index.min(), to_date))
 
