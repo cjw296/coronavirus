@@ -1,4 +1,6 @@
+import geopandas
 import matplotlib.pyplot as plt
+import pandas as pd
 from bokeh.io import reset_output, output_notebook, show, output_file, save
 from bokeh.layouts import row
 from bokeh.models import GeoJSONDataSource, HoverTool
@@ -7,7 +9,7 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
 
-from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population
+from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population, base_path
 
 
 def show_area(ax):
@@ -90,7 +92,19 @@ def matplotlib_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title
     plt.show()
 
 
-def bokeh_zoe_vs_phe_map(zoe_new_lad16, zoe_date, phe_recent_geo, phe_recent_title):
+def add_simple_geoms(zoe_df):
+    lad16cd = geopandas.read_file(str(
+        base_path /
+        'Local_Authority_Districts__December_2016__Boundaries_UK-shp' /
+        'Local_Authority_Districts__December_2016__Boundaries_UK.shp'
+    ))
+    return pd.merge(lad16cd,
+                    zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
+                    how='left')
+
+
+def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
+    zoe_new_lad16 = add_simple_geoms(zoe_df)
     zoe_title = f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}'
     zoe = geoplot_bokeh(zoe_new_lad16.to_crs('EPSG:3857'), zoe_title, 'percentage', tooltips=[
         ('Name','@lad16nm'),

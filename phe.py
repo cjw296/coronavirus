@@ -15,12 +15,11 @@ from tqdm.auto import tqdm
 
 import series as s
 from constants import (
-    base_path, utla_types, specimen_date, area, cases, code, ltla_types,
-    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col, area_code, population,
+    base_path, utla_types, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
+    lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population
 )
 from download import find_latest
-from plotting import geoplot_bokeh, save_to_disk
 
 
 def get(filters, structure, **params):
@@ -127,6 +126,7 @@ def data_for_date(dt, areas=None, area_types=utla_types):
     by_area = df[area_filter]
     if by_area.empty:
         raise ValueError(f'No {area_types} for {areas} in {path}')
+    # nb: cases here!
     data = by_area[[specimen_date, area, cases]].pivot_table(
         values=cases, index=[specimen_date], columns=area
     ).fillna(0)
@@ -315,20 +315,6 @@ def map_data(for_date):
     )
 
     return phe_recent_date, phe_recent_geo, phe_recent_title
-
-
-def plot_map(phe_recent_geo, phe_recent_title):
-    data = phe_recent_geo[[
-        'geometry', 'lad19nm', new_cases_by_specimen_date, population, pct_population
-    ]]
-    p = geoplot_bokeh(data[~data.geometry.isnull()], phe_recent_title, pct_population,
-                      vmax=phe_vmax, tooltips=[
-            ('Name', '@lad19nm'),
-            ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
-            ('Population', '@{population}{1}'),
-            ('Percentage', '@{'+pct_population+'}{1.111}%'),
-        ])
-    save_to_disk(p, "phe.html", title=phe_recent_title)
 
 
 def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,

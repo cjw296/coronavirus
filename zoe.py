@@ -1,19 +1,15 @@
 from datetime import datetime, timedelta, date
 
+import matplotlib.pyplot as plt
+import requests
 from matplotlib import ticker, transforms
 from mpl_axes_aligner import align
 from numpy import nan
 from pandas import DataFrame, read_pickle, to_datetime, Series, DatetimeIndex
 
-import geopandas
-import matplotlib.pyplot as plt
-import pandas as pd
-import requests
-
 from constants import base_path
 from download import find_latest
 from geo import convert_df
-from plotting import geoplot_bokeh, save_to_disk
 
 api_key = 'iTsdIq-t8_cElnLjNmoRLA'
 cases = 'corrected_covid_positive'
@@ -152,37 +148,3 @@ def latest_map_data():
     df = read_pickle(path)
     gdf = convert_df(df, 'the_geom_webmercator')
     return dt, gdf
-
-
-def maplotlib_plot_map():
-    dt, gdf = latest_map_data()
-    ax = gdf.plot(
-        column='percentage',
-        k=10, figsize=(15, 15),
-        cmap='Reds',
-        legend=True,
-        legend_kwds={'fraction': 0.02, 'anchor': (0, 0),
-                     'label': 'Estimated Symptomatic Percentage'},
-    )
-    ax.set_axis_off()
-    ax.set_title(f'ZOE COVID Symptom Study data for {dt:%d %b %Y}')
-
-
-def add_simple_geoms(zoe_df):
-    lad16cd = geopandas.read_file(str(
-        base_path /
-        'Local_Authority_Districts__December_2016__Boundaries_UK-shp' /
-        'Local_Authority_Districts__December_2016__Boundaries_UK.shp'
-    ))
-    return pd.merge(lad16cd,
-                    zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
-                    how='left')
-
-
-def bokeh_plot_map(zoe_new_lad16, zoe_date):
-    zoe_title = f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}'
-    p = geoplot_bokeh(zoe_new_lad16, zoe_title, 'percentage', tooltips=[
-        ('Name', '@lad16nm'),
-        ('Percentage', '@percentage_string')
-    ])
-    save_to_disk(p, "zoe.html", title=zoe_title)
