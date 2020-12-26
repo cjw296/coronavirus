@@ -16,7 +16,7 @@ from tqdm.auto import tqdm
 import series as s
 from constants import (
     base_path, utla, specimen_date, area, cases, code, ltla,
-    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col
+    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col, area_code, population
 )
 from download import find_latest
 from plotting import geoplot_bokeh, save_to_disk
@@ -252,33 +252,38 @@ def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla, ea
     )
 
 
-def recent_phe_data_summed(latest_date, by, days=7):
-    fields = [code, area]
-    earliest_date = str(latest_date-timedelta(days=days))
-    df = pd.read_csv(base_path / f'coronavirus-cases_{latest_date}.csv',
-                     parse_dates=[specimen_date])
-    la_data = df[df['Area type'].isin(by)][[area, code, specimen_date, cases]]
-    recent = la_data[la_data[specimen_date] >= earliest_date]
-    recent_grouped = recent.groupby(list(fields)).agg({cases: 'sum', specimen_date: 'max'})
-    recent_grouped.reset_index(level=1, inplace=True)
-
-    population = load_population()
-    recent_pct = pd.merge(recent_grouped, population, how='outer', on=code)
-    fraction = recent_pct[cases] / recent_pct['population']
-    recent_pct[per100k] = 100_000 * fraction
-    recent_pct['% of population'] = 100 * fraction
-
-    recent_pct['recent_days'] = days
-    return recent_pct
-
-
 @lru_cache
 def load_population():
     # from http://coronavirus.data.gov.uk/downloads/data/population.json
     population = json.load((base_path / 'population.json').open())['general']
     population = pd.DataFrame({'population': population})
-    population.index.name = code
+    population.index.name = area_code
     return population
+
+
+def add_per_100k(df, source_cols, dest_cols=(per100k,), left_on=area_code, right_on=area_code):
+    df = df.reset_index().merge(load_population(), left_on=left_on, right_on=right_on, how='left')
+    for source, dest in zip(source_cols, dest_cols):
+        df[dest] = 100_000 * df[source] / df[population]
+    return df
+
+
+def recent_phe_data_summed(latest_date, days=7):
+    fields = [code, area]
+    earliest_date = str(latest_date-timedelta(days=days))
+    df = pd.read_csv(base_path / f'coronavirus-cases_{latest_date}.csv',
+                     parse_dates=[specimen_date])
+    la_data = df[df['Area type'].isin(ltla)][[area, code, specimen_date, cases]]
+
+    recent = la_data[la_data[specimen_date] >= earliest_date]
+    recent_grouped = recent.groupby(list(fields)).agg({cases: 'sum', specimen_date: 'max'})
+
+    recent_pct = add_per_100k(recent_grouped, [cases], left_on=code)
+    recent_pct.set_index(code, inplace=True)
+    recent_pct['% of population'] = recent_pct[per100k] / 1000
+    recent_pct['recent_days'] = days
+
+    return recent_pct
 
 
 @lru_cache
