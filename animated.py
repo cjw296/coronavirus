@@ -10,7 +10,7 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
 from tqdm import tqdm
 
-from constants import base_path, relax_2, second_wave, data_start
+from constants import relax_2, second_wave, data_start, output_path
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
@@ -19,7 +19,7 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
     # do this up front to catch typos cheaply:
     outputs = [output_types[output] for output in outputs.split(',')]
 
-    image_path = base_path / name
+    image_path = output_path / name
     if image_path.exists():
         rmtree(image_path)
     image_path.mkdir()
@@ -49,7 +49,7 @@ def output_gif(name, data, durations):
     durations.append(3)
 
     print('saving...')
-    gif_path = base_path / (name+'.gif')
+    gif_path = output_path / (name+'.gif')
     imageio.mimsave(gif_path, data, duration=durations)
 
     print('shrinking...')
@@ -61,7 +61,7 @@ def output_mp4(name, data, durations):
     clips = [ImageClip(data, duration=d) for (data, d) in zip(data, durations)]
     # save the mp4
     movie = concatenate_videoclips(clips, method="chain")
-    movie.write_videofile(str(base_path / (name + '.mp4')),
+    movie.write_videofile(str(output_path / (name + '.mp4')),
                           fps=24,
                           threads=cpu_count(),
                           bitrate='10M')
