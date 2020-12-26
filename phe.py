@@ -17,7 +17,7 @@ import series as s
 from constants import (
     base_path, utla_types, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
     lockdown2, date_col, area_code, population,
-    area_name, new_cases_by_specimen_date, pct_population
+    area_name, new_cases_by_specimen_date, pct_population, ltla_types, second_wave
 )
 from download import find_latest
 
@@ -253,7 +253,8 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla_types, earliest=None):
+def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_types=ltla_types,
+               earliest=second_wave):
     plot_with_diff(
         for_date,
         partial(data_for_date, areas=areas, area_types=area_types),
