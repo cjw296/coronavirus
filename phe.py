@@ -16,7 +16,8 @@ from tqdm.auto import tqdm
 import series as s
 from constants import (
     base_path, utla_types, specimen_date, area, cases, code, ltla_types,
-    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col, area_code, population
+    phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col, area_code, population,
+    area_name, new_cases_by_specimen_date, pct_population
 )
 from download import find_latest
 from plotting import geoplot_bokeh, save_to_disk
@@ -109,6 +110,12 @@ def read_csv(data_path, start=None, end=None, metrics=None):
     if start or end:
         data = data.loc[start:end]
     return data
+
+
+def best_data_for(metrics, dt='*', days=None):
+    data_path, data_date = find_latest(f'ltla_{dt}.csv')
+    start = data_date-timedelta(days=days) if days else None
+    return read_csv(data_path, start, metrics=metrics), data_date
 
 
 def data_for_date(dt, areas=None, area_types=utla_types):
@@ -261,26 +268,26 @@ def load_population():
     return population
 
 
-def add_per_100k(df, source_cols, dest_cols=(per100k,), left_on=area_code, right_on=area_code):
-    df = df.reset_index().merge(load_population(), left_on=left_on, right_on=right_on, how='left')
+def add_per_100k(df, source_cols, dest_cols=(per100k,)):
+    df = df.reset_index().merge(load_population(), on=area_code, how='left')
     for source, dest in zip(source_cols, dest_cols):
         df[dest] = 100_000 * df[source] / df[population]
     return df
 
 
 def recent_phe_data_summed(latest_date, days=7):
-    fields = [code, area]
-    earliest_date = str(latest_date-timedelta(days=days))
-    df = pd.read_csv(base_path / f'coronavirus-cases_{latest_date}.csv',
-                     parse_dates=[specimen_date])
-    la_data = df[df['Area type'].isin(ltla_types)][[area, code, specimen_date, cases]]
+    recent, _ = best_data_for(
+        [area_name, area_code, new_cases_by_specimen_date], dt=latest_date, days=days
+    )
+    recent.reset_index(inplace=True)
+    recent_grouped = recent.groupby([area_code, area_name]).agg(
+        {new_cases_by_specimen_date: 'sum', date_col: 'max'}
+    )
+    recent_grouped.rename(columns={date_col: specimen_date}, inplace=True)
 
-    recent = la_data[la_data[specimen_date] >= earliest_date]
-    recent_grouped = recent.groupby(list(fields)).agg({cases: 'sum', specimen_date: 'max'})
-
-    recent_pct = add_per_100k(recent_grouped, [cases], left_on=code)
-    recent_pct.set_index(code, inplace=True)
-    recent_pct['% of population'] = recent_pct[per100k] / 1000
+    recent_pct = add_per_100k(recent_grouped, [new_cases_by_specimen_date])
+    recent_pct.set_index(area_code, inplace=True)
+    recent_pct[pct_population] = recent_pct[per100k] / 1000
     recent_pct['recent_days'] = days
 
     return recent_pct
@@ -297,7 +304,7 @@ def map_data(for_date):
 
     geoms = load_geoms()
     phe_recent_geo = pd.merge(
-        geoms, recent_pct, how='outer', left_on='lad19cd', right_on=code
+        geoms, recent_pct, how='outer', left_on='lad19cd', right_on=area_code
     )
 
     phe_recent_date = phe_recent_geo[specimen_date].max()
@@ -311,13 +318,15 @@ def map_data(for_date):
 
 
 def plot_map(phe_recent_geo, phe_recent_title):
-    data = phe_recent_geo[['geometry', 'lad19nm', cases, 'population', '% of population']]
-    p = geoplot_bokeh(data[~data.geometry.isnull()], phe_recent_title, '% of population',
+    data = phe_recent_geo[[
+        'geometry', 'lad19nm', new_cases_by_specimen_date, population, pct_population
+    ]]
+    p = geoplot_bokeh(data[~data.geometry.isnull()], phe_recent_title, pct_population,
                       vmax=phe_vmax, tooltips=[
             ('Name', '@lad19nm'),
-            ('Cases', '@{Daily lab-confirmed cases}{1}'),
+            ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
             ('Population', '@{population}{1}'),
-            ('Percentage', '@{% of population}{1.111}%'),
+            ('Percentage', '@{'+pct_population+'}{1.111}%'),
         ])
     save_to_disk(p, "phe.html", title=phe_recent_title)
 

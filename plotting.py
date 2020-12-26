@@ -7,7 +7,7 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
 
-from constants import phe_vmax, cases
+from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population
 
 
 def show_area(ax):
@@ -80,7 +80,7 @@ def matplotlib_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title
                        label='Estimated Symptomatic Percentage')
 
     geoplot_matplotlib(phe_recent_geo, axes[1],
-                       column='% of population',
+                       column=pct_population,
                        title=phe_recent_title,
                        label='lab-confirmed cases as % of population',
                        vmax=phe_vmax,
@@ -97,13 +97,15 @@ def bokeh_zoe_vs_phe_map(zoe_new_lad16, zoe_date, phe_recent_geo, phe_recent_tit
         ('Percentage','@{percentage}{1.111}%'),
     ])
 
-    phe_data = phe_recent_geo[['geometry', 'lad19nm', cases, 'population', '% of population']]
-    phe = geoplot_bokeh(phe_data[~phe_data.geometry.isnull()], phe_recent_title, '% of population',
+    phe_data = phe_recent_geo[[
+        'geometry', 'lad19nm', new_cases_by_specimen_date, population, pct_population
+    ]]
+    phe = geoplot_bokeh(phe_data[~phe_data.geometry.isnull()], phe_recent_title, pct_population,
                   x_range=zoe.x_range, y_range=zoe.y_range, vmax=phe_vmax, tooltips=[
             ('Name','@lad19nm'),
-            ('Cases', '@{Daily lab-confirmed cases}{1}'),
+            ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
             ('Population', '@{population}{1}'),
-            ('Percentage','@{% of population}{1.111}%'),
+            ('Percentage','@{'+pct_population+'}{1.111}%'),
     ])
 
     p = row(zoe, phe)

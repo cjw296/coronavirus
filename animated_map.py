@@ -11,15 +11,15 @@ import series as s
 from animated import parallel_render, add_date_arg
 from constants import code, per100k, date_col, new_cases_by_specimen_date, population, area_code
 from download import find_latest
-from phe import load_geoms, load_population, plot_summary, read_csv, add_per_100k
+from phe import load_geoms, load_population, plot_summary, read_csv, add_per_100k, best_data_for
+from plotting import show_area
 
 rolling_days = 14
 
 
 @lru_cache
 def read_map_data():
-    data_path, data_date = find_latest('ltla_*.csv')
-    df = read_csv(data_path, metrics=[area_code, new_cases_by_specimen_date])
+    df, data_date = best_data_for([area_code, new_cases_by_specimen_date])
     df = add_per_100k(df, [new_cases_by_specimen_date])
     pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
     return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k), data_date
