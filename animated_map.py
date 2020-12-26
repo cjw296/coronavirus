@@ -17,19 +17,20 @@ rolling_days = 14
 
 
 @lru_cache
-def read_map_data(data_path):
+def read_map_data():
+    data_path, data_date = find_latest('ltla_*.csv')
     df = read_csv(data_path, metrics=[area_code, new_cases_by_specimen_date])
     df = add_per_100k(df, [new_cases_by_specimen_date])
     pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
-    return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k)
+    return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k), data_date
 
 
 def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
-    df = read_map_data(data_path)
+def render_map(ax, frame_date, vmax=200, linthresh=30):
+    df, _ = read_map_data()
     data = df[df[date_col] == frame_date]
 
     current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
@@ -59,12 +60,12 @@ def render_map(ax, data_path, frame_date, vmax=200, linthresh=30):
     ax.set_title(f'COVID-19 cases for specimens dated {frame_date:%d %b %Y}')
 
 
-def render_dt(data_path, data_date, earliest_date, to_date, frame_date, image_path):
+def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
     dt = str(frame_date.date())
     fig, (map_ax, lines_ax) = plt.subplots(
         figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
     )
-    render_map(map_ax, data_path, frame_date)
+    render_map(map_ax, frame_date)
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                  series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
     fig.text(0.25, 0.08,
@@ -81,14 +82,13 @@ def main():
     parser.add_argument('--output', default='mp4')
     args = parser.parse_args()
 
-    data_path, data_date = find_latest('ltla_*.csv')
-    df = read_map_data(data_path)
+    df, data_date = read_map_data()
 
     to_date = df[date_col].max() - timedelta(days=args.exclude_days)
     earliest_date = df[date_col].min()
     dates = pd.date_range(args.from_date, to_date)
 
-    render = partial(render_dt, data_path, data_date, earliest_date, to_date)
+    render = partial(render_dt, data_date, earliest_date, to_date)
 
     durations = np.full((len(dates)), 0.05)
     durations[-30:] = np.geomspace(0.05, 0.3, 30)
