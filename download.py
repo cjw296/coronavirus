@@ -12,6 +12,9 @@ def download(url, path):
 
 
 def find_latest(glob, date_index=-1):
-    path = sorted(base_path.glob(glob), reverse=True)[0]
+    possible = sorted(base_path.glob(glob), reverse=True)
+    if not possible:
+        raise FileNotFoundError(glob)
+    path = possible[0]
     dt = parse_date(str(path.stem).rsplit('_')[date_index]).date()
     return path, dt
