@@ -12,8 +12,8 @@ from constants import phe_vmax, new_cases_by_specimen_date, population, pct_popu
 
 def show_area(ax):
     ax.set_axis_off()
-    ax.set_ylim(6400000, 7500000)
-    ax.set_xlim(-600000,  200000)
+    ax.set_ylim(6_460_000, 8_000_000)
+    ax.set_xlim(-900_000, 200_000)
 
 
 def geoplot_matplotlib(df, ax, column, title, label, vmax=None, missing_kwds=None):

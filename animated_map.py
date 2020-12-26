@@ -54,9 +54,7 @@ def render_map(ax, frame_date, vmax=200, linthresh=30):
         },
         missing_kwds={'color': 'lightgrey'},
     )
-    ax.set_axis_off()
-    ax.set_ylim(6_460_000, 8_000_000)
-    ax.set_xlim(-900_000, 200_000)
+    show_area(ax)
     ax.set_title(f'COVID-19 cases for specimens dated {frame_date:%d %b %Y}')
 
 
