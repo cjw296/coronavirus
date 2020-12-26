@@ -293,11 +293,11 @@ def load_geoms():
 
 def map_data(for_date):
 
-    recent_pct = recent_phe_data_summed(for_date, by=ltla)
+    recent_pct = recent_phe_data_summed(for_date)
 
     geoms = load_geoms()
     phe_recent_geo = pd.merge(
-        geoms, recent_pct, how='outer', left_on='lad19cd', right_on='Area code'
+        geoms, recent_pct, how='outer', left_on='lad19cd', right_on=code
     )
 
     phe_recent_date = phe_recent_geo[specimen_date].max()
