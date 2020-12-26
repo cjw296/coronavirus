@@ -295,7 +295,14 @@ def map_data(for_date):
         geoms, recent_pct, how='outer', left_on='lad19cd', right_on='Area code'
     )
 
-    return phe_recent_geo[specimen_date].max(), phe_recent_geo
+    phe_recent_date = phe_recent_geo[specimen_date].max()
+
+    phe_recent_title = (
+        'PHE lab-confirmed cases summed over last '
+        f"{int(phe_recent_geo['recent_days'].iloc[0])} days to {phe_recent_date:%d %b %Y}"
+    )
+
+    return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
 def plot_map(phe_recent_geo, phe_recent_title):
