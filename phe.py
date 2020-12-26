@@ -75,11 +75,14 @@ def query(filters, structure, max_workers=None, **params):
     return pd.DataFrame(result)
 
 
-def download(name, area_type, *metrics, area_name=None, check_release_date=True, format='csv'):
+def download(name, area_type, *metrics, area_name=None, release=None, format='csv'):
+    release = release or date.today()
+
     _params = {
         'areaType': area_type,
         'metric': metrics,
         'format': format,
+        'release': str(release),
     }
     if area_name:
         _params['areaName'] = area_name
@@ -89,13 +92,12 @@ def download(name, area_type, *metrics, area_name=None, check_release_date=True,
     if response.status_code != 200:
         raise ValueError(f'{response.status_code}:{response.content}')
 
-    release_date = datetime.strptime(
+    actual_release = datetime.strptime(
         response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.{format}"'
     ).date()
-    today = date.today()
-    if check_release_date and release_date != today:
-        raise ValueError(f'release date: {release_date}, current_date: {today}')
-    path = (base_path / f'{name}_{release_date}.csv')
+    if actual_release != release:
+        raise ValueError(f'downloaded: {actual_release}, requested: {release}')
+    path = (base_path / f'{name}_{actual_release}.csv')
     path.write_bytes(response.content)
     return path
 
