@@ -1,11 +1,16 @@
 from datetime import date
 from pathlib import Path
 
+nation_types = ['Nation', 'nation']
+region_types = ['Region', 'region']
+ltla_types = ['Lower tier local authority', 'ltla']
+utla_types = ['Upper tier local authority', 'utla']
+
 overview = 'overview'
-nation = ['Nation', 'nation']
-region = ['Region', 'region']
-ltla = ['Lower tier local authority', 'ltla']
-utla = ['Upper tier local authority', 'utla']
+nation = 'nation'
+region = 'region'
+utla = 'utla'
+ltla = 'ltla'
 msoa = 'msoa'
 
 cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-cases_latest.{data_type}'

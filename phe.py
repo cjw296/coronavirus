@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 import series as s
 from constants import (
-    base_path, utla, specimen_date, area, cases, code, ltla,
+    base_path, utla_types, specimen_date, area, cases, code, ltla_types,
     phe_vmax, per100k, release_timestamp, lockdown1, lockdown2, date_col, area_code, population
 )
 from download import find_latest
@@ -111,7 +111,7 @@ def read_csv(data_path, start=None, end=None, metrics=None):
     return data
 
 
-def data_for_date(dt, areas=None, area_types=utla):
+def data_for_date(dt, areas=None, area_types=utla_types):
     path = base_path / f'coronavirus-cases_{dt}.csv'
     df = pd.read_csv(path)
     area_filter = df['Area type'].isin(area_types)
@@ -244,7 +244,7 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla, earliest=None):
+def plot_areas(for_date, areas, uncertain_days, diff_days=1, area_types=utla_types, earliest=None):
     plot_with_diff(
         for_date,
         partial(data_for_date, areas=areas, area_types=area_types),
@@ -273,7 +273,7 @@ def recent_phe_data_summed(latest_date, days=7):
     earliest_date = str(latest_date-timedelta(days=days))
     df = pd.read_csv(base_path / f'coronavirus-cases_{latest_date}.csv',
                      parse_dates=[specimen_date])
-    la_data = df[df['Area type'].isin(ltla)][[area, code, specimen_date, cases]]
+    la_data = df[df['Area type'].isin(ltla_types)][[area, code, specimen_date, cases]]
 
     recent = la_data[la_data[specimen_date] >= earliest_date]
     recent_grouped = recent.groupby(list(fields)).agg({cases: 'sum', specimen_date: 'max'})
