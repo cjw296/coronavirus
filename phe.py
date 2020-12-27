@@ -18,7 +18,7 @@ from constants import (
     base_path, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
     lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla
+    ltla, utla, code
 )
 from download import find_latest
 
@@ -131,8 +131,9 @@ def best_data(dt='*', days=None, area_type=ltla):
         data = data[data['Area type'].isin(area_type_filters[area_type])]
         if data.empty:
             raise FileNotFoundError(f'No {area_type} in {data_path}')
-        data.rename(inplace=True, columns={
+        data.rename(inplace=True, errors='raise', columns={
             area: area_name,
+            code: area_code,
             specimen_date: date_col,
             cases: new_cases_by_specimen_date,
         })
