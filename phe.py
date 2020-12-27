@@ -295,10 +295,13 @@ def load_population():
     return population
 
 
-def add_per_100k(df, source_cols, dest_cols=(per100k,)):
+def with_population(df,
+                    source_cols=(new_cases_by_specimen_date,),
+                    dest_cols=(per100k,),
+                    factors=(100_000,)):
     df = df.reset_index().merge(load_population(), on=area_code, how='left')
-    for source, dest in zip(source_cols, dest_cols):
-        df[dest] = 100_000 * df[source] / df[population]
+    for source, dest, factor in zip(source_cols, dest_cols, factors):
+        df[dest] = factor * df[source] / df[population]
     return df
 
 
@@ -309,7 +312,7 @@ def recent_phe_data_summed(latest_date, days=7):
     )
     recent_grouped.rename(columns={date_col: specimen_date}, inplace=True)
 
-    recent_pct = add_per_100k(recent_grouped, [new_cases_by_specimen_date])
+    recent_pct = with_population(recent_grouped)
     recent_pct.set_index(area_code, inplace=True)
     recent_pct[pct_population] = recent_pct[per100k] / 1000
     recent_pct['recent_days'] = days

@@ -9,8 +9,8 @@ from matplotlib.colors import SymLogNorm
 
 import series as s
 from animated import parallel_render, add_date_arg
-from constants import per100k, date_col, new_cases_by_specimen_date, area_code
-from phe import load_geoms, plot_summary, add_per_100k, best_data
+from constants import per100k, date_col, area_code
+from phe import load_geoms, plot_summary, with_population, best_data
 from plotting import show_area
 
 rolling_days = 14
@@ -19,7 +19,7 @@ rolling_days = 14
 @lru_cache
 def read_map_data():
     df, data_date = best_data()
-    df = add_per_100k(df, [new_cases_by_specimen_date])
+    df = with_population(df)
     pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
     return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k), data_date
 
