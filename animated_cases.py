@@ -28,7 +28,7 @@ areas = dict(
 )
 
 
-def render(date, image_path, **kw):
+def render(date, image_path, raise_errors=False, **kw):
     try:
         plot_with_diff(
             date,
@@ -39,7 +39,9 @@ def render(date, image_path, **kw):
             **kw
         )
     except Exception as e:
-        print(f'Could not render for {date}: {e}')
+        print(f'Could not render for {date}: {type(e)}: {e}')
+        if raise_errors:
+            raise
 
 
 def main():
@@ -50,6 +52,7 @@ def main():
                         help='min for x-axis. 2020-08-01 good for start of second wave')
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
+    parser.add_argument('--raise-errors', action='store_true')
     args = parser.parse_args()
     from_date = parse_date(args.from_date).date()
     dates = []
@@ -65,6 +68,7 @@ def main():
                             ylim=max_sum,
                             earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
+                            raise_errors=args.raise_errors,
                             **areas[args.area]),
                     dates, duration=args.duration)
 
