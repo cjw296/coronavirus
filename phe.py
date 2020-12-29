@@ -1,15 +1,14 @@
 import concurrent.futures
 import json
 from datetime import timedelta, date, datetime
-from functools import lru_cache, partial
+from functools import lru_cache
 from urllib.parse import parse_qs, urlparse
 
 import geopandas
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import requests
-from dateutil.parser import parse as parse_date
+from matplotlib.dates import DayLocator, DateFormatter
 from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
 from tqdm.auto import tqdm
 
@@ -18,9 +17,10 @@ from constants import (
     base_path, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
     lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code
+    ltla, utla, code, unique_people_tested_sum
 )
 from download import find_latest
+from plotting import stacked_bar_plot
 
 
 def get(filters, structure, **params):
@@ -143,30 +143,28 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     if earliest:
         data = data[data[date_col] >= pd.to_datetime(earliest)]
 
-def data_for_date(dt, areas=None, area_type=ltla):
-    data, _ = best_data(dt, area_type=area_type)
     if areas:
         data = data[data[area_code].isin(areas)]
+
     if data.empty:
-        raise ValueError(f'No {area_type} for {areas} available')
+        raise ValueError(f'No {area_type} for {areas} available in {data_path}')
+
+    return data, data_date
+
+
+def case_data(data):
     data = data.pivot_table(
         values=new_cases_by_specimen_date, index=[date_col], columns=area_name
     ).fillna(0)
-    labels = pd.date_range(start=data.index.min(), end=data.index.max())
-    return data.reindex([str(dt.date()) for dt in labels], fill_value=0)
+    return data
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None, earliest=None):
-    if earliest:
-        data = data.loc[str(earliest):]
-        previous_data = previous_data.loc[str(earliest):]
+              diff_ylims=None, diff_log_scale=None):
     diff = data.sub(previous_data, fill_value=0)
-    diff.plot(
-        ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis',
-        title=f'Change between reports on {previous_date} and {for_date}', legend=False
-    )
-    fix_x_dates(ax)
+    stacked_bar_plot(ax, diff, colormap='viridis')
+    ax.set_title(f'Change between reports on {previous_date} and {for_date}')
+    fix_x_axis(ax, diff)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
@@ -180,64 +178,95 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
     ax.axhline(y=0, color='k')
 
 
-def fix_x_dates(ax):
-    labels = ax.xaxis.get_ticklabels()
-    for i, label in enumerate(reversed(labels)):
-        if i % 4:
-            label.set_text('')
+def fix_x_axis(ax, data, number_to_show=50):
     ax.axes.set_axisbelow(True)
-    ax.xaxis.set_ticklabels(labels)
+    ax.xaxis.set_tick_params(rotation=-90)
+    ax.xaxis.label.set_visible(False)
+    interval = max(1, round(data.shape[0]/number_to_show))
+    ax.xaxis.set_minor_locator(DayLocator())
+    ax.xaxis.set_major_locator(DayLocator(interval=interval))
+    ax.xaxis.set_major_formatter(DateFormatter('%d %b %Y'))
+    ax.set_xlim(data.index.min()-timedelta(days=0.5), data.index.max()+timedelta(days=0.5))
 
 
-def plot_stacked_bars(ax, data, average_end, title=None, ylim=None, earliest=None):
-    if earliest:
-        data = data.loc[str(earliest):]
-    data.plot(ax=ax, kind='bar', stacked=True, width=1, rot=-90, colormap='viridis', legend=False,
-              title=title)
+def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=None):
+
+    handles = stacked_bar_plot(ax, data, colormap='viridis')
+
+    if average_end is not None:
+        average_days = 7
+        average_label = f'{average_days} day average'
+        mean = data[:average_end].sum(axis=1).rolling(average_days).mean()
+        handles.extend(
+            ax.plot(mean.index, mean, color='k', label=average_label)
+        )
+        latest_average = mean.iloc[-1]
+        handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
+                                label=f'Latest {average_label}: {latest_average:,.0f}'))
+
+    if unique_people_tested_sum in all_data:
+        test_data = all_data.merge(load_population(), on=area_code, how='left')
+        agg = test_data.groupby(date_col).agg(
+            {unique_people_tested_sum: 'sum', population: 'sum'}
+        )
+        tested = (100 * agg[unique_people_tested_sum] / agg[population])
+        if average_end is not None:
+            tested = tested[:average_end]
+        tested_color = 'darkblue'
+        tested_ax = ax.twinx()
+        tested_label = '% Population tested'
+        handles.extend(
+            tested_ax.plot(tested.index, tested, color=tested_color,
+                           label=tested_label, linestyle=(0, (5, 5)))
+        )
+        tested_ax.set_ylabel(tested_label, rotation=-90, labelpad=14)
+        tested_ax.set_ylim(0, tested_ylim)
+        tested_ax.yaxis.tick_left()
+        tested_ax.yaxis.set_label_position("left")
+
+        tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+
+    fix_x_axis(ax, data)
+
     ax.set_ylabel(cases)
     if ylim:
         ax.set_ylim((0, ylim))
-
-    mean = None
-    if average_end is not None:
-        mean = data.sum(axis=1).rolling(7).mean()
-        mean.loc[str(average_end):] = np.NaN
-        mean.plot(ax=ax, color='k', label='7 day average', rot=-90)
-
-    fix_x_dates(ax)
     ax.yaxis.grid(True)
     ax.yaxis.tick_right()
+    ax.yaxis.set_label_position("right")
     ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
 
-    for i, lockdown in enumerate((lockdown1, lockdown2), start=1):
-        labels = (data.index.get_loc(str(d))
-                  if str(d) in data.index
-                  else data.index.get_loc(data.index.max())+1
-                  for d in lockdown)
-        ax.axvspan(*labels, color='black', alpha=0.05,
-                   zorder=-1000, label=f'lockdown {i}')
+    for i, lockdown in enumerate((lockdown1, lockdown2)):
+        h = ax.axvspan(*lockdown, color='black', alpha=0.05,
+                       zorder=-1000, label=f'National Lockdown')
+        if not i:
+            handles.append(h)
 
-    if mean is not None:
-        latest_average = mean.loc[str(average_end-timedelta(days=1))]
-        ax.axhline(y=latest_average, color='blue', linestyle=':',
-                   label=f'Latest average: {latest_average:.0f}')
+    ax.legend(handles=handles, loc='upper left', framealpha=1)
 
-    ax.legend(loc='upper left')
+    if title:
+        ax.set_title(title)
 
 
-def plot_with_diff(for_date, data_for_date, uncertain_days,
+def plot_with_diff(data_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
-                   earliest=None):
-    previous_date = for_date - timedelta(days=diff_days)
+                   earliest=None, area_type=None, areas=None):
 
-    data = data_for_date(for_date)
+    all_data, data_date = best_data(data_date, area_type, areas, earliest)
+
+    previous_date = data_date - timedelta(days=diff_days)
+
+    data = case_data(all_data)
     previous_data = None
     while previous_data is None and previous_date > date(2020, 1, 1):
         try:
-            previous_data = data_for_date(previous_date)
+            previous = best_data(previous_date, area_type, areas, earliest)
         except FileNotFoundError:
             previous_date -= timedelta(days=1)
+        else:
+            all_previous_data, previous_data_date = previous
+            previous_data = case_data(all_previous_data)
 
     if previous_data is None:
         previous_data = data
@@ -245,40 +274,38 @@ def plot_with_diff(for_date, data_for_date, uncertain_days,
     if uncertain_days is None:
         average_end = None
     else:
-        average_end = parse_date(data.index.max()).date()-timedelta(days=uncertain_days)
+        average_end = data.index.max()-timedelta(days=uncertain_days)
+
     end_dates = [previous_data.index.max(), data.index.max()]
     if to_date:
-        end_dates.append(str(to_date))
+        end_dates.append(to_date)
 
-    labels = [str(dt.date()) for dt in
-              pd.date_range(start=min(previous_data.index.min(), data.index.min()),
-                            end=max(end_dates))]
+    labels = pd.date_range(start=min(previous_data.index.min(), data.index.min()),
+                           end=max(end_dates))
     data = data.reindex(labels, fill_value=0)
     previous_data = previous_data.reindex(labels, fill_value=0)
 
-    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
-                             gridspec_kw={'height_ratios': [12, 2]})
+    fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
+                                           gridspec_kw={'height_ratios': [12, 2]})
     fig.set_facecolor('white')
-    fig.subplots_adjust(hspace=0.5)
+    fig.subplots_adjust(hspace=0.45)
 
-    plot_diff(
-        axes[1], for_date, data, previous_date, previous_data,
-        diff_ylims, diff_log_scale, earliest
-    )
-    plot_stacked_bars(axes[0], data, average_end, title, ylim, earliest)
+    with pd.plotting.plot_params.use("x_compat", True):
+        plot_diff(diff_ax, data_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
+        plot_stacked_bars(bars_ax, data, average_end, title, ylim, all_data)
+
     if image_path:
-        plt.savefig(image_path / f'{for_date}.png', dpi=90, bbox_inches='tight')
+        plt.savefig(image_path / f'{data_date}.png', bbox_inches='tight')
         plt.close()
     else:
         plt.show()
 
 
 def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_type=ltla,
-               earliest=second_wave):
+               earliest=second_wave, **kw):
     plot_with_diff(
-        for_date,
-        partial(data_for_date, areas=areas, area_type=area_type),
-        uncertain_days, diff_days, earliest=earliest
+        for_date, uncertain_days, diff_days,
+        earliest=earliest, areas=areas, area_type=area_type, **kw
     )
 
 
