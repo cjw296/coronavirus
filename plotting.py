@@ -1,5 +1,6 @@
 import geopandas
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from bokeh.io import reset_output, output_notebook, show, output_file, save
 from bokeh.layouts import row
@@ -8,6 +9,7 @@ from bokeh.palettes import Reds
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
+from matplotlib.cm import get_cmap
 
 from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population, base_path
 
@@ -124,3 +126,20 @@ def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
 
     p = row(zoe, phe)
     save_to_disk(p, "zoe_phe.html", title='ZOE modelled estimates versus PHE lab confirmed cases', show_inline=False)
+
+
+def stacked_bar_plot(ax, data, colormap):
+    pos_prior = neg_prior = pd.Series(0, data.index)
+    colormap = get_cmap(colormap)
+    ncolors = data.shape[1]
+    colors = [colormap(num) for num in np.linspace(0, 1, num=ncolors)]
+    handles = []
+    for i, (name, series) in enumerate(data.iteritems()):
+        mask = series > 0
+        bottom = np.where(mask, pos_prior, neg_prior)
+        handles.append(
+            ax.bar(data.index, series, width=1, bottom=bottom, label=name, color=colors[i])
+        )
+        pos_prior = pos_prior + np.where(mask, series, 0)
+        neg_prior = neg_prior + np.where(mask, 0, series)
+    return handles
