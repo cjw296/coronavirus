@@ -214,7 +214,7 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=
             tested = tested[:average_end]
         tested_color = 'darkblue'
         tested_ax = ax.twinx()
-        tested_label = '% Population tested'
+        tested_label = '% Population tested per week'
         handles.extend(
             tested_ax.plot(tested.index, tested, color=tested_color,
                            label=tested_label, linestyle=(0, (5, 5)))
