@@ -122,15 +122,13 @@ area_type_filters = {
 }
 
 
-def best_data(dt='*', days=None, area_type=ltla):
+def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     try:
         data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
     except FileNotFoundError:
         data_path, data_date = find_latest(f'coronavirus-cases_{dt}.csv')
         data = pd.read_csv(data_path, parse_dates=[specimen_date])
         data = data[data['Area type'].isin(area_type_filters[area_type])]
-        if data.empty:
-            raise FileNotFoundError(f'No {area_type} in {data_path}')
         data.rename(inplace=True, errors='raise', columns={
             area: area_name,
             code: area_code,
@@ -141,11 +139,9 @@ def best_data(dt='*', days=None, area_type=ltla):
         data = read_csv(data_path)
 
     if days:
-        start = datetime.combine(data_date - timedelta(days=days), datetime.min.time())
-        data = data[data[date_col] >= start]
-
-    return data, data_date
-
+        earliest = datetime.combine(data_date - timedelta(days=days), datetime.min.time())
+    if earliest:
+        data = data[data[date_col] >= pd.to_datetime(earliest)]
 
 def data_for_date(dt, areas=None, area_type=ltla):
     data, _ = best_data(dt, area_type=area_type)
