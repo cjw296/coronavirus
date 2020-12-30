@@ -81,12 +81,12 @@ special_dates = {text: str(dt) for dt, text in (
 )}
 
 
-def lookup(text):
+def date_lookup(text):
     return special_dates.get(text, text)
 
 
 def add_date_arg(parser):
 
-    parser.add_argument('--from-date', default=str(relax_2), type=lookup,
+    parser.add_argument('--from-date', default=str(relax_2), type=date_lookup,
                         help='data release dates. '
                              '2020-03-07: data start, 2020-07-02: end of lockdown')

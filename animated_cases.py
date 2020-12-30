@@ -48,7 +48,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=areas.keys())
     add_date_arg(parser)
-    parser.add_argument('--earliest',
+    parser.add_argument('--earliest', type=date_lookup,
                         help='min for x-axis. 2020-08-01 good for start of second wave')
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
