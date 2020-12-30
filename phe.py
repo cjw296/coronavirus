@@ -96,7 +96,7 @@ def download(name, area_type, *metrics, area_name=None, release=None, format='cs
     actual_release = datetime.strptime(
         response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.{format}"'
     ).date()
-    if actual_release != release:
+    if str(actual_release) != str(release):
         raise ValueError(f'downloaded: {actual_release}, requested: {release}')
     path = (base_path / f'{name}_{actual_release}.csv')
     path.write_bytes(response.content)
