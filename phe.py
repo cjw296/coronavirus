@@ -122,6 +122,9 @@ area_type_filters = {
 }
 
 
+class NoData(ValueError): pass
+
+
 def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     try:
         data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
@@ -147,7 +150,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
         data = data[data[area_code].isin(areas)]
 
     if data.empty:
-        raise ValueError(f'No {area_type} for {areas} available in {data_path}')
+        raise NoData(f'No {area_type} for {areas} available in {data_path}')
 
     return data, data_date
 
@@ -263,7 +266,7 @@ def plot_with_diff(data_date, uncertain_days,
     while previous_data is None and previous_date > date(2020, 1, 1):
         try:
             previous = best_data(previous_date, area_type, areas, earliest)
-        except FileNotFoundError:
+        except (FileNotFoundError, NoData):
             previous_date -= timedelta(days=1)
         else:
             all_previous_data, previous_data_date = previous
