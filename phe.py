@@ -214,12 +214,13 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=
             tested = tested[:average_end]
         tested_color = 'darkblue'
         tested_ax = ax.twinx()
-        tested_label = '% Population tested per week'
+        tested_label = '% Population tested'
         handles.extend(
             tested_ax.plot(tested.index, tested, color=tested_color,
                            label=tested_label, linestyle=(0, (5, 5)))
         )
-        tested_ax.set_ylabel(tested_label, rotation=-90, labelpad=14)
+        tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
+                             rotation=-90, labelpad=14)
         tested_ax.set_ylim(0, tested_ylim)
         tested_ax.yaxis.tick_left()
         tested_ax.yaxis.set_label_position("left")
