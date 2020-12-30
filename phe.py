@@ -211,9 +211,10 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=
         handles.extend(
             ax.plot(mean.index, mean, color='k', label=average_label)
         )
-        latest_average = mean.iloc[-1]
-        handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
-                                label=f'Latest {average_label}: {latest_average:,.0f}'))
+        if not mean.empty:
+            latest_average = mean.iloc[-1]
+            handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
+                                    label=f'Latest {average_label}: {latest_average:,.0f}'))
 
     tested_ax = ax.twinx()
     tested_label = '% Population tested'
