@@ -163,7 +163,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     return data, data_date
 
 
-def case_data(data):
+def cases_data(data):
     data = data.pivot_table(
         values=new_cases_by_specimen_date, index=[date_col], columns=area_name
     ).fillna(0)
@@ -273,7 +273,7 @@ def plot_with_diff(data_date, uncertain_days,
 
     previous_date = data_date - timedelta(days=diff_days)
 
-    data = case_data(all_data)
+    data = cases_data(all_data)
     previous_data = None
     while previous_data is None and previous_date > date(2020, 1, 1):
         try:
@@ -282,7 +282,7 @@ def plot_with_diff(data_date, uncertain_days,
             previous_date -= timedelta(days=1)
         else:
             all_previous_data, previous_data_date = previous
-            previous_data = case_data(all_previous_data)
+            previous_data = cases_data(all_previous_data)
 
     if previous_data is None:
         previous_data = data
