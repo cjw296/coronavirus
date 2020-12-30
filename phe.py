@@ -162,6 +162,14 @@ def case_data(data):
     return data
 
 
+def tests_data(data):
+    data = data.merge(load_population(), on=area_code, how='left')
+    agg = data.groupby(date_col).agg(
+        {unique_people_tested_sum: 'sum', population: 'sum'}
+    )
+    return 100 * agg[unique_people_tested_sum] / agg[population]
+
+
 def plot_diff(ax, for_date, data, previous_date, previous_data,
               diff_ylims=None, diff_log_scale=None):
     diff = data.sub(previous_data, fill_value=0)
@@ -208,11 +216,7 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=
                                 label=f'Latest {average_label}: {latest_average:,.0f}'))
 
     if unique_people_tested_sum in all_data:
-        test_data = all_data.merge(load_population(), on=area_code, how='left')
-        agg = test_data.groupby(date_col).agg(
-            {unique_people_tested_sum: 'sum', population: 'sum'}
-        )
-        tested = (100 * agg[unique_people_tested_sum] / agg[population])
+        tested = tests_data(all_data)
         if average_end is not None:
             tested = tested[:average_end]
         tested_color = 'darkblue'
