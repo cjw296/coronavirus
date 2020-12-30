@@ -11,10 +11,18 @@ def download(url, path):
         target.write(response.content)
 
 
+def find_all(glob, date_index=-1, earliest=None):
+    possible = []
+    for path in base_path.glob(glob):
+        dt = parse_date(str(path.stem).rsplit('_')[date_index]).date()
+        if earliest is None or dt >= earliest:
+            possible.append((dt, path))
+    return possible
+
+
 def find_latest(glob, date_index=-1):
-    possible = sorted(base_path.glob(glob), reverse=True)
+    possible = find_all(glob, date_index)
     if not possible:
         raise FileNotFoundError(glob)
-    path = possible[0]
-    dt = parse_date(str(path.stem).rsplit('_')[date_index]).date()
+    dt, path = sorted(possible, reverse=True)[0]
     return path, dt
