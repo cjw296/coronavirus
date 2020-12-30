@@ -43,6 +43,11 @@ unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
 
+first_dose = 'newPeopleReceivingFirstDose'
+second_dose = 'newPeopleReceivingSecondDose'
+first_dose_cum = 'cumPeopleReceivingFirstDose'
+second_dose_cum = 'cumPeopleReceivingSecondDose'
+
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
 relax_1 = date(2020, 5, 11)
