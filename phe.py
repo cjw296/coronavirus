@@ -19,7 +19,7 @@ from constants import (
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
     ltla, utla, code, unique_people_tested_sum
 )
-from download import find_latest
+from download import find_latest, find_all
 from plotting import stacked_bar_plot
 
 
@@ -120,6 +120,14 @@ area_type_filters = {
     ltla: ['Lower tier local authority', 'ltla'],
     utla: ['Upper tier local authority', 'utla'],
 }
+
+
+def available_dates(area_type=ltla, earliest=None):
+    dates = set()
+    for pattern in f'{area_type}_*.csv', 'coronavirus-cases_*.csv':
+        for dt, _ in find_all(pattern, date_index=-1, earliest=earliest):
+            dates.add(dt)
+    return sorted(dates, reverse=True)
 
 
 class NoData(ValueError): pass
