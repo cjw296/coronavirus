@@ -208,7 +208,7 @@ def fix_x_axis(ax, data, number_to_show=50):
     ax.set_xlim(data.index.min()-timedelta(days=0.5), data.index.max()+timedelta(days=0.5))
 
 
-def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=None):
+def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim):
 
     handles = stacked_bar_plot(ax, data, colormap='viridis')
 
@@ -267,7 +267,7 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim=
 def plot_with_diff(data_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
-                   earliest=None, area_type=None, areas=None):
+                   earliest=None, area_type=ltla, areas=None, tested_ylim=None):
 
     all_data, data_date = best_data(data_date, area_type, areas, earliest)
 
@@ -308,7 +308,7 @@ def plot_with_diff(data_date, uncertain_days,
 
     with pd.plotting.plot_params.use("x_compat", True):
         plot_diff(diff_ax, data_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
-        plot_stacked_bars(bars_ax, data, average_end, title, ylim, all_data)
+        plot_stacked_bars(bars_ax, data, average_end, title, ylim, all_data, tested_ylim)
 
     if image_path:
         plt.savefig(image_path / f'{data_date}.png', bbox_inches='tight')
