@@ -102,7 +102,14 @@ wokingham = 'E06000041'
 reading = 'E06000038'
 west_berks = 'E06000037'
 bracknell = 'E06000036'
-oxfordshire = 'E10000025'
+
+oxford = 'E07000178'
+south_oxfordshire = 'E07000179'
+west_oxfordshire = 'E07000181'
+vale_of_white_horse = 'E07000180'
+cherwell = 'E07000177'
+
+oxford_areas = [oxford, south_oxfordshire, west_oxfordshire, vale_of_white_horse, cherwell]
 
 dorset = 'E06000059'
 

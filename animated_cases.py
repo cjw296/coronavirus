@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from functools import partial
 
 from animated import parallel_render, add_date_arg
-from constants import my_areas, london_areas, oxfordshire, region, ltla
+from constants import my_areas, london_areas, oxford_areas, region, ltla
 from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
 
 all_params = dict(
@@ -11,7 +11,7 @@ all_params = dict(
         areas=my_areas,
     ),
     oxford=dict(
-        areas=[oxfordshire],
+        areas=oxford_areas,
     ),
     london=dict(
         diff_ylims=[-10, 1800],
