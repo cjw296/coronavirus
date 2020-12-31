@@ -1,10 +1,8 @@
 from argparse import ArgumentParser
 from functools import partial
 
-from dateutil.parser import parse as parse_date
-
-from animated import parallel_render, add_date_arg, date_lookup
-from constants import base_path, my_areas, london_areas, oxfordshire, region, ltla
+from animated import parallel_render, add_date_arg
+from constants import my_areas, london_areas, oxfordshire, region, ltla
 from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
 
 all_params = dict(
@@ -47,8 +45,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=all_params.keys())
     add_date_arg(parser)
-    parser.add_argument('--earliest', type=date_lookup,
-                        help='min for x-axis. 2020-08-01 good for start of second wave')
+    add_date_arg(parser, '--earliest', help='min for x-axis', default=None)
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--raise-errors', action='store_true')
@@ -58,7 +55,7 @@ def main():
     area_type = params.get('area_type', ltla)
     areas = params.get('areas')
 
-    from_date = parse_date(args.from_date).date()
+    from_date = max(args.from_date, args.from_date if args.earliest is None else args.earliest)
 
     dates = available_dates(area_type, earliest=from_date)
 
