@@ -2,8 +2,10 @@ from datetime import date
 
 from dateutil.parser import parse as parse_date
 
-from constants import data_start, second_wave, lockdown2, earliest_available_download
-
+from constants import (
+    data_start, second_wave, lockdown2, earliest_available_download,
+    earliest_testing
+)
 
 special_dates = {text: dt for dt, text in (
     (data_start, 'start'),
@@ -11,6 +13,7 @@ special_dates = {text: dt for dt, text in (
     (lockdown2[0], 'lockdown-2-start'),
     (lockdown2[1], 'lockdown-2-end'),
     (earliest_available_download, 'earliest-download'),
+    (earliest_testing, 'earliest-testing'),
     (date.today(), 'today'),
 )}
 
