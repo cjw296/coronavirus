@@ -88,9 +88,13 @@ def query_phe(filters, structure, max_workers=None, **params):
 
 class RateLimited(ValueError):
 
-    def __init__(self, retry_after):
+    def __init__(self, status_code, content, retry_after):
+        self.status_code = status_code
+        self.content = content
         self.retry_after = retry_after
 
+    def __str__(self):
+        return f'{self.status_code}: {self.content}'
 
 
 class NoContent(ValueError):
@@ -114,8 +118,13 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
 
     if response.status_code == 204:
         raise NoContent
+
     if response.status_code in (429, 403):
-        raise RateLimited(int(response.headers['retry-after']))
+        raise RateLimited(
+            response.status_code,
+            response.content,
+            int(response.headers['retry-after'])
+        )
 
     if response.status_code != 200:
         raise ValueError(f'{response.status_code}:{response.content}')
@@ -155,18 +164,22 @@ def main():
             if data_path.exists() and not args.overwrite:
                 print('already exists:', data_path)
                 continue
-            while True:
-                try:
-                    data_path = download_phe(area_type, area_type, *standard_metrics, release=d)
-                except RateLimited as e:
-                    dt = datetime.now()+timedelta(seconds=e.retry_after)
-                    print(f'retrying after {e.retry_after}s at {dt:%H:%M:%S}')
-                    sleep(e.retry_after)
-                except ReadTimeout:
-                    print('read timeout')
-                else:
-                    break
-            print('downloaded: ', data_path)
+            try:
+                while True:
+                    try:
+                        data_path = download_phe(area_type, area_type, *standard_metrics, release=d)
+                    except RateLimited as e:
+                        dt = datetime.now()+timedelta(seconds=e.retry_after)
+                        print(f'retrying after {e.retry_after}s at {dt:%H:%M:%S} ({e})')
+                        sleep(e.retry_after)
+                    except ReadTimeout:
+                        print('read timeout')
+                    else:
+                        break
+            except NoContent:
+                print(f'no content for {area_type} on {d}')
+            else:
+                print('downloaded: ', data_path)
 
 
 if __name__ == '__main__':
