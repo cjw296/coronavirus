@@ -48,11 +48,16 @@ def main():
     add_date_arg(parser, '--earliest', help='min for x-axis', default=None)
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
+    parser.add_argument('--diff-no-lims', action='store_true')
     parser.add_argument('--raise-errors', action='store_true')
     parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
     params = all_params[args.area]
+
+    if args.diff_no_lims:
+        params.pop('diff_ylims', None)
+
     area_type = params.get('area_type', ltla)
     areas = params.get('areas')
 
