@@ -49,6 +49,7 @@ def main():
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--raise-errors', action='store_true')
+    parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
     params = all_params[args.area]
@@ -61,8 +62,8 @@ def main():
 
     data, _ = best_data(dates[0], area_type, areas, from_date)
 
-    max_cases = cases_data(data).sum(axis=1).max()*1.01
-    max_tests = tests_data(data).max()*1.01
+    max_cases = cases_data(data).sum(axis=1).max()*args.y_max_factor
+    max_tests = tests_data(data).max()*args.y_max_factor
 
     parallel_render(f'animated_cases_{args.area}',
                     partial(render,
