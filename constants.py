@@ -145,3 +145,8 @@ london_areas = [
     southwark, lambeth, wandsworth, hammersmith, kensington,
     westminster, cambden, islington, hackney, tower_hamlets, lewisham, city_of_london, newham
 ]
+
+england = 'E92000001'
+wales = 'W92000004'
+scotland = 'S92000003'
+northern_ireland = 'N92000002'
