@@ -181,8 +181,9 @@ def tests_data(data):
 def plot_diff(ax, for_date, data, previous_date, previous_data,
               diff_ylims=None, diff_log_scale=None):
     diff = data.sub(previous_data, fill_value=0)
+    total_diff = diff.sum().sum()
     stacked_bar_plot(ax, diff, colormap='viridis')
-    ax.set_title(f'Change between reports on {previous_date} and {for_date}')
+    ax.set_title(f'Change between reports on {previous_date} and {for_date}: {total_diff:,.0f}')
     fix_x_axis(ax, diff)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
