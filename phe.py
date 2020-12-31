@@ -179,12 +179,12 @@ def tests_data(data):
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None):
+              diff_ylims=None, diff_log_scale=None, earliest=None):
     diff = data.sub(previous_data, fill_value=0)
     total_diff = diff.sum().sum()
     stacked_bar_plot(ax, diff, colormap='viridis')
     ax.set_title(f'Change between reports on {previous_date} and {for_date}: {total_diff:,.0f}')
-    fix_x_axis(ax, diff)
+    fix_x_axis(ax, diff, earliest)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
@@ -198,7 +198,7 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
     ax.axhline(y=0, color='k')
 
 
-def fix_x_axis(ax, data, number_to_show=50):
+def fix_x_axis(ax, data, earliest=None, number_to_show=50):
     ax.axes.set_axisbelow(True)
     ax.xaxis.set_tick_params(rotation=-90)
     ax.xaxis.label.set_visible(False)
@@ -206,17 +206,21 @@ def fix_x_axis(ax, data, number_to_show=50):
     ax.xaxis.set_minor_locator(DayLocator())
     ax.xaxis.set_major_locator(DayLocator(interval=interval))
     ax.xaxis.set_major_formatter(DateFormatter('%d %b %Y'))
-    ax.set_xlim(data.index.min()-timedelta(days=0.5), data.index.max()+timedelta(days=0.5))
+    ax.set_xlim(
+        (pd.to_datetime(earliest) or data.index.min())-timedelta(days=0.5),
+        data.index.max()+timedelta(days=0.5)
+    )
 
 
-def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim):
+def plot_stacked_bars(
+        ax, data, all_data, average_days, average_end, title, ylim, tested_ylim, earliest
+):
 
     handles = stacked_bar_plot(ax, data, colormap='viridis')
 
     if average_end is not None:
-        average_days = 7
         average_label = f'{average_days} day average'
-        mean = data[:average_end].sum(axis=1).rolling(average_days).mean()
+        mean = data.loc[:average_end].sum(axis=1).rolling(average_days).mean()
         handles.extend(
             ax.plot(mean.index, mean, color='k', label=average_label)
         )
@@ -234,7 +238,7 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim)
         tested_color = 'darkblue'
         handles.extend(
             tested_ax.plot(tested.index, tested, color=tested_color,
-                           label=tested_label, linestyle=(0, (5, 5)))
+                           label=tested_label, linestyle='dotted')
         )
     tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
                          rotation=-90, labelpad=14)
@@ -243,7 +247,7 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim)
     tested_ax.yaxis.set_label_position("left")
     tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
 
-    fix_x_axis(ax, data)
+    fix_x_axis(ax, data, earliest)
 
     ax.set_ylabel(cases)
     if ylim:
@@ -268,9 +272,15 @@ def plot_stacked_bars(ax, data, average_end, title, ylim, all_data, tested_ylim)
 def plot_with_diff(data_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
-                   earliest=None, area_type=ltla, areas=None, tested_ylim=None):
+                   earliest=None, area_type=ltla, areas=None, tested_ylim=None,
+                   average_days=7):
 
-    all_data, data_date = best_data(data_date, area_type, areas, earliest)
+    if earliest is None:
+        earliest_data = None
+    else:
+        earliest_data = pd.to_datetime(earliest) - timedelta(days=average_days)
+
+    all_data, data_date = best_data(data_date, area_type, areas, earliest_data)
 
     previous_date = data_date - timedelta(days=diff_days)
 
@@ -278,7 +288,7 @@ def plot_with_diff(data_date, uncertain_days,
     previous_data = None
     while previous_data is None and previous_date > date(2020, 1, 1):
         try:
-            previous = best_data(previous_date, area_type, areas, earliest)
+            previous = best_data(previous_date, area_type, areas, earliest_data)
         except (FileNotFoundError, NoData):
             previous_date -= timedelta(days=1)
         else:
@@ -308,8 +318,14 @@ def plot_with_diff(data_date, uncertain_days,
     fig.subplots_adjust(hspace=0.45)
 
     with pd.plotting.plot_params.use("x_compat", True):
-        plot_diff(diff_ax, data_date, data, previous_date, previous_data, diff_ylims, diff_log_scale)
-        plot_stacked_bars(bars_ax, data, average_end, title, ylim, all_data, tested_ylim)
+        plot_diff(
+            diff_ax, data_date, data, previous_date, previous_data, diff_ylims, diff_log_scale,
+            earliest
+        )
+        plot_stacked_bars(
+            bars_ax, data, all_data, average_days, average_end, title, ylim, tested_ylim,
+            earliest
+        )
 
     if image_path:
         plt.savefig(image_path / f'{data_date}.png', bbox_inches='tight')
