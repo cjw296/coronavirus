@@ -5,13 +5,12 @@ from shutil import rmtree
 from typing import Union
 
 import imageio
-from dateutil.parser import parse as parse_date
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
 from tqdm import tqdm
 
-from constants import relax_2, second_wave, data_start, output_path, lockdown2
+from constants import output_path
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
@@ -75,23 +74,3 @@ output_types = {
     'mp4': output_mp4,
     'gif': output_gif,
 }
-
-special_dates = {text: dt for dt, text in (
-    (data_start, 'start'),
-    (second_wave, 'second-wave'),
-    (lockdown2[0], 'lockdown-2-start'),
-    (lockdown2[1], 'lockdown-2-end'),
-)}
-
-
-def date_lookup(text):
-    dt = special_dates.get(text)
-    if dt is None:
-        dt = parse_date(text).date()
-    return dt
-
-
-def add_date_arg(parser, name='--from-date', help='data release date', default=second_wave):
-
-    parser.add_argument(name, default=default, type=date_lookup,
-                        help=f"{help}: {', '.join(special_dates)}")

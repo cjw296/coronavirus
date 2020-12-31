@@ -8,8 +8,9 @@ import pandas as pd
 from matplotlib.colors import SymLogNorm
 
 import series as s
-from animated import parallel_render, add_date_arg
-from constants import per100k, date_col, area_code
+from animated import parallel_render
+from args import add_date_arg
+from constants import per100k, date_col, area_code, second_wave
 from phe import load_geoms, plot_summary, with_population, best_data
 from plotting import show_area
 
@@ -74,7 +75,7 @@ def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
 
 def main():
     parser = ArgumentParser()
-    add_date_arg(parser)
+    add_date_arg(parser, default=second_wave)
     parser.add_argument('--exclude-days', default=7, type=int)
     parser.add_argument('--output', default='mp4')
     args = parser.parse_args()

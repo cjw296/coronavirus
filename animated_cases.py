@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
 from functools import partial
 
-from animated import parallel_render, add_date_arg
-from constants import my_areas, london_areas, oxford_areas, region, ltla
+from animated import parallel_render
+from args import add_date_arg
+from constants import my_areas, london_areas, oxford_areas, region, ltla, second_wave
 from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
 
 all_params = dict(
@@ -43,8 +44,8 @@ def render(date, image_path, raise_errors=False, **kw):
 def main():
     parser = ArgumentParser()
     parser.add_argument('area', choices=all_params.keys())
-    add_date_arg(parser)
-    add_date_arg(parser, '--earliest', help='min for x-axis', default=None)
+    add_date_arg(parser, help='first release to use', default=second_wave)
+    add_date_arg(parser, '--earliest', help='min for x-axis')
     parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--diff-no-lims', action='store_true')
