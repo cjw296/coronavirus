@@ -7,19 +7,18 @@ from phe import plot_with_diff, available_dates, best_data, cases_data, tests_da
 
 all_params = dict(
     my_area=dict(
-        diff_ylims=[-2, 200],
+        diff_ylims=[-2, 350],
         areas=my_areas,
     ),
     oxford=dict(
-        diff_ylims=None,
         areas=[oxfordshire],
     ),
     london=dict(
-        diff_ylims=[-10, 50],
+        diff_ylims=[-10, 1800],
         areas=london_areas,
     ),
     regions=dict(
-        diff_ylims=[-10, 13_000],
+        diff_ylims=[-100, 25_000],
         area_type=region,
     )
 )
