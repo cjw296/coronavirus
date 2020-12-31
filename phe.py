@@ -1,106 +1,22 @@
-import concurrent.futures
 import json
 from datetime import timedelta, date, datetime
 from functools import lru_cache
-from urllib.parse import parse_qs, urlparse
 
 import geopandas
 import matplotlib.pyplot as plt
 import pandas as pd
-import requests
 from matplotlib.dates import DayLocator, DateFormatter
 from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
-from tqdm.auto import tqdm
 
 import series as s
 from constants import (
-    base_path, specimen_date, area, cases, per100k, release_timestamp, lockdown1,
+    base_path, specimen_date, area, cases, per100k, lockdown1,
     lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
     ltla, utla, code, unique_people_tested_sum
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
-
-
-def get(filters, structure, **params):
-    _params={
-        'filters':';'.join(f'{k}={v}' for (k, v) in filters.items()),
-        'structure': json.dumps({element:element for element in structure}),
-    }
-    _params.update(params)
-    response = requests.get('https://api.coronavirus.data.gov.uk/v1/data', timeout=20, params=_params)
-    if response.status_code != 200:
-        raise ValueError(f'{response.status_code}:{response.content}')
-    return response.json()
-
-
-def pickle(name, df):
-    for_dates = df[release_timestamp].unique()
-    assert len(for_dates) == 1, for_dates
-    for_date, = for_dates
-    path = base_path / f'phe_{name}_{for_date}_{datetime.now():%Y-%m-%d-%H-%M}.pickle'
-    df.to_pickle(path)
-    return path
-
-
-def query(filters, structure, max_workers=None, **params):
-    page = 1
-    response = get(filters, structure, page=page, **params)
-    result = response['data']
-    max_page = int(parse_qs(urlparse(response['pagination']['last']).query)['page'][0])
-    if max_page > 1:
-        t = tqdm(total=max_page)
-        t.update(1)
-        todo = range(2, max_page+1)
-        attempt = 0
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers or max_page-1) as executor:
-            while todo:
-                attempt += 1
-                bad = []
-                t.set_postfix({'errors': len(bad), 'attempt': attempt})
-                futures = {executor.submit(get, filters, structure, page=page, **params): page
-                           for page in todo}
-                for future in concurrent.futures.as_completed(futures):
-                    page = futures[future]
-                    try:
-                        response = future.result()
-                    except Exception as exc:
-                        bad.append(page)
-                        t.set_postfix({'errors': len(bad), 'attempt': attempt})
-                    else:
-                        result.extend(response['data'])
-                        t.update(1)
-                todo = bad
-        t.close()
-    return pd.DataFrame(result)
-
-
-def download(name, area_type, *metrics, area_name=None, release=None, format='csv'):
-    release = release or date.today()
-
-    _params = {
-        'areaType': area_type,
-        'metric': metrics,
-        'format': format,
-        'release': str(release),
-    }
-    if area_name:
-        _params['areaName'] = area_name
-    response = requests.get(
-        'https://api.coronavirus.data.gov.uk/v2/data', timeout=20, params=_params
-    )
-    if response.status_code != 200:
-        raise ValueError(f'{response.status_code}:{response.content}')
-
-    actual_release = datetime.strptime(
-        response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.{format}"'
-    ).date()
-    if str(actual_release) != str(release):
-        raise ValueError(f'downloaded: {actual_release}, requested: {release}')
-    path = (base_path / f'{name}_{actual_release}.csv')
-    path.write_bytes(response.content)
-    return path
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):

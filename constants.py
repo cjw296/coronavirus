@@ -8,6 +8,8 @@ utla = 'utla'
 ltla = 'ltla'
 msoa = 'msoa'
 
+earliest_available_download = date(2020, 8, 12)
+
 cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-cases_latest.{data_type}'
 
 base_path = Path('~/coronavirus/data').expanduser()
@@ -47,6 +49,14 @@ first_dose = 'newPeopleReceivingFirstDose'
 second_dose = 'newPeopleReceivingSecondDose'
 first_dose_cum = 'cumPeopleReceivingFirstDose'
 second_dose_cum = 'cumPeopleReceivingSecondDose'
+
+standard_metrics = (
+    new_cases_by_specimen_date,
+    new_deaths_by_death_date,
+    unique_people_tested_sum,
+    unique_cases_positivity_sum,
+    new_cases_rate
+)
 
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
