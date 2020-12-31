@@ -129,7 +129,8 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 
 def plot_stacked_bars(
-        ax, data, all_data, average_days, average_end, title, ylim, tested_ylim, earliest
+        ax, data, all_data, average_days, average_end, title, show_testing,
+        ylim, tested_ylim, earliest
 ):
 
     handles = stacked_bar_plot(ax, data, colormap='viridis')
@@ -145,23 +146,24 @@ def plot_stacked_bars(
             handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
                                     label=f'Latest {average_label}: {latest_average:,.0f}'))
 
-    tested_ax = ax.twinx()
-    tested_label = '% Population tested'
-    if unique_people_tested_sum in all_data:
-        tested = tests_data(all_data)
-        if average_end is not None:
-            tested = tested[:average_end]
-        tested_color = 'darkblue'
-        handles.extend(
-            tested_ax.plot(tested.index, tested, color=tested_color,
-                           label=tested_label, linestyle='dotted')
-        )
-    tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
-                         rotation=-90, labelpad=14)
-    tested_ax.set_ylim(0, tested_ylim)
-    tested_ax.yaxis.tick_left()
-    tested_ax.yaxis.set_label_position("left")
-    tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+    if show_testing:
+        tested_ax = ax.twinx()
+        tested_label = '% Population tested'
+        if unique_people_tested_sum in all_data:
+            tested = tests_data(all_data)
+            if average_end is not None:
+                tested = tested[:average_end]
+            tested_color = 'darkblue'
+            handles.extend(
+                tested_ax.plot(tested.index, tested, color=tested_color,
+                               label=tested_label, linestyle='dotted')
+            )
+        tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
+                             rotation=-90, labelpad=14)
+        tested_ax.set_ylim(0, tested_ylim)
+        tested_ax.yaxis.tick_left()
+        tested_ax.yaxis.set_label_position("left")
+        tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
 
     fix_x_axis(ax, data, earliest)
 
@@ -189,7 +191,7 @@ def plot_with_diff(data_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
                    earliest=None, area_type=ltla, areas=None, tested_ylim=None,
-                   average_days=7):
+                   average_days=7, show_testing=True):
 
     if earliest is None:
         earliest_data = None
@@ -239,7 +241,8 @@ def plot_with_diff(data_date, uncertain_days,
             earliest
         )
         plot_stacked_bars(
-            bars_ax, data, all_data, average_days, average_end, title, ylim, tested_ylim,
+            bars_ax, data, all_data, average_days, average_end, title, show_testing,
+            ylim, tested_ylim,
             earliest
         )
 
