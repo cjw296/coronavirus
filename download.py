@@ -92,6 +92,11 @@ class RateLimited(ValueError):
         self.retry_after = retry_after
 
 
+
+class NoContent(ValueError):
+    pass
+
+
 def download_phe(name, area_type, *metrics, area_name=None, release=None, format='csv'):
     release = release or date.today()
 
@@ -107,6 +112,8 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
         'https://api.coronavirus.data.gov.uk/v2/data', timeout=20, params=_params
     )
 
+    if response.status_code == 204:
+        raise NoContent
     if response.status_code in (429, 403):
         raise RateLimited(int(response.headers['retry-after']))
 
