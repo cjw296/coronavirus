@@ -6,6 +6,7 @@ import geopandas
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.dates import DayLocator, DateFormatter
+from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
 
 import series as s
@@ -13,7 +14,7 @@ from constants import (
     base_path, specimen_date, area, cases, per100k, lockdown1,
     lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code, unique_people_tested_sum
+    ltla, utla, code, unique_people_tested_sum, second_dose_cum, first_dose_cum, first_dose
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -369,3 +370,68 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
 
     xaxis = tests_ax.get_xaxis()
     xaxis.label.set_visible(False)
+
+
+def vaccination_dashboard():
+    data = read_csv(find_latest('vaccination_*', date_index=-1)[0])
+    assert data[second_dose_cum].sum() == 0
+    nation_populations = load_population().loc[data[area_code].unique()]
+    total_population = nation_populations.sum()[0]
+    data = data.merge(nation_populations, on=area_code)
+
+    max_date = data[date_col].max()
+    pie_data = data[data[date_col] == max_date].copy()
+    pie_data['vaccinated'] = pie_data[first_dose_cum] / pie_data[population]
+    pie_data['unvaccinated'] = 1 - pie_data['vaccinated']
+    pie_data = pie_data.set_index(area_name)[['vaccinated', 'unvaccinated']].transpose()
+
+    pct_total = 100 * (
+                data.pivot_table(values=first_dose_cum, index=[date_col], columns=area_name).fillna(
+                    0) / total_population)
+    pct_total.columns.name = None
+    people_weekly = data.pivot_table(values=first_dose, index=[date_col], columns=area_name).fillna(
+        0)
+    colors = [plt.cm.tab10(i) for i in range(len(nation_populations))]
+
+    fig = plt.figure(figsize=(16, 8), dpi=100)
+    fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
+
+    gs = GridSpec(3, 4, height_ratios=[1, 1, 1])
+    gs.update(top=0.95, bottom=0.05, right=0.95, left=0.02, wspace=0, hspace=0.2)
+
+    for x, nation in enumerate(pie_data):
+        ax = plt.subplot(gs[0, x])
+        ax.add_patch(plt.Circle((0, 0), radius=1, color='k', fill=False))
+        pie_data.plot(ax=ax, y=nation,
+                      kind='pie', labels=None, legend=False, startangle=-90, counterclock=False,
+                      colors=['green', 'white'],
+                      )
+        pct = 100 * pie_data[nation].loc['vaccinated']
+        ax.text(0, 0.5, f"{pct:.1f}%", ha='center', va='top', weight='bold', fontsize=14)
+
+    ax = plt.subplot(gs[1, :])
+    ax.yaxis.set_label_position("right")
+    ax.yaxis.tick_right()
+    ax.yaxis.grid(True)
+    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+
+    pct_total.plot(ax=ax, kind='bar', stacked=True, width=0.9, color=colors,
+                   title='Percentage of UK population vaccinated')
+    xaxis = ax.xaxis
+
+    ax = plt.subplot(gs[2, :], sharex=ax)
+    ax.yaxis.set_label_position("right")
+    ax.yaxis.tick_right()
+    ax.yaxis.grid(True)
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+
+    ax.xaxis.label.set_visible(False)
+
+    ax = people_weekly.plot(ax=ax, kind='bar', stacked=True, width=0.9, color=colors, legend=False,
+                            title='People vaccinated in the previous week')
+
+    ax.xaxis.set_tick_params(rotation=0)
+    labels = ax.xaxis.get_ticklabels()
+    for i, (dt, label) in enumerate(zip(people_weekly.index, labels)):
+        label.set_text(dt.strftime('%d %b %Y'))
+    ax.xaxis.set_ticklabels(labels)
