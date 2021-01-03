@@ -18,8 +18,17 @@ from args import add_date_arg
 from constants import output_path, second_wave
 
 
+def safe_render(render, image_path, raise_errors, item):
+    try:
+        render(item, image_path=image_path)
+    except Exception as e:
+        print(f'Could not render for {item}: {type(e)}: {e}')
+        if raise_errors:
+            raise
+
+
 def parallel_render(name, render: partial, items, duration: Union[float, list],
-                    outputs: str = 'gif'):
+                    outputs: str = 'gif', raise_errors: bool = True):
 
     # do this up front to catch typos cheaply:
     outputs = [output_types[output] for output in outputs.split(',')]
@@ -28,10 +37,10 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
     if image_path.exists():
         rmtree(image_path)
     image_path.mkdir()
-    render.keywords['image_path'] = image_path
+    renderer = partial(safe_render, render, image_path, raise_errors)
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        tuple(tqdm(executor.map(render, items), total=len(items), desc='rendering'))
+        tuple(tqdm(executor.map(renderer, items), total=len(items), desc='rendering'))
 
     image_paths = sorted(image_path.iterdir())
     if not isinstance(duration, list):
@@ -92,6 +101,7 @@ def map_main(name, read_map_data, render_dt, default_exclude=0):
     add_date_arg(parser, default=second_wave)
     parser.add_argument('--exclude-days', default=default_exclude, type=int)
     parser.add_argument('--output', default='mp4')
+    parser.add_argument('--raise-errors', action='store_true')
     args = parser.parse_args()
 
     df, data_date = read_map_data()
@@ -102,4 +112,5 @@ def map_main(name, read_map_data, render_dt, default_exclude=0):
 
     render = partial(render_dt, data_date, earliest_date, to_date)
 
-    parallel_render(name, render, dates, slowing_durations(dates), args.output)
+    parallel_render(name, render, dates, slowing_durations(dates),
+                    args.output, raise_errors=args.raise_errors)

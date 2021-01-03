@@ -25,20 +25,15 @@ all_params = dict(
 )
 
 
-def render(date, image_path, raise_errors=False, **kw):
-    try:
-        plot_with_diff(
-            date,
-            uncertain_days=5,
-            image_path=image_path,
-            title='Evolution of PHE case reporting',
-            to_date=date.today(),
-            **kw
-        )
-    except Exception as e:
-        print(f'Could not render for {date}: {type(e)}: {e}')
-        if raise_errors:
-            raise
+def render(date, image_path, **kw):
+    plot_with_diff(
+        date,
+        uncertain_days=5,
+        image_path=image_path,
+        title='Evolution of PHE case reporting',
+        to_date=date.today(),
+        **kw
+    )
 
 
 def main():
@@ -76,9 +71,8 @@ def main():
                             tested_ylim=max_tests,
                             earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
-                            raise_errors=args.raise_errors,
                             **params),
-                    dates, duration=args.duration)
+                    dates, duration=args.duration, raise_errors=args.raise_errors)
 
 
 if __name__ == '__main__':
