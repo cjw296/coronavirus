@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib.colors import SymLogNorm
 
 import series as s
-from animated import parallel_render
+from animated import parallel_render, slowing_durations
 from args import add_date_arg
 from constants import per100k, date_col, area_code, second_wave
 from phe import load_geoms, plot_summary, with_population, best_data
@@ -88,10 +88,7 @@ def main():
 
     render = partial(render_dt, data_date, earliest_date, to_date)
 
-    durations = np.full((len(dates)), 0.05)
-    durations[-30:] = np.geomspace(0.05, 0.3, 30)
-
-    parallel_render('animated_map', render, dates, list(durations), args.output)
+    parallel_render('animated_map', render, dates, slowing_durations(dates), args.output)
 
 
 if __name__ == '__main__':

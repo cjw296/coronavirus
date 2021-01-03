@@ -5,6 +5,7 @@ from shutil import rmtree
 from typing import Union
 
 import imageio
+import numpy as np
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
@@ -74,3 +75,9 @@ output_types = {
     'mp4': output_mp4,
     'gif': output_gif,
 }
+
+
+def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
+    durations = np.full((len(dates)), normal)
+    durations[-period:] = np.geomspace(normal, slow, period)
+    return list(durations)
