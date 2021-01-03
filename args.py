@@ -13,6 +13,7 @@ special_dates = {text: dt for dt, text in (
     (lockdown2[0], 'lockdown-2-start'),
     (lockdown2[1], 'lockdown-2-end'),
     (earliest_available_download, 'earliest-download'),
+    (date(2020, 12, 18), 'earliest-msoa'),
     (earliest_testing, 'earliest-testing'),
     (date.today(), 'today'),
 )}

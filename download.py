@@ -2,7 +2,9 @@ import concurrent.futures
 import json
 from argparse import ArgumentParser
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from time import sleep
+from typing import List, Tuple
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
@@ -22,7 +24,7 @@ def download(url, path):
         target.write(response.content)
 
 
-def find_all(glob, date_index=-1, earliest=None):
+def find_all(glob, date_index=-1, earliest=None) -> List[Tuple[date, Path]]:
     possible = []
     for path in base_path.glob(glob):
         dt = parse_date(str(path.stem).rsplit('_')[date_index]).date()
