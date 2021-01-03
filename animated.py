@@ -1,4 +1,6 @@
 import concurrent.futures
+from argparse import ArgumentParser
+from datetime import timedelta
 from functools import partial
 from os import cpu_count
 from shutil import rmtree
@@ -6,12 +8,14 @@ from typing import Union
 
 import imageio
 import numpy as np
+import pandas as pd
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
 from tqdm import tqdm
 
-from constants import output_path
+from args import add_date_arg
+from constants import output_path, second_wave
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
@@ -81,3 +85,21 @@ def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
     durations = np.full((len(dates)), normal)
     durations[-period:] = np.geomspace(normal, slow, period)
     return list(durations)
+
+
+def map_main(name, read_map_data, render_dt, default_exclude=0):
+    parser = ArgumentParser()
+    add_date_arg(parser, default=second_wave)
+    parser.add_argument('--exclude-days', default=default_exclude, type=int)
+    parser.add_argument('--output', default='mp4')
+    args = parser.parse_args()
+
+    df, data_date = read_map_data()
+
+    to_date = df.index.max().date() - timedelta(days=args.exclude_days)
+    earliest_date = df.index.min().date()
+    dates = pd.date_range(args.from_date, to_date)
+
+    render = partial(render_dt, data_date, earliest_date, to_date)
+
+    parallel_render(name, render, dates, slowing_durations(dates), args.output)

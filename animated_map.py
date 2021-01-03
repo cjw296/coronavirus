@@ -1,6 +1,4 @@
-from argparse import ArgumentParser
-from datetime import timedelta
-from functools import lru_cache, partial
+from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,9 +6,8 @@ import pandas as pd
 from matplotlib.colors import SymLogNorm
 
 import series as s
-from animated import parallel_render, slowing_durations
-from args import add_date_arg
-from constants import per100k, date_col, area_code, second_wave
+from animated import map_main
+from constants import per100k, date_col, area_code
 from phe import load_geoms, plot_summary, with_population, best_data
 from plotting import show_area
 
@@ -75,21 +72,7 @@ def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
 
 
 def main():
-    parser = ArgumentParser()
-    add_date_arg(parser, default=second_wave)
-    parser.add_argument('--exclude-days', default=7, type=int)
-    parser.add_argument('--output', default='mp4')
-    args = parser.parse_args()
-
-    df, data_date = read_map_data()
-
-    to_date = df[date_col].max() - timedelta(days=args.exclude_days)
-    earliest_date = df[date_col].min()
-    dates = pd.date_range(args.from_date, to_date)
-
-    render = partial(render_dt, data_date, earliest_date, to_date)
-
-    parallel_render('animated_map', render, dates, slowing_durations(dates), args.output)
+    map_main('animated_map_ltla_cases', read_map_data, render_dt, default_exclude=7)
 
 
 if __name__ == '__main__':
