@@ -335,7 +335,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     if data_date is None:
         data_path, data_date = find_latest('england_*.csv')
     else:
-        data_path = base_path / f'england_{data_date}.csv'
+        data_path = base_path / f'england_{pd.to_datetime(data_date).date()}.csv'
 
     data = read_csv(
         data_path, earliest_date, to_date, [s_.metric for s_ in all_series], index_col=[date_col]
