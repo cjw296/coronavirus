@@ -22,7 +22,8 @@ def read_map_data():
     df, data_date = best_data()
     df = with_population(df)
     pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
-    return pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k), data_date
+    smoothed = pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k)
+    return smoothed.set_index(date_col), data_date
 
 
 def round_nearest(a, nearest):
@@ -31,7 +32,8 @@ def round_nearest(a, nearest):
 
 def render_map(ax, frame_date, vmax=200, linthresh=30):
     df, _ = read_map_data()
-    data = df[df[date_col] == frame_date]
+    dt = frame_date.date()
+    data = df.loc[dt]
 
     current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='lad19cd',
                                right_on=area_code)
@@ -59,7 +61,6 @@ def render_map(ax, frame_date, vmax=200, linthresh=30):
 
 
 def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
-    dt = str(frame_date.date())
     fig, (map_ax, lines_ax) = plt.subplots(
         figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
     )
@@ -69,7 +70,7 @@ def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
     fig.text(0.25, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
-    plt.savefig(image_path / f'{dt}.png', dpi=90, bbox_inches='tight')
+    plt.savefig(image_path / f'{frame_date.date()}.png', dpi=90, bbox_inches='tight')
     plt.close()
 
 
