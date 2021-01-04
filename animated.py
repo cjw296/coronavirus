@@ -109,6 +109,7 @@ def render_dt(data_date, earliest_date, to_date, dpi, render_map, frame_date, im
 
 def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
     durations = np.full((len(dates)), normal)
+    period = min(len(durations), period)
     durations[-period:] = np.geomspace(normal, slow, period)
     return list(durations)
 
