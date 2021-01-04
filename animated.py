@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from args import add_date_arg
 from constants import output_path, second_wave
+from geo import views
 from phe import plot_summary
 import series as s
 
@@ -93,11 +94,13 @@ output_types = {
 }
 
 
-def render_dt(data_date, earliest_date, to_date, dpi, render_map, frame_date, image_path):
+def render_dt(
+        data_date, earliest_date, to_date, dpi, render_map, view, frame_date, image_path
+):
     fig, (map_ax, lines_ax) = plt.subplots(
         figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
     )
-    render_map(map_ax, frame_date)
+    render_map(map_ax, frame_date, views[view])
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                  series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
     fig.text(0.25, 0.08,
@@ -114,12 +117,13 @@ def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
     return list(durations)
 
 
-def map_main(name, read_map_data, render_map, default_exclude=0, dpi=90):
+def map_main(name, read_map_data, render_map, default_view='uk', default_exclude=0, dpi=90):
     parser = ArgumentParser()
     add_date_arg(parser, default=second_wave)
     parser.add_argument('--exclude-days', default=default_exclude, type=int)
     parser.add_argument('--output', default='mp4')
     parser.add_argument('--raise-errors', action='store_true')
+    parser.add_argument('--view', choices=views.keys(), default=default_view)
     args = parser.parse_args()
 
     df, data_date = read_map_data()
@@ -128,7 +132,9 @@ def map_main(name, read_map_data, render_map, default_exclude=0, dpi=90):
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 
-    render = partial(render_dt, data_date, earliest_date, to_date, dpi, render_map)
+    render = partial(
+        render_dt, data_date, earliest_date, to_date, dpi, render_map, args.view
+    )
 
     parallel_render(name, render, dates, slowing_durations(dates),
                     args.output, raise_errors=args.raise_errors)

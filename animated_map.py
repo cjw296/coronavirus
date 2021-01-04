@@ -25,7 +25,7 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def render_map(ax, frame_date, vmax=200, linthresh=30):
+def render_map(ax, frame_date, view, vmax=200, linthresh=30):
     df, _ = read_map_data()
     dt = frame_date.date()
     data = df.loc[dt]
@@ -51,7 +51,7 @@ def render_map(ax, frame_date, vmax=200, linthresh=30):
         },
         missing_kwds={'color': 'lightgrey'},
     )
-    show_area(ax)
+    show_area(ax, view)
     ax.set_title(f'COVID-19 cases for specimens dated {frame_date:%d %b %Y}')
 
 

@@ -12,12 +12,13 @@ from bokeh.transform import linear_cmap
 from matplotlib.cm import get_cmap
 
 from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population, base_path
+from geo import views
 
 
-def show_area(ax):
+def show_area(ax, view=views['uk']):
     ax.set_axis_off()
-    ax.set_ylim(6_460_000, 8_000_000)
-    ax.set_xlim(-900_000, 200_000)
+    ax.set_xlim(view.minx, view.maxx)
+    ax.set_ylim(view.miny, view.maxy)
 
 
 def geoplot_matplotlib(df, ax, column, title, label, vmax=None, missing_kwds=None):
