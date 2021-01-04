@@ -17,8 +17,8 @@ def read_map_data():
     df, data_date = best_data()
     df = with_population(df)
     pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
-    smoothed = pivoted.fillna(0).rolling(14).mean().unstack().reset_index(name=per100k)
-    return smoothed.set_index(date_col), data_date
+    smoothed = pivoted.fillna(0).rolling(rolling_days).mean()
+    return smoothed.unstack().reset_index(name=per100k).set_index(date_col), data_date
 
 
 def round_nearest(a, nearest):
