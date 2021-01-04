@@ -1,14 +1,12 @@
 from functools import lru_cache
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import SymLogNorm
 
-import series as s
 from animated import map_main
 from constants import per100k, date_col, area_code
-from phe import load_geoms, plot_summary, with_population, best_data
+from phe import load_geoms, with_population, best_data
 from plotting import show_area
 
 rolling_days = 14
@@ -57,22 +55,8 @@ def render_map(ax, frame_date, vmax=200, linthresh=30):
     ax.set_title(f'COVID-19 cases for specimens dated {frame_date:%d %b %Y}')
 
 
-def render_dt(data_date, earliest_date, to_date, frame_date, image_path):
-    fig, (map_ax, lines_ax) = plt.subplots(
-        figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
-    )
-    render_map(map_ax, frame_date)
-    plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
-                 series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
-    fig.text(0.25, 0.08,
-             f'@chriswithers13 - '
-             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
-    plt.savefig(image_path / f'{frame_date.date()}.png', dpi=90, bbox_inches='tight')
-    plt.close()
-
-
 def main():
-    map_main('animated_map_ltla_cases', read_map_data, render_dt, default_exclude=7)
+    map_main('animated_map_ltla_cases', read_map_data, render_map, default_exclude=7)
 
 
 if __name__ == '__main__':

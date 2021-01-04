@@ -7,6 +7,7 @@ from shutil import rmtree
 from typing import Union
 
 import imageio
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from moviepy.video.VideoClip import ImageClip
@@ -16,6 +17,8 @@ from tqdm import tqdm
 
 from args import add_date_arg
 from constants import output_path, second_wave
+from phe import plot_summary
+import series as s
 
 
 def safe_render(render, image_path, raise_errors, item):
@@ -90,13 +93,27 @@ output_types = {
 }
 
 
+def render_dt(data_date, earliest_date, to_date, dpi, render_map, frame_date, image_path):
+    fig, (map_ax, lines_ax) = plt.subplots(
+        figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
+    )
+    render_map(map_ax, frame_date)
+    plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
+                 series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
+    fig.text(0.25, 0.08,
+             f'@chriswithers13 - '
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
+    plt.savefig(image_path / f'{frame_date.date()}.png', dpi=dpi, bbox_inches='tight')
+    plt.close()
+
+
 def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
     durations = np.full((len(dates)), normal)
     durations[-period:] = np.geomspace(normal, slow, period)
     return list(durations)
 
 
-def map_main(name, read_map_data, render_dt, default_exclude=0):
+def map_main(name, read_map_data, render_map, default_exclude=0, dpi=90):
     parser = ArgumentParser()
     add_date_arg(parser, default=second_wave)
     parser.add_argument('--exclude-days', default=default_exclude, type=int)
@@ -110,7 +127,7 @@ def map_main(name, read_map_data, render_dt, default_exclude=0):
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 
-    render = partial(render_dt, data_date, earliest_date, to_date)
+    render = partial(render_dt, data_date, earliest_date, to_date, dpi, render_map)
 
     parallel_render(name, render, dates, slowing_durations(dates),
                     args.output, raise_errors=args.raise_errors)
