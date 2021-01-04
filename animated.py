@@ -50,18 +50,22 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
         tuple(tqdm(executor.map(renderer, items), total=len(items), desc='rendering'))
 
     image_paths = sorted(image_path.iterdir())
+    image_count = len(image_paths)
     if not isinstance(duration, list):
-        duration = [duration] * len(image_paths)
+        durations = [duration] * image_count
+    else:
+        # make sure if there are too many durations, we ignore the ones at the start.
+        durations = duration[-image_count:]
 
     # still last frame
     image_paths.append(image_paths[-1])
-    duration.append(3)
+    durations.append(3)
 
     data = list(tqdm((imageio.imread(filename) for filename in image_paths),
                      total=len(image_paths), desc='loading'))
 
     for output in outputs:
-        output(name, data, duration)
+        output(name, data, durations)
 
 
 def output_gif(name, data, durations):
