@@ -44,7 +44,7 @@ def main():
     if args.output.exists() and not args.clean:
         add_from(args.output, rows)
     if rows:
-        print('latest date found: ', sorted(rows.keys())[-1])
+        print('latest date found: ', sorted(rows.keys())[-1][0])
 
     for dt, path in tqdm(
             sorted(find_all('msoa_????-??-??.csv', earliest=args.start)),
