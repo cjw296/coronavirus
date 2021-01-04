@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import SymLogNorm
+from matplotlib.ticker import StrMethodFormatter
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
@@ -118,7 +119,7 @@ def render_map(ax, frame_date, read_map_data, view, column, title,
 
     legend_kwds = {
         'fraction': 0.02,
-        'format': '%.0f',
+        'format': StrMethodFormatter('{x:,.0f}'),
         'ticks': ticks,
     }
     legend_kwds.update(plot_kw.pop('legend_kwds', {}))
