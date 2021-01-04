@@ -6,7 +6,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from args import add_date_arg
-from constants import date_col, area_code, base_path
+from constants import date_col, area_code, base_path, release_timestamp
 from download import find_all
 
 
@@ -24,9 +24,11 @@ def lines_from(path: Path):
                 line = source.readline()
 
 
-def add_from(path: Path, rows: dict):
+def add_from(path: Path, rows: dict, dt: date = None):
     reader = DictReader(lines_from(path))
     for row in reader:
+        if dt:
+            row[release_timestamp] = dt
         rows[key(row)] = row
     return reader.fieldnames
 
@@ -50,13 +52,13 @@ def main():
             sorted(find_all('msoa_????-??-??.csv', earliest=args.start)),
             desc='source files'
     ):
-        fieldnames = add_from(path, rows)
+        fieldnames = add_from(path, rows, dt)
 
     if not rows:
         return
 
     with open(args.output, 'w') as target:
-        writer = DictWriter(target, fieldnames)
+        writer = DictWriter(target, fieldnames+[release_timestamp])
         writer.writeheader()
         for _, row in tqdm(sorted(rows.items()), desc='writing'):
             writer.writerow(row)
