@@ -10,16 +10,18 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.colors import SymLogNorm
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from pygifsicle import optimize
 from tqdm import tqdm
 
 from args import add_date_arg
-from constants import output_path, second_wave
+from constants import output_path, second_wave, area_code
 from geo import views
-from phe import plot_summary
+from phe import plot_summary, load_geoms as ltla_geoms
 import series as s
+from plotting import show_area
 
 
 def safe_render(render, image_path, raise_errors, item):
@@ -92,6 +94,49 @@ output_types = {
     'mp4': output_mp4,
     'gif': output_gif,
 }
+
+
+def round_nearest(a, nearest):
+    return (a/nearest).round(0) * nearest
+
+
+def render_map(ax, frame_date, read_map_data, view, column, title,
+               vmin, linthresh, vmax, linspacing, lognum, lognearest,
+               load_geoms=ltla_geoms, geom_col='lad19cd',
+               **plot_kw):
+    df, _ = read_map_data()
+    dt = frame_date.date()
+    data = df.loc[dt]
+
+    current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on=geom_col,
+                               right_on=area_code)
+
+    ticks = np.concatenate((
+        np.arange(vmin, linthresh, linspacing),
+        round_nearest(np.geomspace(linthresh, vmax, lognum), lognearest))
+    )
+
+    legend_kwds = {
+        'fraction': 0.02,
+        'format': '%.0f',
+        'ticks': ticks,
+    }
+    legend_kwds.update(plot_kw.pop('legend_kwds', {}))
+
+    ax = current_pct_geo.plot(
+        ax=ax,
+        column=column,
+        legend=True,
+        norm=SymLogNorm(linthresh=linthresh, vmin=vmin, vmax=vmax, base=10),
+        cmap='inferno_r',
+        vmin=vmin,
+        vmax=vmax,
+        legend_kwds=legend_kwds,
+        missing_kwds={'color': 'lightgrey'},
+        **plot_kw
+    )
+    show_area(ax, view)
+    ax.set_title(title)
 
 
 def render_dt(
