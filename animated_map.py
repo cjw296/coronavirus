@@ -20,7 +20,7 @@ def render_cases_map(ax, frame_date, view):
     render_map(
         ax, frame_date, read_map_data, view, column=per100k,
         title=f'COVID-19 cases as of {frame_date:%d %b %Y}',
-        vmin=0, linthresh=30, vmax=200, linspacing=10, lognum=5, lognearest=10,
+        vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10,
         legend_kwds={
             'extend': 'max',
             'label': f'{rolling_days} day rolling average of new cases per 100,000 people '

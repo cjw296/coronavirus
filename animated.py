@@ -102,8 +102,9 @@ def round_nearest(a, nearest):
 
 
 def render_map(ax, frame_date, read_map_data, view, column, title,
-               vmin, linthresh, vmax, linspacing, lognum, lognearest,
-               load_geoms=ltla_geoms, geom_col='lad19cd',
+               vmin, linthresh, vmax, linticks, logticks,
+               linnearest=1, lognearest=1,
+               load_geoms=ltla_geoms, geom_col='lad19cd', cmap='inferno_r',
                **plot_kw):
     df, _ = read_map_data()
     dt = frame_date.date()
@@ -113,8 +114,8 @@ def render_map(ax, frame_date, read_map_data, view, column, title,
                                right_on=area_code)
 
     ticks = np.concatenate((
-        np.arange(vmin, linthresh, linspacing),
-        round_nearest(np.geomspace(linthresh, vmax, lognum), lognearest))
+        round_nearest(np.linspace(vmin, linthresh, linticks), linnearest),
+        round_nearest(np.geomspace(linthresh, vmax, logticks), lognearest))
     )
 
     legend_kwds = {
@@ -124,16 +125,17 @@ def render_map(ax, frame_date, read_map_data, view, column, title,
     }
     legend_kwds.update(plot_kw.pop('legend_kwds', {}))
 
+    plot_kw['missing_kwds'] = plot_kw.pop('missing_kwds', {'color': 'lightgrey'})
+
     ax = current_pct_geo.plot(
         ax=ax,
         column=column,
         legend=True,
         norm=SymLogNorm(linthresh=linthresh, vmin=vmin, vmax=vmax, base=10),
-        cmap='inferno_r',
+        cmap=cmap,
         vmin=vmin,
         vmax=vmax,
         legend_kwds=legend_kwds,
-        missing_kwds={'color': 'lightgrey'},
         **plot_kw
     )
     show_area(ax, view)
