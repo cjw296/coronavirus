@@ -14,6 +14,10 @@ all_params = dict(
     oxford=dict(
         areas=oxford_areas,
     ),
+    wiltshire=dict(
+        areas=['E06000054'],
+
+    ),
     london=dict(
         diff_ylims=[-10, 1800],
         areas=london_areas,
