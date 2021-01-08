@@ -14,7 +14,8 @@ from constants import (
     base_path, specimen_date, area, cases, per100k, lockdown1,
     lockdown2, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code, unique_people_tested_sum, second_dose_cum, first_dose_cum, first_dose
+    ltla, utla, code, unique_people_tested_sum, second_dose_cum, first_dose_cum, first_dose,
+    first_vaccination, second_dose
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -373,24 +374,54 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
 
 
 def vaccination_dashboard():
-    data = read_csv(find_latest('vaccination_*', date_index=-1)[0])
-    assert data[second_dose_cum].sum() == 0
-    nation_populations = load_population().loc[data[area_code].unique()]
+    # input data:
+    raw = read_csv(find_latest('vaccination_*', date_index=-1)[0])
+    names_frame = raw[[area_code, area_name]].drop_duplicates()
+    nation_codes = names_frame[area_code]
+    nation_populations = load_population().loc[nation_codes]
     total_population = nation_populations.sum()[0]
-    data = data.merge(nation_populations, on=area_code)
+    data = raw[[date_col, area_code, first_dose, second_dose]].copy()
 
+    # data massaging:
+    initial = pd.DataFrame(
+        {date_col: pd.to_datetime(first_vaccination), first_dose: 0, second_dose: 0},
+        index=nation_codes
+    )
+    initial.index.name = area_code
+
+    to_fudge = data.set_index(date_col).sort_index().loc[:'2020-12-20'].reset_index()
+    fudged = to_fudge.groupby(area_code).agg(
+        {date_col: 'max', first_dose: 'sum', second_dose: 'sum'}
+    )
+
+    normal = data.set_index(date_col).sort_index().loc['2020-12-21':]
+
+    all_data = pd.concat((df.reset_index() for df in (initial, fudged, normal)))
+    all_data['start'] = all_data[date_col].shift(len(nation_codes))
+    all_data['duration'] = all_data[date_col] - all_data['start']
+    all_data = all_data.set_index([date_col, area_code])
+    all_data['any'] = all_data.groupby(level=-1)[first_dose].cumsum()
+    all_data['full'] = all_data.groupby(level=-1)[second_dose].cumsum()
+    all_data['partial'] = all_data['any'] - all_data['full']
+    data = pd.merge(all_data.reset_index(), names_frame, on=area_code)
     max_date = data[date_col].max()
-    pie_data = data[data[date_col] == max_date].copy()
-    pie_data['vaccinated'] = pie_data[first_dose_cum] / pie_data[population]
-    pie_data['unvaccinated'] = 1 - pie_data['vaccinated']
-    pie_data = pie_data.set_index(area_name)[['vaccinated', 'unvaccinated']].transpose()
 
+    # data for plotting:
+    latest = data[[area_name, area_code, 'full', 'any', 'partial']][
+        data[date_col] == max_date].copy()
+    latest = pd.merge(latest, nation_populations, on=area_code)
+
+    latest['full_pct'] = 100 * latest['full'] / latest[population]
+    latest['partial_pct'] = 100 * latest['partial'] / latest[population]
+    latest['none_pct'] = 100 - latest['full_pct'] - latest['partial_pct']
+
+    pie_data = latest.set_index(area_name)[['full_pct', 'partial_pct', 'none_pct']].transpose()
     pct_total = 100 * (
-                data.pivot_table(values=first_dose_cum, index=[date_col], columns=area_name).fillna(
-                    0) / total_population)
-    pct_total.columns.name = None
-    people_weekly = data.pivot_table(values=first_dose, index=[date_col], columns=area_name).fillna(
-        0)
+        data.pivot_table(values='any', index=[date_col], columns=area_name).fillna(0)
+        / total_population
+    )
+
+    # plotting
     colors = [plt.cm.tab10(i) for i in range(len(nation_populations))]
 
     fig = plt.figure(figsize=(16, 8), dpi=100)
@@ -404,34 +435,49 @@ def vaccination_dashboard():
         ax.add_patch(plt.Circle((0, 0), radius=1, color='k', fill=False))
         pie_data.plot(ax=ax, y=nation,
                       kind='pie', labels=None, legend=False, startangle=-90, counterclock=False,
-                      colors=['green', 'white'],
+                      colors=['green', 'lightgreen', 'white'],
                       )
-        pct = 100 * pie_data[nation].loc['vaccinated']
+        pct = pie_data[nation].loc['full_pct'] + pie_data[nation].loc['partial_pct']
         ax.text(0, 0.5, f"{pct:.1f}%", ha='center', va='top', weight='bold', fontsize=14)
 
     ax = plt.subplot(gs[1, :])
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
-    ax.yaxis.grid(True)
+    ax.yaxis.grid(False)
     ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+    plt.setp(ax.get_xticklabels(), visible=False)
+    ax.set_title('Percentage of UK population vaccinated')
 
-    pct_total.plot(ax=ax, kind='bar', stacked=True, width=0.9, color=colors,
-                   title='Percentage of UK population vaccinated')
-    xaxis = ax.xaxis
+    labels = [f"{nation}: {latest[latest[area_name] == nation]['any'].item():,.0f} people" for
+              nation in pct_total.columns]
+    ax.stackplot(pct_total.index, pct_total.values.transpose(), colors=colors, labels=labels)
+    ax.legend(loc='upper left')
 
     ax = plt.subplot(gs[2, :], sharex=ax)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
-    ax.yaxis.grid(True)
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
-
+    ax.xaxis.set_major_locator(DayLocator(interval=7))
+    ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
     ax.xaxis.label.set_visible(False)
+    ax.set_title('People vaccinated per week')
 
-    ax = people_weekly.plot(ax=ax, kind='bar', stacked=True, width=0.9, color=colors, legend=False,
-                            title='People vaccinated in the previous week')
+    bottom = None
+    for nation_name, color in zip(pct_total, colors):
+        nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
+        if bottom is None:
+            bottom = pd.Series(0, nation_data.index)
+        heights = (nation_data[first_dose] + nation_data[second_dose]) * (
+                    7 / nation_data['duration'].dt.days)
+        ax.bar(
+            nation_data.index - nation_data['duration'],
+            bottom=bottom,
+            height=heights,
+            width=nation_data['duration'].dt.days,
+            align='edge',
+            color=color,
+        )
+        bottom += heights
 
-    ax.xaxis.set_tick_params(rotation=0)
-    labels = ax.xaxis.get_ticklabels()
-    for i, (dt, label) in enumerate(zip(people_weekly.index, labels)):
-        label.set_text(dt.strftime('%d %b %Y'))
-    ax.xaxis.set_ticklabels(labels)
+    # return latest data so it gets displayed
+    return latest
