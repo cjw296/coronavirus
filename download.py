@@ -141,6 +141,16 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
     return path
 
 
+def is_msoa_data_ready():
+    response = requests.get('https://api.coronavirus.data.gov.uk/v1/timestamp')
+    release_timestamp = parse_date(response.json()['websiteTimestamp'])
+    response = requests.head('https://coronavirus.data.gov.uk/downloads/maps/msoa_data_latest.geojson')
+    msoa_timestamp = parse_date(response.headers['Last-Modified'])
+    today = date.today()
+    print(f'today: {today}, release: {release_timestamp}, msoa: {msoa_timestamp}')
+    return release_timestamp.date() >= today and msoa_timestamp > release_timestamp
+
+
 def main():
     parser = ArgumentParser()
     add_date_arg(parser, '--start')
