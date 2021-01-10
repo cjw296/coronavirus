@@ -57,7 +57,7 @@ def main():
     for dt, path in msoa_files(args.start):
         fieldnames = add_from(path, rows, dt)
 
-    if not rows:
+    if fieldnames is None or not rows:
         return
 
     with open(args.output, 'w') as target:
