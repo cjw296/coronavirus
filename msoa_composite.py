@@ -31,6 +31,14 @@ def add_from(path: Path, rows: dict, dt: date = None):
     return reader.fieldnames
 
 
+def msoa_files(earliest) -> Sequence[Tuple[datetime, Path]]:
+    for dt, path in tqdm(
+            sorted(find_all('msoa_????-??-??.csv', earliest=earliest)),
+            desc='source files'
+    ):
+        yield dt, path
+
+
 def main():
     parser = ArgumentParser()
     add_date_arg(parser, '--start', default=date.today())
@@ -46,10 +54,7 @@ def main():
     if rows:
         print('latest date found: ', sorted(rows.keys())[-1][0])
 
-    for dt, path in tqdm(
-            sorted(find_all('msoa_????-??-??.csv', earliest=args.start)),
-            desc='source files'
-    ):
+    for dt, path in msoa_files(args.start):
         fieldnames = add_from(path, rows, dt)
 
     if not rows:
