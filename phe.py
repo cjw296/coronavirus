@@ -11,11 +11,10 @@ from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
 
 import series as s
 from constants import (
-    base_path, specimen_date, area, cases, per100k, lockdown1,
-    lockdown2, date_col, area_code, population,
+    base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code, unique_people_tested_sum, second_dose_cum, first_dose_cum, first_dose,
-    first_vaccination, second_dose
+    ltla, utla, code, unique_people_tested_sum, first_dose,
+    first_vaccination, second_dose, national_lockdowns
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -177,7 +176,7 @@ def plot_stacked_bars(
     ax.yaxis.set_label_position("right")
     ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
 
-    for i, lockdown in enumerate((lockdown1, lockdown2)):
+    for i, lockdown in enumerate(national_lockdowns):
         h = ax.axvspan(*lockdown, color='black', alpha=0.05,
                        zorder=-1000, label=f'National Lockdown')
         if not i:
@@ -352,7 +351,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
               y=[s_.metric for s_ in series],
               color=[s_.color for s_ in series], legend=False)
 
-    for lockdown in lockdown1, lockdown2:
+    for lockdown in national_lockdowns:
         lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2, zorder=0)
 
     lines = tests_ax.get_lines() + outcomes_ax.get_lines() + [lockdown_obj]
