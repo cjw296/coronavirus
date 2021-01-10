@@ -15,13 +15,11 @@ def key(row):
 
 
 def lines_from(path: Path):
-    with tqdm(total=path.stat().st_size, desc=path.name) as progress:
-        with open(path) as source:
-            line = source.readline()
-            while line:
-                progress.update(source.tell() - progress.n)
-                yield line
-                line = source.readline()
+    with open(path) as source:
+        lines = source.read().splitlines()
+
+    for line in tqdm(lines, desc=path.name):
+        yield line
 
 
 def add_from(path: Path, rows: dict, dt: date = None):
