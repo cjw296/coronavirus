@@ -374,7 +374,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
 
 def vaccination_dashboard():
     # input data:
-    raw = read_csv(find_latest('vaccination_*', date_index=-1)[0])
+    path, data_date = find_latest('vaccination_*', date_index=-1)
+    raw = read_csv(path)
     names_frame = raw[[area_code, area_name]].drop_duplicates()
     nation_codes = names_frame[area_code]
     nation_populations = load_population().loc[nation_codes]
@@ -423,11 +424,11 @@ def vaccination_dashboard():
     # plotting
     colors = [plt.cm.tab10(i) for i in range(len(nation_populations))]
 
-    fig = plt.figure(figsize=(16, 8), dpi=100)
+    fig = plt.figure(figsize=(16, 8.5), dpi=100)
     fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
 
     gs = GridSpec(3, 4, height_ratios=[1, 1, 1])
-    gs.update(top=0.95, bottom=0.05, right=0.95, left=0.02, wspace=0, hspace=0.2)
+    gs.update(top=0.95, bottom=0.15, right=0.95, left=0.02, wspace=0, hspace=0.2)
 
     for x, nation in enumerate(pie_data):
         ax = plt.subplot(gs[0, x])
@@ -477,6 +478,11 @@ def vaccination_dashboard():
             color=color,
         )
         bottom += heights
+
+    fig.text(0.5, 0.08,
+             f'@chriswithers13 - '
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
+            ha='center')
 
     # return latest data so it gets displayed
     return latest
