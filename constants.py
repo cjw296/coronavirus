@@ -16,6 +16,8 @@ cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-c
 
 base_path = Path('~/coronavirus/data').expanduser()
 output_path = Path('~/Downloads').expanduser()
+repo_path = Path(__file__).absolute().parent
+
 
 base = str(base_path)
 area = 'Area name'

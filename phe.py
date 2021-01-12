@@ -15,7 +15,7 @@ from constants import (
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
     ltla, utla, code, unique_people_tested_sum, first_dose_weekly,
     first_vaccination, second_dose_weekly, national_lockdowns, area_type, complete_dose_daily_cum,
-    first_dose_daily_cum, second_dose_daily_cum
+    first_dose_daily_cum, second_dose_daily_cum, repo_path
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -525,4 +525,5 @@ def vaccination_dashboard():
             ha='center')
 
     # return latest data so it gets displayed
+    plt.savefig(repo_path / f'vaccination.png', bbox_inches='tight')
     return latest
