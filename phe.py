@@ -428,7 +428,8 @@ def vaccination_dashboard():
     latest['partial_pct'] = 100 * latest['partial'] / latest[population]
     latest['none_pct'] = 100 - latest['full_pct'] - latest['partial_pct']
 
-    pie_data = latest.set_index(area_name)[['full_pct', 'partial_pct', 'none_pct']].transpose()
+    pie_data = latest.set_index(area_name).sort_index()
+    pie_data = pie_data[['full_pct', 'partial_pct', 'none_pct']].transpose()
     pct_total = 100 * (
         data.pivot_table(values='any', index=[date_col], columns=area_name).fillna(0)
         / total_population
