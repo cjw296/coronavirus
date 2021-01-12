@@ -1,10 +1,15 @@
-Exploring UK data on coronovirus cases.
+# UK coronovirus visualisations by Chris Withers.
+
+Latest vaccination data:
+
+![Branching](https://cjw296.github.io/coronavirus/vaccination.png)
 
 Animations are generally tweeted by [@chriswithers13](https://twitter.com/chriswithers13).
 
 Static charts are in the [notebooks](https://github.com/cjw296/coronavirus/blob/master/coronavirus.ipynb), just view them on GitHub.
 
-Charts and interactive plots infrequently updated, often when code changes.
+Charts and interactive plots, other than vaccination data, are infrequently updated, 
+often when code changes.
 
 Code is here: [https://github.com/cjw296/coronavirus](https://github.com/cjw296/coronavirus)
 
