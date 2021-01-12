@@ -14,7 +14,8 @@ from constants import (
     base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
     ltla, utla, code, unique_people_tested_sum, first_dose_weekly,
-    first_vaccination, second_dose_weekly, national_lockdowns, area_type, complete_dose_daily_cum
+    first_vaccination, second_dose_weekly, national_lockdowns, area_type, complete_dose_daily_cum,
+    first_dose_daily_cum, second_dose_daily_cum
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -386,14 +387,8 @@ def latest_raw_vaccination_data():
     return raw, new_weekly_dt
 
 
-def vaccination_dashboard():
-    # input data:
-    raw, data_date = latest_raw_vaccination_data()
-    names_frame = raw[[area_code, area_name]].drop_duplicates()
-    nation_codes = names_frame[area_code]
-    nation_populations = load_population().loc[nation_codes]
-    total_population = nation_populations.sum()[0]
-    data = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
+def weekly_data(raw, nation_codes):
+    weekly = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
 
     # data massaging:
     initial = pd.DataFrame(
@@ -402,19 +397,50 @@ def vaccination_dashboard():
     )
     initial.index.name = area_code
 
-    to_fudge = data.set_index(date_col).sort_index().loc[:'2020-12-20'].reset_index()
+    to_fudge = weekly.set_index(date_col).sort_index().loc[:'2020-12-20'].reset_index()
     fudged = to_fudge.groupby(area_code).agg(
         {date_col: 'max', first_dose_weekly: 'sum', second_dose_weekly: 'sum'}
     )
 
-    normal = data.set_index(date_col).sort_index().loc['2020-12-21':]
+    normal = weekly.set_index(date_col).sort_index().loc['2020-12-21':]
+    data = pd.concat((df.reset_index() for df in (initial, fudged, normal)))
+    data.rename(columns={first_dose_weekly: 'first_dose', second_dose_weekly: 'second_dose'},
+                  errors='raise', inplace=True)
+    return data
 
-    all_data = pd.concat((df.reset_index() for df in (initial, fudged, normal)))
+
+def daily_data(raw, weekly):
+    initial_daily = weekly.groupby(area_code).agg({
+        'first_dose': 'sum', 'second_dose': 'sum', date_col: 'max'
+    }).reset_index()
+
+    daily_rows = raw[[date_col, area_code, first_dose_daily_cum, second_dose_daily_cum]].dropna()
+    daily_rows.rename(
+        columns={first_dose_daily_cum: 'first_dose', second_dose_daily_cum: 'second_dose'},
+        errors='raise', inplace=True)
+    daily = pd.concat(
+        [initial_daily, daily_rows[daily_rows[date_col] > initial_daily[date_col].max()]])
+
+    return daily.set_index([date_col, area_code]).groupby(area_code).diff().dropna().reset_index()
+
+
+def vaccination_dashboard():
+    # input data:
+    raw, data_date = latest_raw_vaccination_data()
+    names_frame = raw[[area_code, area_name]].drop_duplicates()
+    nation_codes = names_frame[area_code]
+    nation_populations = load_population().loc[nation_codes]
+    total_population = nation_populations.sum()[0]
+
+    weekly = weekly_data(raw, nation_codes)
+    daily = daily_data(raw, weekly)
+    all_data = pd.concat([weekly, daily])
+
     all_data['start'] = all_data[date_col].shift(len(nation_codes))
     all_data['duration'] = all_data[date_col] - all_data['start']
     all_data = all_data.set_index([date_col, area_code])
-    all_data['any'] = all_data.groupby(level=-1)[first_dose_weekly].cumsum()
-    all_data['full'] = all_data.groupby(level=-1)[second_dose_weekly].cumsum()
+    all_data['any'] = all_data.groupby(level=-1)['first_dose'].cumsum()
+    all_data['full'] = all_data.groupby(level=-1)['second_dose'].cumsum()
     all_data['partial'] = all_data['any'] - all_data['full']
     data = pd.merge(all_data.reset_index(), names_frame, on=area_code)
     max_date = data[date_col].max()
@@ -481,7 +507,7 @@ def vaccination_dashboard():
         nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
-        heights = (nation_data[first_dose_weekly] + nation_data[second_dose_weekly]) * (
+        heights = (nation_data['first_dose'] + nation_data['second_dose']) * (
                     7 / nation_data['duration'].dt.days)
         ax.bar(
             nation_data.index - nation_data['duration'],
