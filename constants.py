@@ -47,10 +47,28 @@ unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
 
-first_dose = 'newPeopleReceivingFirstDose'
-second_dose = 'newPeopleReceivingSecondDose'
-first_dose_cum = 'cumPeopleReceivingFirstDose'
-second_dose_cum = 'cumPeopleReceivingSecondDose'
+first_dose_weekly = 'weeklyPeopleVaccinatedFirstDoseByVaccinationDate'
+second_dose_weekly = 'weeklyPeopleVaccinatedSecondDoseByVaccinationDate'
+first_dose_daily_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
+second_dose_daily_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
+complete_dose_daily_cum = "cumPeopleVaccinatedCompleteByPublishDate"
+
+vaccination_new_and_weekly = [
+    "newPeopleVaccinatedFirstDoseByPublishDate",
+    "newPeopleVaccinatedSecondDoseByPublishDate",
+    "newPeopleVaccinatedCompleteByPublishDate",
+    first_dose_weekly,
+    second_dose_weekly,
+]
+
+vaccination_cumulative = [
+    first_dose_daily_cum,
+    second_dose_daily_cum,
+    complete_dose_daily_cum,
+    "cumPeopleVaccinatedFirstDoseByVaccinationDate",
+    "cumPeopleVaccinatedSecondDoseByVaccinationDate",
+]
+
 
 standard_metrics = (
     new_cases_by_specimen_date,

@@ -13,8 +13,8 @@ import series as s
 from constants import (
     base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code, unique_people_tested_sum, first_dose,
-    first_vaccination, second_dose, national_lockdowns
+    ltla, utla, code, unique_people_tested_sum, first_dose_weekly,
+    first_vaccination, second_dose_weekly, national_lockdowns, area_type, complete_dose_daily_cum
 )
 from download import find_latest, find_all
 from plotting import stacked_bar_plot
@@ -372,26 +372,39 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     xaxis.label.set_visible(False)
 
 
+def latest_raw_vaccination_data():
+    new_weekly_path, new_weekly_dt = find_latest('vaccination_????-*', date_index=-1)
+    cum_path, cum_dt = find_latest('vaccination_cum_*', date_index=-1)
+    assert cum_dt == new_weekly_dt, f'{cum_dt} != {new_weekly_dt}'
+    new_weekly_df = read_csv(new_weekly_path)
+    cum_df = read_csv(cum_path)
+    raw = pd.merge(new_weekly_df, cum_df, how='outer',
+                   on=[date_col, area_type, area_code, area_name]).sort_values(
+        [date_col, area_code])
+    # this isn't currently populated:
+    assert raw[complete_dose_daily_cum].isnull().all()
+    return raw, new_weekly_dt
+
+
 def vaccination_dashboard():
     # input data:
-    path, data_date = find_latest('vaccination_*', date_index=-1)
-    raw = read_csv(path)
+    raw, data_date = latest_raw_vaccination_data()
     names_frame = raw[[area_code, area_name]].drop_duplicates()
     nation_codes = names_frame[area_code]
     nation_populations = load_population().loc[nation_codes]
     total_population = nation_populations.sum()[0]
-    data = raw[[date_col, area_code, first_dose, second_dose]].copy()
+    data = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
 
     # data massaging:
     initial = pd.DataFrame(
-        {date_col: pd.to_datetime(first_vaccination), first_dose: 0, second_dose: 0},
+        {date_col: pd.to_datetime(first_vaccination), first_dose_weekly: 0, second_dose_weekly: 0},
         index=nation_codes
     )
     initial.index.name = area_code
 
     to_fudge = data.set_index(date_col).sort_index().loc[:'2020-12-20'].reset_index()
     fudged = to_fudge.groupby(area_code).agg(
-        {date_col: 'max', first_dose: 'sum', second_dose: 'sum'}
+        {date_col: 'max', first_dose_weekly: 'sum', second_dose_weekly: 'sum'}
     )
 
     normal = data.set_index(date_col).sort_index().loc['2020-12-21':]
@@ -400,8 +413,8 @@ def vaccination_dashboard():
     all_data['start'] = all_data[date_col].shift(len(nation_codes))
     all_data['duration'] = all_data[date_col] - all_data['start']
     all_data = all_data.set_index([date_col, area_code])
-    all_data['any'] = all_data.groupby(level=-1)[first_dose].cumsum()
-    all_data['full'] = all_data.groupby(level=-1)[second_dose].cumsum()
+    all_data['any'] = all_data.groupby(level=-1)[first_dose_weekly].cumsum()
+    all_data['full'] = all_data.groupby(level=-1)[second_dose_weekly].cumsum()
     all_data['partial'] = all_data['any'] - all_data['full']
     data = pd.merge(all_data.reset_index(), names_frame, on=area_code)
     max_date = data[date_col].max()
@@ -467,7 +480,7 @@ def vaccination_dashboard():
         nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
-        heights = (nation_data[first_dose] + nation_data[second_dose]) * (
+        heights = (nation_data[first_dose_weekly] + nation_data[second_dose_weekly]) * (
                     7 / nation_data['duration'].dt.days)
         ax.bar(
             nation_data.index - nation_data['duration'],
