@@ -2,7 +2,7 @@
 
 Latest vaccination data:
 
-![Branching](https://cjw296.github.io/coronavirus/vaccination.png)
+<img src="https://cjw296.github.io/coronavirus/vaccination.png" alt="UK Vaccination data" width="800"/>
 
 Animations are generally tweeted by [@chriswithers13](https://twitter.com/chriswithers13).
 
