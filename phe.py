@@ -490,7 +490,7 @@ def vaccination_dashboard():
     ax.yaxis.grid(False)
     ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.set_title('Percentage of UK population vaccinated')
+    ax.set_title('Percentage of UK population partially or fully vaccinated')
 
     labels = [f"{nation}: {latest[latest[area_name] == nation]['any'].item():,.0f} people" for
               nation in pct_total.columns]
@@ -504,7 +504,7 @@ def vaccination_dashboard():
     ax.xaxis.set_major_locator(DayLocator(interval=7))
     ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
     ax.xaxis.label.set_visible(False)
-    ax.set_title('People vaccinated per week')
+    ax.set_title('Total injections per week')
 
     bottom = None
     for nation_name, color in zip(pct_total, colors):
