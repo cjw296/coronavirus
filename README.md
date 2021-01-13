@@ -1,6 +1,4 @@
----
-title: UK coronovirus visualisations by Chris Withers.
----
+UK coronovirus visualisations by Chris Withers.
 
 Latest vaccination data:
 
