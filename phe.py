@@ -436,6 +436,10 @@ def vaccination_dashboard():
     daily = daily_data(raw, weekly)
     all_data = pd.concat([weekly, daily])
 
+    # look out for weirdness
+    assert (all_data['first_dose'] >= 0).all()
+    assert (all_data['second_dose'] >= 0).all()
+
     all_data['start'] = all_data[date_col].shift(len(nation_codes))
     all_data['duration'] = all_data[date_col] - all_data['start']
     all_data = all_data.set_index([date_col, area_code])
