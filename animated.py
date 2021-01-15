@@ -19,8 +19,8 @@ from tqdm import tqdm
 
 from args import add_date_arg
 from constants import output_path, second_wave, area_code
-from geo import views
-from phe import plot_summary, load_geoms as ltla_geoms
+from geo import views, ltla_geoms
+from phe import plot_summary
 import series as s
 from plotting import show_area
 
@@ -108,13 +108,13 @@ def round_nearest(a, nearest):
 def render_map(ax, frame_date, read_map_data, view, column, title,
                vmin, linthresh, vmax, linticks, logticks,
                linnearest=1, lognearest=1,
-               load_geoms=ltla_geoms, geom_col='lad19cd', cmap='inferno_r',
+               load_geoms=ltla_geoms, cmap='inferno_r',
                **plot_kw):
     df, _ = read_map_data()
     dt = frame_date.date()
     data = df.loc[dt]
 
-    current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on=geom_col,
+    current_pct_geo = pd.merge(load_geoms(), data, how='outer', left_on='code',
                                right_on=area_code)
 
     ticks = np.concatenate((

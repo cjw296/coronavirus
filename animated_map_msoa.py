@@ -1,11 +1,11 @@
 from functools import lru_cache
 
-import geopandas
 import pandas as pd
 from matplotlib.cm import get_cmap
 
 from animated import map_main, render_map
 from constants import base_path, date_col, new_cases_rate, release_timestamp
+from geo import msoa_geoms
 from phe import read_csv
 
 
@@ -13,15 +13,6 @@ from phe import read_csv
 def read_map_data():
     data = read_csv(base_path / 'msoa_composite.csv', index_col=date_col)
     return data.fillna(0), pd.to_datetime(data.iloc[-1][release_timestamp])
-
-
-@lru_cache
-def msoa_geoms():
-    return geopandas.read_file(
-        base_path /
-        "Middle_Layer_Super_Output_Areas__December_2011__EW_BSC_V2-shp" /
-        "Middle_Layer_Super_Output_Areas__December_2011__EW_BSC_V2.shp"
-    ).to_crs("EPSG:3857")
 
 
 cmap = get_cmap('inferno_r')
@@ -34,7 +25,7 @@ def render_cases_map(ax, frame_date, view):
         title=f'COVID-19 cases as of {frame_date:%d %b %Y}',
         vmin=30, linthresh=700, vmax=4000,
         linticks=7, linnearest=10, logticks=5, lognearest=100,
-        load_geoms=msoa_geoms, geom_col='MSOA11CD', cmap=cmap,
+        load_geoms=msoa_geoms, cmap=cmap,
         antialiased=False,
         missing_kwds={'color': 'white'},
         legend_kwds={

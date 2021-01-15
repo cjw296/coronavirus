@@ -2,7 +2,6 @@ import json
 from datetime import timedelta, date, datetime
 from functools import lru_cache
 
-import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,6 +18,7 @@ from constants import (
     first_dose_daily_cum, second_dose_daily_cum, repo_path
 )
 from download import find_latest, find_all
+from geo import ltla_geoms
 from plotting import stacked_bar_plot
 
 
@@ -298,18 +298,13 @@ def recent_phe_data_summed(latest_date, days=7):
     return recent_pct
 
 
-@lru_cache
-def load_geoms():
-    return geopandas.read_file(str(base_path / 'ltlas_v1.geojson')).to_crs("EPSG:3857")
-
-
 def map_data(for_date):
 
     recent_pct = recent_phe_data_summed(for_date)
 
-    geoms = load_geoms()
+    geoms = ltla_geoms()
     phe_recent_geo = pd.merge(
-        geoms, recent_pct, how='outer', left_on='lad19cd', right_on=area_code
+        geoms, recent_pct, how='outer', left_on='code', right_on=area_code
     )
 
     phe_recent_date = phe_recent_geo[specimen_date].max()

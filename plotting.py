@@ -12,7 +12,7 @@ from bokeh.transform import linear_cmap
 from matplotlib.cm import get_cmap
 
 from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population, base_path
-from geo import views
+from geo import views, old_ltla_geoms
 
 
 def show_area(ax, view=views['uk']):
@@ -95,19 +95,13 @@ def matplotlib_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title
     plt.show()
 
 
-def add_simple_geoms(zoe_df):
-    lad16cd = geopandas.read_file(str(
-        base_path /
-        'Local_Authority_Districts__December_2016__Boundaries_UK-shp' /
-        'Local_Authority_Districts__December_2016__Boundaries_UK.shp'
-    ))
-    return pd.merge(lad16cd,
-                    zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
-                    how='left')
-
-
 def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
-    zoe_new_lad16 = add_simple_geoms(zoe_df)
+    zoe_new_lad16 = pd.merge(
+        old_ltla_geoms(),
+        zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
+        how='left',
+        left_on='code', right_on='lad16cd',
+    )
     zoe_title = f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}'
     zoe = geoplot_bokeh(zoe_new_lad16.to_crs('EPSG:3857'), zoe_title, 'percentage', tooltips=[
         ('Name','@lad16nm'),
@@ -115,7 +109,7 @@ def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
     ])
 
     phe_data = phe_recent_geo[[
-        'geometry', 'lad19nm', new_cases_by_specimen_date, population, pct_population
+        'geometry', 'code', new_cases_by_specimen_date, population, pct_population
     ]]
     phe = geoplot_bokeh(phe_data[~phe_data.geometry.isnull()], phe_recent_title, pct_population,
                   x_range=zoe.x_range, y_range=zoe.y_range, vmax=phe_vmax, tooltips=[
