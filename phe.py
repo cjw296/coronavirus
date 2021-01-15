@@ -510,7 +510,7 @@ def vaccination_dashboard():
     ax.set_xticks(major_ticks)
     ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
     ax.xaxis.label.set_visible(False)
-    ax.set_title('Total injections per week')
+    ax.set_title('Rate of injections per week')
 
     bottom = None
     for nation_name, color in zip(pct_total, colors):
