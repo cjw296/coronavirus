@@ -4,6 +4,7 @@ from functools import lru_cache
 
 import geopandas
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from matplotlib.dates import DayLocator, DateFormatter
 from matplotlib.gridspec import GridSpec
@@ -473,6 +474,7 @@ def vaccination_dashboard():
     colors = [plt.cm.tab10(i) for i in [england_col, ni_col, scotland_col, wales_col]]
 
     fig = plt.figure(figsize=(16, 8.5), dpi=100)
+    fig.set_facecolor('white')
     fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
 
     gs = GridSpec(3, 4, height_ratios=[1, 1, 1])
@@ -505,7 +507,12 @@ def vaccination_dashboard():
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
-    ax.xaxis.set_major_locator(DayLocator(interval=7))
+    ax.set_xlim(first_vaccination, max_date)
+    ax.set_xticks(all_data.index.get_level_values(0).unique(), minor=True)
+    major_ticks = list(weekly[date_col].unique())
+    if max_date > major_ticks[-1]+np.timedelta64(1,'D'):
+        major_ticks.append(max_date.to_datetime64())
+    ax.set_xticks(major_ticks)
     ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
     ax.xaxis.label.set_visible(False)
     ax.set_title('Total injections per week')
