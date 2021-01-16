@@ -5,7 +5,7 @@ from matplotlib.cm import get_cmap
 
 from animated import map_main, render_map
 from constants import base_path, date_col, new_cases_rate, release_timestamp
-from geo import msoa_geoms
+from geo import msoa_geoms_20
 from phe import read_csv
 
 
@@ -25,7 +25,7 @@ def render_cases_map(ax, frame_date, view):
         title=f'COVID-19 cases as of {frame_date:%d %b %Y}',
         vmin=30, linthresh=700, vmax=4000,
         linticks=7, linnearest=10, logticks=5, lognearest=100,
-        load_geoms=msoa_geoms, cmap=cmap,
+        load_geoms=msoa_geoms_20, cmap=cmap,
         antialiased=False,
         missing_kwds={'color': 'white'},
         legend_kwds={

@@ -5,20 +5,19 @@ import geopandas
 import shapely
 from geopandas import GeoDataFrame
 
-from constants import base_path
+from constants import repo_path
 
 
 @lru_cache
 def geoportal_geoms(name, code_column, name_column):
     # geoms that comes from https://geoportal.statistics.gov.uk/
-    geoms = geopandas.read_file(base_path / f"{name}-shp" / f"{name}.shp")
+    geoms = geopandas.read_file(repo_path / 'geo' / f"{name}-shp" / f"{name}.shp")
     geoms.to_crs("EPSG:3857", inplace=True)
     geoms.rename(columns={code_column: 'code', name_column: 'name'},
                  errors='raise', inplace=True)
     return geoms
 
 
-@lru_cache
 def old_ltla_geoms():
     return geoportal_geoms(
         "Local_Authority_Districts__December_2016__Boundaries_UK",
@@ -27,8 +26,7 @@ def old_ltla_geoms():
     )
 
 
-@lru_cache
-def ltla_geoms():
+def ltla_geoms_500():
     return geoportal_geoms(
         "Local_Authority_Districts__April_2019__UK_BUC_v2",
         code_column='LAD19CD',
@@ -36,9 +34,44 @@ def ltla_geoms():
     )
 
 
-def msoa_geoms():
+def ltla_geoms_20():
+    return geoportal_geoms(
+        "Local_Authority_Districts__April_2019__UK_BGC_v2",
+        code_column='LAD19CD',
+        name_column='LAD19NM',
+    )
+
+
+def ltla_geoms_full():
+    return geoportal_geoms(
+        'Local_Authority_Districts__April_2019__UK_BFC_v2',
+        code_column='LAD19CD',
+        name_column='LAD19NM',
+    )
+
+
+ltla_geoms = ltla_geoms_500
+
+
+def msoa_geoms_200():
     return geoportal_geoms(
         "Middle_Layer_Super_Output_Areas__December_2011__EW_BSC_V2",
+        code_column='MSOA11CD',
+        name_column='MSOA11NM',
+    )
+
+
+def msoa_geoms_20():
+    return geoportal_geoms(
+        "Middle_Layer_Super_Output_Areas__December_2011__EW_BGC_V2",
+        code_column='MSOA11CD',
+        name_column='MSOA11NM',
+    )
+
+
+def msoa_geoms_full():
+    return geoportal_geoms(
+        "Middle_Layer_Super_Output_Areas__December_2011__Boundaries_Full_Extent__BFE__EW_V3",
         code_column='MSOA11CD',
         name_column='MSOA11NM',
     )
