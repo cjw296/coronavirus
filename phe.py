@@ -529,6 +529,8 @@ def vaccination_dashboard():
         )
         bottom += heights
 
+    ax.set_ylim(0, 2_500_000)
+
     fig.text(0.5, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
