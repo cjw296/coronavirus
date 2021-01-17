@@ -29,7 +29,7 @@ def render_cases_map(ax, frame_date, view):
 
 
 def main():
-    map_main('animated_map_ltla_cases', read_map_data, render_cases_map, default_exclude=7)
+    map_main('animated_map_ltla_cases', read_map_data, render_cases_map, default_exclude=5)
 
 
 if __name__ == '__main__':
