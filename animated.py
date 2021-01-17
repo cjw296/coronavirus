@@ -155,9 +155,10 @@ def render_dt(
     render_map(map_ax, frame_date, views[view])
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                  series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
-    fig.text(0.25, 0.08,
+    fig.text(0.25, 0.07,
              f'@chriswithers13 - '
-             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}')
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
+             color='darkgrey')
     plt.savefig(image_path / f'{frame_date.date()}.png', dpi=dpi, bbox_inches='tight')
     plt.close()
 
