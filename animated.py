@@ -35,7 +35,7 @@ def safe_render(render, image_path, raise_errors, item):
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
-                    outputs: str = 'gif', raise_errors: bool = True):
+                    outputs: str = 'gif', raise_errors: bool = True, max_workers: int = None):
 
     # do this up front to catch typos cheaply:
     outputs = [output_types[output] for output in outputs.split(',')]
@@ -46,7 +46,7 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
     image_path.mkdir()
     renderer = partial(safe_render, render, image_path, raise_errors)
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers) as executor:
         tuple(tqdm(executor.map(renderer, items), total=len(items), desc='rendering'))
 
     image_paths = sorted(image_path.iterdir())
@@ -196,6 +196,7 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     parser.add_argument('--output', default='mp4')
     parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
     parser.add_argument('--view', choices=views.keys(), default=default_view)
+    parser.add_argument('--max_workers', type=int)
     args = parser.parse_args()
 
     df, data_date = read_map_data()
@@ -209,4 +210,4 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     )
 
     parallel_render(name+'-'+args.view, render, dates, slowing_durations(dates),
-                    args.output, raise_errors=args.raise_errors)
+                    args.output, raise_errors=args.raise_errors, max_workers=args.max_workers)
