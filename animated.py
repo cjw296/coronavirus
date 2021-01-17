@@ -175,7 +175,7 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     add_date_arg(parser, default=second_wave)
     parser.add_argument('--exclude-days', default=default_exclude, type=int)
     parser.add_argument('--output', default='mp4')
-    parser.add_argument('--raise-errors', action='store_true')
+    parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
     parser.add_argument('--view', choices=views.keys(), default=default_view)
     args = parser.parse_args()
 
