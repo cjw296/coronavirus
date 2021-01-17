@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from enum import Enum
 from functools import lru_cache
+from typing import Sequence
 
 import geopandas
 import pandas as pd
@@ -102,15 +104,107 @@ def convert_df(df, geom_col):
     return GeoDataFrame(df, crs=crs, geometry=geom_col)
 
 
+def above(geometry):
+    x = geometry.centroid.coords[0][0]
+    minx, miny, maxx, maxy = geometry.bounds
+    y = maxy + (maxy - miny) * 0.05
+    return x, y
+
+
+def center(geometry):
+    return geometry.centroid.coords[0]
+
+
+class Places:
+
+    def __init__(self, *names,
+                 outline_colour='black',
+                 outline_width=0.5,
+                 label_location=above,
+                 geom_source=town_and_city_geoms):
+        self.geom_source = geom_source
+        self.names = names
+        self.outline_colour = outline_colour
+        self.outline_width = outline_width
+        self.label_location = label_location
+
+    def frame(self):
+        geoms = self.geom_source()
+        return geoms[geoms['name'].isin(self.names)]
+
+
+PlacesFrom = Enum('PlacesFrom', 'show outline')
+
+
 @dataclass
 class View:
-    minx: int
-    maxx: int
-    miny: int
-    maxy: int
+
+    minx: float = None
+    maxx: float = None
+    miny: float = None
+    maxy: float = None
+
+    width: float = 10
+    height: float = 15
+    ratio: int = 9
+
+    show: Places = ()
+    outline: Sequence[Places] = ()
+    label: Sequence[Places] = ()
+
+    margin_pct = 10
+
+    def __post_init__(self):
+        if self.minx is None:
+            show = self.show.frame()
+            minx, miny, maxx, maxy = show.geometry.total_bounds
+            factor = self.margin_pct / 100
+            x_margin = (maxx-minx)*factor
+            self.minx = minx - x_margin
+            self.maxx = maxx + x_margin
+            y_margin = (maxy-miny)*factor
+            self.miny = miny - y_margin
+            self.maxy = maxy + y_margin
+        for attr in 'outline', 'label':
+            value = getattr(self, attr)
+            if value is PlacesFrom.show:
+                value = [getattr(self, 'show')]
+            elif value is PlacesFrom.outline:
+                value = getattr(self, 'outline')
+            setattr(self, attr, value)
 
 
 views = {
     'uk': View(-900_000, 200_000, 6_460_000, 8_000_000),
     'england': View(-640_000, 200_000, 6_460_000, 7_520_000),
+    'reading': View(
+        show=Places('Reading'),
+        outline=[Places('Reading'),
+                 Places('Earley',
+                        'Lower Earley North',
+                        'Lower Earley South',
+                        outline_colour='white',
+                        outline_width=1,
+                        geom_source=msoa_geoms_20)],
+        label=PlacesFrom.show,
+        width=10, height=10, ratio=7
+    ),
+    'poole': View(
+        show=Places("Bournemouth, Christchurch and Poole", geom_source=ltla_geoms_20),
+        outline=[Places(
+            'Ferndown Town',
+            'Poole Town',
+            outline_width=1,
+            geom_source=msoa_geoms_20
+        )],
+        label=[Places('Bournemouth', label_location=center)],
+        width=15, height=10, ratio=4
+    ),
+    'reading-london': View(
+        show=Places('Reading', 'London'),
+        outline=PlacesFrom.show,
+        label=PlacesFrom.show,
+        width=15, height=10, ratio=3
+    ),
+    'london': View(show=Places('London'), height=11, ratio=3),
 }

@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from args import add_date_arg
 from constants import output_path, second_wave, area_code
-from geo import views, ltla_geoms
+from geo import views, ltla_geoms, View
 from phe import plot_summary
 import series as s
 from plotting import show_area
@@ -105,7 +105,7 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def render_map(ax, frame_date, read_map_data, view, column, title,
+def render_map(ax, frame_date, read_map_data, view: View, column, title,
                vmin, linthresh, vmax, linticks, logticks,
                linnearest=1, lognearest=1,
                load_geoms=ltla_geoms, cmap='inferno_r',
@@ -145,14 +145,33 @@ def render_map(ax, frame_date, read_map_data, view, column, title,
     show_area(ax, view)
     ax.set_title(title)
 
+    for places in view.outline:
+        places.frame().geometry.boundary.plot(
+            ax=ax, edgecolor=places.outline_colour, linewidth=places.outline_width
+        )
+
+    for places in view.label:
+        frame = places.frame()
+        for name, geometry in zip(frame['name'], frame['geometry']):
+            ax.annotate(
+                name,
+                xy=places.label_location(geometry),
+                ha='center',
+                fontsize='x-large',
+                fontweight=1000,
+            )
+
 
 def render_dt(
         data_date, earliest_date, to_date, dpi, render_map, view, frame_date, image_path
 ):
+    view = views[view]
     fig, (map_ax, lines_ax) = plt.subplots(
-        figsize=(10, 15), nrows=2, gridspec_kw={'height_ratios': [9, 1], 'hspace': 0}
+        figsize=(view.width, view.height),
+        nrows=2,
+        gridspec_kw={'height_ratios': [view.ratio, 1], 'hspace': 0}
     )
-    render_map(map_ax, frame_date, views[view])
+    render_map(map_ax, frame_date, view)
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                  series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
     fig.text(0.25, 0.07,
@@ -189,5 +208,5 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
         render_dt, data_date, earliest_date, to_date, dpi, render_map, args.view
     )
 
-    parallel_render(name, render, dates, slowing_durations(dates),
+    parallel_render(name+'-'+args.view, render, dates, slowing_durations(dates),
                     args.output, raise_errors=args.raise_errors)
