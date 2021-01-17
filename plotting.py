@@ -109,11 +109,12 @@ def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
     ])
 
     phe_data = phe_recent_geo[[
-        'geometry', 'code', new_cases_by_specimen_date, population, pct_population
+        'geometry', 'name', 'code', new_cases_by_specimen_date, population, pct_population
     ]]
-    phe = geoplot_bokeh(phe_data[~phe_data.geometry.isnull()], phe_recent_title, pct_population,
+    phe = geoplot_bokeh(phe_data, phe_recent_title, pct_population,
                   x_range=zoe.x_range, y_range=zoe.y_range, vmax=phe_vmax, tooltips=[
-            ('Name','@lad19nm'),
+            ('Name','@name'),
+            ('Code','@code'),
             ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
             ('Population', '@{population}{1}'),
             ('Percentage','@{'+pct_population+'}{1.111}%'),
