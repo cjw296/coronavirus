@@ -203,7 +203,11 @@ def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
 def map_main(name, read_map_data, render_map, default_view='uk', default_exclude=0, dpi=90):
     parser = ArgumentParser()
     add_date_arg(parser, default=second_wave)
-    parser.add_argument('--exclude-days', default=default_exclude, type=int)
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--exclude-days', default=default_exclude, type=int)
+    add_date_arg(group, '--to-date')
+
     parser.add_argument('--output', default='mp4')
     parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
     parser.add_argument('--view', choices=views.keys(), default=default_view)
@@ -212,7 +216,7 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
 
     df, data_date = read_map_data()
 
-    to_date = df.index.max().date() - timedelta(days=args.exclude_days)
+    to_date = args.to_date or df.index.max().date() - timedelta(days=args.exclude_days)
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 
