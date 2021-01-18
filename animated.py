@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from args import add_date_arg
 from constants import output_path, second_wave, area_code
-from geo import views, ltla_geoms, View
+from geo import views, ltla_geoms, View, above
 from phe import plot_summary
 import series as s
 from plotting import show_area
@@ -109,6 +109,7 @@ def render_map(ax, frame_date, read_map_data, view: View, column, title,
                vmin, linthresh, vmax, linticks, logticks,
                linnearest=1, lognearest=1,
                load_geoms=ltla_geoms, cmap='inferno_r',
+               label_top_5=False,
                **plot_kw):
     df, _ = read_map_data()
     dt = frame_date.date()
@@ -159,6 +160,16 @@ def render_map(ax, frame_date, read_map_data, view: View, column, title,
                 ha='center',
                 fontsize='x-large',
                 fontweight=1000,
+            )
+
+    if label_top_5:
+        top_5 = current_pct_geo.sort_values(column, ascending=False).iloc[:5]
+        for name, geometry in zip(top_5['name'], top_5['geometry']):
+            ax.annotate(
+                name,
+                xy=above(geometry),
+                ha='center',
+                fontsize='x-large',
             )
 
 
