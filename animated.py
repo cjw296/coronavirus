@@ -215,6 +215,8 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
     args = parser.parse_args()
 
+    views[args.view].check()
+
     df, data_date = read_map_data()
 
     to_date = args.to_date or df.index.max().date() - timedelta(days=args.exclude_days)

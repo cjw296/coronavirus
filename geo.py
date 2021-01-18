@@ -131,7 +131,13 @@ class Places:
     @lru_cache()
     def frame(self):
         geoms = self.geom_source()
-        return geoms[geoms['name'].isin(self.names)]
+        filtered = geoms[geoms['name'].isin(self.names)]
+        found_names = set(filtered['name'])
+        expected_names = set(self.names)
+        if found_names != expected_names:
+            missing = ','.join(repr(n) for n in expected_names - found_names)
+            raise ValueError(f'{self.geom_source} does not contain {missing}')
+        return filtered
 
 
 PlacesFrom = Enum('PlacesFrom', 'show outline')
@@ -155,6 +161,12 @@ class View:
 
     margin_pct: int = 10
 
+    def check(self):
+        # make sure all the places are valid, cache them if we're lucky!
+        for places in [self.show], self.outline, self.label:
+            for place in places:
+                if place is not None:
+                    place.frame()
 
     @cached_property
     def total_bounds(self):
