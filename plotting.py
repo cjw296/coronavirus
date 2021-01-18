@@ -17,8 +17,9 @@ from geo import views, old_ltla_geoms
 
 def show_area(ax, view=views['uk']):
     ax.set_axis_off()
-    ax.set_xlim(view.minx, view.maxx)
-    ax.set_ylim(view.miny, view.maxy)
+    minx, miny, maxx, maxy = view.total_bounds
+    ax.set_xlim(minx, maxx)
+    ax.set_ylim(miny, maxy)
 
 
 def geoplot_matplotlib(df, ax, column, title, label, vmax=None, missing_kwds=None):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from functools import lru_cache
+from functools import lru_cache, cached_property
 from typing import Sequence
 
 import geopandas
@@ -128,6 +128,7 @@ class Places:
         self.outline_width = outline_width
         self.label_location = label_location
 
+    @lru_cache()
     def frame(self):
         geoms = self.geom_source()
         return geoms[geoms['name'].isin(self.names)]
@@ -148,23 +149,30 @@ class View:
     height: float = 15
     ratio: int = 9
 
-    show: Places = ()
+    show: Places = None
     outline: Sequence[Places] = ()
     label: Sequence[Places] = ()
 
-    margin_pct = 10
+    margin_pct: int = 10
 
-    def __post_init__(self):
+
+    @cached_property
+    def total_bounds(self):
         if self.minx is None:
             show = self.show.frame()
             minx, miny, maxx, maxy = show.geometry.total_bounds
             factor = self.margin_pct / 100
             x_margin = (maxx-minx)*factor
-            self.minx = minx - x_margin
-            self.maxx = maxx + x_margin
+            minx = minx - x_margin
+            maxx = maxx + x_margin
             y_margin = (maxy-miny)*factor
-            self.miny = miny - y_margin
-            self.maxy = maxy + y_margin
+            miny = miny - y_margin
+            maxy = maxy + y_margin
+            return minx, miny, maxx, maxy
+        else:
+            return self.minx, self.miny, self.maxx, self.maxy
+
+    def __post_init__(self):
         for attr in 'outline', 'label':
             value = getattr(self, attr)
             if value is PlacesFrom.show:
