@@ -66,14 +66,18 @@ def check_path(path):
 def add_from(path: Path, rows: dict, dt: date = None, check: bool = True):
     checker = Checker(dt, path)
     reader = DictReader(lines_from(path))
+    max_date = str(date.min)
     for row in reader:
         if dt:
             row[release_timestamp] = dt
         rows[key(row)] = row
         if check:
             checker.add_row(row)
+        if row[date_col] > max_date:
+            max_date = row[date_col]
     if check:
         checker.check()
+    tqdm.write(f'latest date in {path.name}: {max_date}')
     return reader.fieldnames
 
 
@@ -98,9 +102,6 @@ def main():
     
     if args.output.exists() and not args.clean:
         add_from(args.output, rows, check=False)
-
-    if rows:
-        print('latest date found: ', sorted(rows.keys())[-1][0])
 
     for dt, path in msoa_files(args.start):
         fieldnames = add_from(path, rows, dt, args.check)
