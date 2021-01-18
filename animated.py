@@ -212,6 +212,7 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
     parser.add_argument('--view', choices=views.keys(), default=default_view)
     parser.add_argument('--max_workers', type=int)
+    parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
     args = parser.parse_args()
 
     df, data_date = read_map_data()
@@ -224,5 +225,6 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
         render_dt, data_date, earliest_date, to_date, dpi, render_map, args.view
     )
 
-    parallel_render(name+'-'+args.view, render, dates, slowing_durations(dates),
+    duration = args.duration or slowing_durations(dates)
+    parallel_render(name+'-'+args.view, render, dates, duration,
                     args.output, raise_errors=args.raise_errors, max_workers=args.max_workers)
