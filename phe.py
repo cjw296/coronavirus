@@ -186,6 +186,22 @@ def plot_stacked_bars(
         ax.set_title(title)
 
 
+def current_and_previous_data(get_data, start='*', diff_days=1):
+    data, data_date = get_data(start)
+    previous_date = data_date - timedelta(days=diff_days)
+    previous_data = previous_data_date = None
+    while previous_data is None and previous_date > date(2020, 2, 1):
+        try:
+            previous_data, previous_data_date = get_data(previous_date)
+        except (FileNotFoundError, NoData):
+            previous_date -= timedelta(days=1)
+
+    if previous_data is None:
+        previous_data = data
+        previous_data_date = data_date
+    return data, data_date, previous_data, previous_data_date
+
+
 def plot_with_diff(data_date, uncertain_days,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
@@ -197,23 +213,13 @@ def plot_with_diff(data_date, uncertain_days,
     else:
         earliest_data = pd.to_datetime(earliest) - timedelta(days=average_days)
 
-    all_data, data_date = best_data(data_date, area_type, areas, earliest_data)
+    def get_data(dt):
+        all_data_, data_date_ = best_data(dt, area_type, areas, earliest_data)
+        data_ = cases_data(all_data_)
+        return (all_data_, data_), data_date_
 
-    previous_date = data_date - timedelta(days=diff_days)
-
-    data = cases_data(all_data)
-    previous_data = None
-    while previous_data is None and previous_date > date(2020, 1, 1):
-        try:
-            previous = best_data(previous_date, area_type, areas, earliest_data)
-        except (FileNotFoundError, NoData):
-            previous_date -= timedelta(days=1)
-        else:
-            all_previous_data, previous_data_date = previous
-            previous_data = cases_data(all_previous_data)
-
-    if previous_data is None:
-        previous_data = data
+    results = current_and_previous_data(get_data, data_date, diff_days)
+    (all_data, data), data_date, (all_previous_data, previous_data), previous_data_date = results
 
     if uncertain_days is None:
         average_end = None
@@ -236,7 +242,7 @@ def plot_with_diff(data_date, uncertain_days,
 
     with pd.plotting.plot_params.use("x_compat", True):
         plot_diff(
-            diff_ax, data_date, data, previous_date, previous_data, diff_ylims, diff_log_scale,
+            diff_ax, data_date, data, previous_data_date, previous_data, diff_ylims, diff_log_scale,
             earliest
         )
         plot_stacked_bars(
