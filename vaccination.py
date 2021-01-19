@@ -89,8 +89,8 @@ def vaccination_dashboard():
     max_date = data[date_col].max()
 
     # data for plotting:
-    latest = data[[area_name, area_code, 'full', 'any', 'partial']][
-        data[date_col] == max_date].copy()
+    is_latest_date = data[date_col] == max_date
+    latest = data[[area_name, area_code, 'full', 'any', 'partial']][is_latest_date].copy()
     latest = pd.merge(latest, nation_populations, on=area_code)
 
     latest['full_pct'] = 100 * latest['full'] / latest[population]
