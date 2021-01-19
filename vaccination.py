@@ -7,20 +7,22 @@ from matplotlib.ticker import StrMethodFormatter, FuncFormatter
 
 from constants import date_col, area_type, area_code, area_name, complete_dose_daily_cum, \
     first_dose_weekly, second_dose_weekly, first_vaccination, first_dose_daily_cum, \
-    second_dose_daily_cum, population, repo_path
+    second_dose_daily_cum, population, repo_path, first_dose_daily_new, second_dose_daily_new
 from download import find_latest
-from phe import read_csv, load_population
+from phe import read_csv, load_population, current_and_previous_data
 
 
-def latest_raw_vaccination_data():
-    new_weekly_path, new_weekly_dt = find_latest('vaccination_????-*', date_index=-1)
-    cum_path, cum_dt = find_latest('vaccination_cum_*', date_index=-1)
+def raw_vaccination_data(dt='*'):
+    if dt == '*':
+        dt = '????-*'
+    new_weekly_path, new_weekly_dt = find_latest(f'vaccination_{dt}.csv', date_index=-1)
+    cum_path, cum_dt = find_latest(f'vaccination_cum_{dt}.csv', date_index=-1)
     assert cum_dt == new_weekly_dt, f'{cum_dt} != {new_weekly_dt}'
     new_weekly_df = read_csv(new_weekly_path)
     cum_df = read_csv(cum_path)
     raw = pd.merge(new_weekly_df, cum_df, how='outer',
-                   on=[date_col, area_type, area_code, area_name]).sort_values(
-        [date_col, area_code])
+                   on=[date_col, area_type, area_code, area_name])
+    raw.sort_values([date_col, area_code], inplace=True)
     # this isn't currently populated:
     assert raw[complete_dose_daily_cum].isnull().all()
     return raw, new_weekly_dt
@@ -65,7 +67,7 @@ def daily_data(raw, weekly):
 
 def vaccination_dashboard():
     # input data:
-    raw, data_date = latest_raw_vaccination_data()
+    raw, data_date = raw_vaccination_data()
     names_frame = raw[[area_code, area_name]].drop_duplicates()
     nation_codes = names_frame[area_code]
     nation_populations = load_population().loc[nation_codes]
@@ -182,3 +184,73 @@ def vaccination_dashboard():
     # return latest data so it gets displayed
     plt.savefig(repo_path / f'vaccination.png', bbox_inches='tight')
     return latest
+
+
+def vaccination_corrections():
+
+    calc_first_dose = 'calcPeopleVaccinatedFirstDoseByPublishDate'
+    calc_second_dose = 'calcPeopleVaccinatedSecondDoseByPublishDate'
+
+    def pivoted(data):
+        return data.pivot_table(
+            values=[first_dose_daily_new, second_dose_daily_new,
+                    first_dose_daily_cum, second_dose_daily_cum],
+            index=date_col, columns=area_name
+        )
+
+    result = current_and_previous_data(raw_vaccination_data)
+    all_current_data, current_date, all_previous_data, previous_date = result
+
+    pivoted_current = pivoted(all_current_data)
+    corrections = pivoted_current - pivoted(all_previous_data)
+
+    current_cum = pivoted_current[[first_dose_daily_cum, second_dose_daily_cum]]
+    calculated = current_cum - current_cum.shift(1)
+    calculated.rename(
+        columns={first_dose_daily_cum: calc_first_dose, second_dose_daily_cum: calc_second_dose},
+        inplace=True
+    )
+
+    observed = pivoted_current[[first_dose_daily_new, second_dose_daily_new]].rename(
+        columns={first_dose_daily_new: calc_first_dose, second_dose_daily_new: calc_second_dose},
+    )
+
+    corrections = pd.concat([corrections, observed-calculated], axis=1)
+
+    corrections.dropna(inplace=True)
+    corrections.columns.names = ['', '']
+    corrections.columns = corrections.columns.swaplevel()
+    corrections.rename(inplace=True, level=1, columns={
+        first_dose_daily_cum: 'First Dose (Total)',
+        first_dose_daily_new: 'First Dose (New)',
+    })
+    corrections.sort_index(axis=1, inplace=True)
+    corrections.index.name = ''
+    corrections.index = corrections.index.strftime("%d %b %Y")
+    corrections = corrections.loc[:, (corrections != 0).any(axis=0)]
+    corrections = corrections.loc[(corrections != 0).any(axis=1), :]
+    if corrections.empty:
+        return
+    styled = corrections.style
+    styled.set_caption(
+        "Corrections between https://coronavirus.data.gov.uk/ release on "
+        f"{previous_date:%d %b %Y} and {current_date:%d %b %Y}"
+    )
+    styled.set_table_styles([
+        {'selector': 'caption', 'props': [
+            ("text-align", "center"),
+            ("font-size", "100%"),
+            ("color", 'darkred'),
+        ]},
+        {'selector': 'th.col_heading.level0', 'props': [
+            ("text-align", "center"),
+            ("font-weight", "normal"),
+            ("font-style", "italic"),
+            ("padding-bottom", '0.1em')
+        ]},
+        {'selector': 'td', 'props': [
+            ("text-align", "center")
+        ]},
+    ])
+    styled.format("{:,.0f}")
+    return styled
