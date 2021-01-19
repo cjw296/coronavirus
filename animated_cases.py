@@ -65,7 +65,7 @@ def main():
 
     dates = available_dates(area_type, earliest=from_date)
 
-    data, _ = best_data(dates[0], area_type, areas, from_date)
+    data, _ = best_data(dates[0], area_type, areas, args.earliest)
 
     max_cases = cases_data(data).sum(axis=1).max()*args.y_max_factor
     max_tests = tests_data(data).max()*args.y_max_factor
