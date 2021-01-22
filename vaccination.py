@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -51,18 +53,28 @@ def weekly_data(raw, nation_codes):
 
 
 def daily_data(raw, weekly):
-    initial_daily = weekly.groupby(area_code).agg({
+    initial = weekly.groupby(area_code).agg({
         'first_dose': 'sum', 'second_dose': 'sum', date_col: 'max'
-    }).reset_index()
+    }).reset_index().set_index([date_col, area_code])
+    weekly_date = initial.index.max()[0]
 
-    daily_rows = raw[[date_col, area_code, first_dose_daily_cum, second_dose_daily_cum]].dropna()
+    daily_rows = raw[[
+        date_col, area_code, first_dose_daily_cum, second_dose_daily_cum
+    ]].dropna().set_index([date_col, area_code])
     daily_rows.rename(
         columns={first_dose_daily_cum: 'first_dose', second_dose_daily_cum: 'second_dose'},
-        errors='raise', inplace=True)
-    daily = pd.concat(
-        [initial_daily, daily_rows[daily_rows[date_col] > initial_daily[date_col].max()]])
+        errors='raise', inplace=True
+    )
 
-    return daily.set_index([date_col, area_code]).groupby(area_code).diff().dropna().reset_index()
+    initial_date = weekly_date + timedelta(days=1)
+    initial_from_daily = daily_rows.loc[initial_date]
+    initial_from_weekly = initial.loc[weekly_date]
+    initial_from_weekly.where(
+        initial_from_daily > initial_from_weekly, initial_from_daily, inplace=True
+    )
+
+    daily = pd.concat([initial, daily_rows[initial_date:]])
+    return daily.groupby(area_code).diff().dropna().reset_index()
 
 
 def vaccination_dashboard():
