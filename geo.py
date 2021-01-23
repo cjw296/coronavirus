@@ -270,8 +270,8 @@ views = {
         )],
         label=[Places('Bournemouth', label_location=center)],
     ),
-    'reading-london': View(
-        show=Places('Reading', 'London'),
+    'thames-valley': View(
+        show=Places('Reading', 'London', 'Oxford'),
         outline=places_from_show,
         label=places_from_show,
     ),
