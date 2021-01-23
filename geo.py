@@ -275,4 +275,35 @@ views = {
         outline=places_from_show,
         label=places_from_show,
     ),
+    'west-midlands': View(
+        show=Places('Sandwell',
+                    'Wolverhampton',
+                    'Walsall',
+                    'Birmingham',
+                    'Dudley',
+                    'Telford and Wrekin',
+                    'Coventry',
+                    'Staffordshire',
+                    'Shropshire',
+                    'Stoke-on-Trent',
+                    'Warwickshire',
+                    'Solihull',
+                    "Herefordshire, County of",
+                    geom_source=utla_geoms_20),
+        outline=PlacesFrom(attr='show', plus=[
+            Places("Birmingham", 'Stoke-on-Trent', 'Telford',
+                   colour='white')
+        ]),
+        label=[
+            Places('Staffordshire', 'Shropshire',
+                   label_location=above, geom_source=utla_geoms_20),
+            Places('Herefordshire, County of', 'Warwickshire',
+                   label_location=below, geom_source=utla_geoms_20),
+            Places("Birmingham", 'Stoke-on-Trent', 'Telford',
+                   label_location=below,
+                   fontsize='medium',
+                   colour='white')
+        ],
+        margin_pct=30,
+    )
 }
