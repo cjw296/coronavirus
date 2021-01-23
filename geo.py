@@ -132,15 +132,19 @@ def center(geometry):
 class Places:
 
     def __init__(self, *names,
-                 outline_colour='black',
+                 colour='black',
                  outline_width=0.5,
                  label_location=above,
-                 geom_source=town_and_city_geoms):
+                 geom_source=town_and_city_geoms,
+                 fontsize='x-large',
+                 fontweight=1000):
         self.geom_source = geom_source
         self.names = names
-        self.outline_colour = outline_colour
+        self.colour = colour
         self.outline_width = outline_width
         self.label_location = label_location
+        self.fontsize = fontsize
+        self.fontweight = fontweight
 
     @lru_cache()
     def frame(self):
@@ -251,7 +255,7 @@ views = {
                  Places('Earley',
                         'Lower Earley North',
                         'Lower Earley South',
-                        outline_colour='white',
+                        colour='white',
                         outline_width=1,
                         geom_source=msoa_geoms_20)],
         label=places_from_show,

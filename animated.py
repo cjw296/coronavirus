@@ -153,7 +153,7 @@ def render_map(ax, frame_date, read_map_data, view: View, column, title,
 
     for places in view.outline:
         places.frame().geometry.boundary.plot(
-            ax=ax, edgecolor=places.outline_colour, linewidth=places.outline_width
+            ax=ax, edgecolor=places.colour, linewidth=places.outline_width
         )
 
     for places in view.label:
@@ -163,8 +163,9 @@ def render_map(ax, frame_date, read_map_data, view: View, column, title,
                 name,
                 xy=places.label_location(geometry),
                 ha='center',
-                fontsize='x-large',
-                fontweight=1000,
+                fontsize=places.fontsize,
+                fontweight=places.fontweight,
+                color=places.colour
             )
 
     if label_top_5:
