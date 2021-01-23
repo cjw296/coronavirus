@@ -118,6 +118,13 @@ def above(geometry):
     return x, y
 
 
+def below(geometry):
+    x = geometry.centroid.coords[0][0]
+    minx, miny, maxx, maxy = geometry.bounds
+    y = miny - (maxy - miny) * 0.10
+    return x, y
+
+
 def center(geometry):
     return geometry.centroid.coords[0]
 
