@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from enum import Enum
-from functools import lru_cache, cached_property
-from typing import Sequence
+from functools import lru_cache, cached_property, partial
+from typing import Sequence, Union
 
 import geopandas
 import pandas as pd
@@ -140,7 +139,22 @@ class Places:
         return filtered
 
 
-PlacesFrom = Enum('PlacesFrom', 'show outline')
+class PlacesFrom:
+
+    def __init__(self, plus=(), attr='show'):
+        self.attr = attr
+        self.plus = plus
+
+    def __call__(self, view):
+        value = getattr(view, self.attr)
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+        value.extend(self.plus)
+        return value
+
+
+places_from_show = PlacesFrom(attr='show')
+places_from_outline = PlacesFrom(attr='outline')
 
 
 @dataclass
@@ -156,8 +170,8 @@ class View:
     ratio: int = 9
 
     show: Places = None
-    outline: Sequence[Places] = ()
-    label: Sequence[Places] = ()
+    outline: Union[Sequence[Places], callable] = ()
+    label: Union[Sequence[Places], callable] = ()
 
     margin_pct: int = 10
 
@@ -187,11 +201,8 @@ class View:
     def __post_init__(self):
         for attr in 'outline', 'label':
             value = getattr(self, attr)
-            if value is PlacesFrom.show:
-                value = [getattr(self, 'show')]
-            elif value is PlacesFrom.outline:
-                value = getattr(self, 'outline')
-            setattr(self, attr, value)
+            if callable(value):
+                setattr(self, attr, value(view=self))
 
 
 views = {
@@ -206,8 +217,8 @@ views = {
                         outline_colour='white',
                         outline_width=1,
                         geom_source=msoa_geoms_20)],
-        label=PlacesFrom.show,
         width=10, height=10, ratio=7
+        label=places_from_show,
     ),
     'poole': View(
         show=Places("Bournemouth, Christchurch and Poole", geom_source=ltla_geoms_20),
@@ -222,9 +233,9 @@ views = {
     ),
     'reading-london': View(
         show=Places('Reading', 'London'),
-        outline=PlacesFrom.show,
-        label=PlacesFrom.show,
         width=15, height=10, ratio=3
+        outline=places_from_show,
+        label=places_from_show,
     ),
     'london': View(show=Places('London'), height=11, ratio=3),
 }
