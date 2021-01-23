@@ -129,7 +129,7 @@ def render_map(ax, frame_date, read_map_data, view: View, column, title,
     )
 
     legend_kwds = {
-        'fraction': 0.02,
+        'fraction': view.legend_fraction,
         'format': StrMethodFormatter('{x:,.0f}'),
         'ticks': ticks,
     }
@@ -182,10 +182,11 @@ def render_dt(
         data_date, earliest_date, to_date, dpi, render_map, view, frame_date, image_path
 ):
     view = views[view]
+    width, height, height_ratio = view.layout()
     fig, (map_ax, lines_ax) = plt.subplots(
-        figsize=(view.width, view.height),
+        figsize=(width, height),
         nrows=2,
-        gridspec_kw={'height_ratios': [view.ratio, 1], 'hspace': 0}
+        gridspec_kw={'height_ratios': [height_ratio, 1], 'hspace': view.grid_hspace}
     )
     render_map(map_ax, frame_date, view)
     plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
@@ -193,7 +194,8 @@ def render_dt(
     fig.text(0.25, 0.07,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
-             color='darkgrey')
+             color='darkgrey',
+             zorder=-1)
     plt.savefig(image_path / f'{frame_date.date()}.png', dpi=dpi, bbox_inches='tight')
     plt.close()
 

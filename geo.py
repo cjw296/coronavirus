@@ -180,9 +180,9 @@ class View:
     miny: float = None
     maxy: float = None
 
-    width: float = 10
-    height: float = 15
-    ratio: int = 9
+    legend_fraction: float = 0.02
+    grid_hspace = 0.05
+    summary_height = 1.5
 
     show: Places = None
     outline: Union[Sequence[Places], callable] = ()
@@ -213,6 +213,27 @@ class View:
         else:
             return self.minx, self.miny, self.maxx, self.maxy
 
+    def layout(self):
+        minx, miny, maxx, maxy = self.total_bounds
+        plot_height = maxy - miny
+        plot_width = maxx - minx
+        aspect = plot_width / plot_height
+        if aspect > 1:
+            # reading-london
+            width = 15
+            map_width = width * (1-self.legend_fraction)
+            map_height = map_width / aspect
+            height = map_height + self.summary_height + self.grid_hspace
+        else:
+            # uk / england
+            height = 15
+            map_height = height - self.summary_height - self.grid_hspace
+            map_width = aspect * height
+            width = map_width / (1-self.legend_fraction)
+
+        ratio = map_height / self.summary_height
+        return width, height, ratio
+
     def __post_init__(self):
         for attr in 'outline', 'label':
             value = getattr(self, attr)
@@ -223,6 +244,7 @@ class View:
 views = {
     'uk': View(-900_000, 200_000, 6_460_000, 8_000_000),
     'england': View(-640_000, 200_000, 6_460_000, 7_520_000),
+    'london': View(show=Places('London')),
     'reading': View(
         show=Places('Reading'),
         outline=[Places('Reading'),
@@ -232,7 +254,6 @@ views = {
                         outline_colour='white',
                         outline_width=1,
                         geom_source=msoa_geoms_20)],
-        width=10, height=10, ratio=7
         label=places_from_show,
     ),
     'poole': View(
@@ -244,13 +265,10 @@ views = {
             geom_source=msoa_geoms_20
         )],
         label=[Places('Bournemouth', label_location=center)],
-        width=15, height=10, ratio=4
     ),
     'reading-london': View(
         show=Places('Reading', 'London'),
-        width=15, height=10, ratio=3
         outline=places_from_show,
         label=places_from_show,
     ),
-    'london': View(show=Places('London'), height=11, ratio=3),
 }
