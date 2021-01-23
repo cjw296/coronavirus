@@ -45,6 +45,14 @@ def ltla_geoms_20():
     )
 
 
+def utla_geoms_20():
+    return geoportal_geoms(
+        "Counties_and_Unitary_Authorities__December_2017___EW_BGC",
+        code_column='CTYUA17CD',
+        name_column='CTYUA17NM',
+    )
+
+
 def ltla_geoms_full():
     return geoportal_geoms(
         'Local_Authority_Districts__April_2019__UK_BFC_v2',
