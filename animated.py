@@ -35,7 +35,8 @@ def safe_render(render, image_path, raise_errors, item):
 
 
 def parallel_render(name, render: partial, items, duration: Union[float, list],
-                    outputs: str = 'gif', raise_errors: bool = True, max_workers: int = None):
+                    outputs: str = 'gif', raise_errors: bool = True, max_workers: int = None,
+                    item=None):
 
     # do this up front to catch typos cheaply:
     outputs = [output_types[output] for output in outputs.split(',')]
@@ -45,6 +46,10 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
         rmtree(image_path)
     image_path.mkdir()
     renderer = partial(safe_render, render, image_path, raise_errors)
+
+    if item is not None:
+        renderer(item)
+        return
 
     with concurrent.futures.ProcessPoolExecutor(max_workers) as executor:
         tuple(tqdm(executor.map(renderer, items), total=len(items), desc='rendering'))
@@ -211,8 +216,9 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
     parser.add_argument('--output', default='mp4')
     parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
     parser.add_argument('--view', choices=views.keys(), default=default_view)
-    parser.add_argument('--max_workers', type=int)
+    parser.add_argument('--max-workers', type=int)
     parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
+    add_date_arg(group, '--single')
     args = parser.parse_args()
 
     views[args.view].check()
@@ -229,4 +235,5 @@ def map_main(name, read_map_data, render_map, default_view='uk', default_exclude
 
     duration = args.duration or slowing_durations(dates)
     parallel_render(name+'-'+args.view, render, dates, duration,
-                    args.output, raise_errors=args.raise_errors, max_workers=args.max_workers)
+                    args.output, raise_errors=args.raise_errors, max_workers=args.max_workers,
+                    item=pd.to_datetime(args.single) if args.single else None)
