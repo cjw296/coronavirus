@@ -259,6 +259,7 @@ views = {
                         outline_width=1,
                         geom_source=msoa_geoms_20)],
         label=places_from_show,
+        margin_pct=40
     ),
     'poole': View(
         show=Places("Bournemouth, Christchurch and Poole", geom_source=ltla_geoms_20),
