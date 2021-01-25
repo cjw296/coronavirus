@@ -203,7 +203,7 @@ def vaccination_dashboard():
     return latest
 
 
-def vaccination_corrections():
+def vaccination_corrections(dt='*'):
 
     calc_first_dose = 'calcPeopleVaccinatedFirstDoseByPublishDate'
     calc_second_dose = 'calcPeopleVaccinatedSecondDoseByPublishDate'
@@ -215,7 +215,7 @@ def vaccination_corrections():
             index=date_col, columns=area_name
         )
 
-    result = current_and_previous_data(raw_vaccination_data)
+    result = current_and_previous_data(raw_vaccination_data, start=dt)
     all_current_data, current_date, all_previous_data, previous_date = result
 
     pivoted_current = pivoted(all_current_data)
