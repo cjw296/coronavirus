@@ -9,7 +9,8 @@ from matplotlib.ticker import StrMethodFormatter, FuncFormatter
 
 from constants import date_col, area_type, area_code, area_name, complete_dose_daily_cum, \
     first_dose_weekly, second_dose_weekly, first_vaccination, first_dose_daily_cum, \
-    second_dose_daily_cum, population, repo_path, first_dose_daily_new, second_dose_daily_new
+    second_dose_daily_cum, population, repo_path, first_dose_daily_new, second_dose_daily_new, \
+    complete_dose_daily_new
 from download import find_latest
 from phe import read_csv, load_population, current_and_previous_data
 
@@ -25,8 +26,12 @@ def raw_vaccination_data(dt='*'):
     raw = pd.merge(new_weekly_df, cum_df, how='outer',
                    on=[date_col, area_type, area_code, area_name])
     raw.sort_values([date_col, area_code], inplace=True)
-    # this isn't currently populated:
-    assert raw[complete_dose_daily_cum].isnull().all()
+    complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
+                    complete_dose_daily_new, second_dose_daily_new]].dropna()
+    cum_equal = (complete[complete_dose_daily_cum] == complete[second_dose_daily_cum]).all()
+    new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
+    assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
+
     return raw, new_weekly_dt
 
 
