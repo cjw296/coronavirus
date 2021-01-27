@@ -165,7 +165,7 @@ def vaccination_dashboard():
     ax.yaxis.tick_right()
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
     ax.set_xlim(first_vaccination, max_date)
-    ax.set_xticks(all_data.index.get_level_values(0).unique(), minor=True)
+    ax.set_xticks(all_data.index.levels[0], minor=True)
     major_ticks = list(weekly[date_col].unique())
     if max_date > major_ticks[-1]+np.timedelta64(1,'D'):
         major_ticks.append(max_date.to_datetime64())
