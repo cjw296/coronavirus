@@ -339,8 +339,12 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     data = read_csv(
         data_path, earliest_date, to_date, [s_.metric for s_ in all_series], index_col=[date_col]
     ) / 7
-    if to_date and to_date > data.index.max():
-        data = data.reindex(pd.date_range(data.index.min(), to_date))
+
+    possible_max = [dt for dt in (frame_date, to_date) if dt is not None]
+    if possible_max:
+        max_date = max(*possible_max) + timedelta(days=1)
+        if max_date and max_date > data.index.max():
+            data = data.reindex(pd.date_range(data.index.min(), max_date))
 
     data.plot(ax=tests_ax,
               y=s.unique_people_tested_sum.metric,
@@ -364,8 +368,10 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
 
     outcomes_ax.tick_params(axis='y', labelcolor=s.new_admissions_sum.color)
     outcomes_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000:.0f}k"))
+    outcomes_ax.set_ylim(ymin=0)
     tests_ax.tick_params(axis='y', labelcolor=s.unique_people_tested_sum.color)
     tests_ax.yaxis.set_major_formatter(FuncFormatter(tested_formatter))
+    tests_ax.set_ylim(ymin=0)
 
     xaxis = tests_ax.get_xaxis()
     xaxis.label.set_visible(False)
