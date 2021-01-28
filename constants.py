@@ -94,7 +94,7 @@ first_vaccination = date(2020, 12, 8)
 
 lockdown1 = (lockdown, relax_2)
 lockdown2 = (date(2020, 11, 5), date(2020, 12, 2))
-lockdown3 = (date(2021, 1, 5), date(2021, 2, 22))
+lockdown3 = (date(2021, 1, 5), date(2021, 3, 8))
 national_lockdowns = lockdown1, lockdown2, lockdown3
 
 
