@@ -248,7 +248,27 @@ class View:
 views = {
     'uk': View(-900_000, 200_000, 6_460_000, 8_000_000),
     'england': View(-640_000, 200_000, 6_460_000, 7_520_000),
-    'london': View(show=Places('London')),
+    'bristol': View(
+        show=Places('Bristol'),
+        outline=PlacesFrom(attr='show', plus=[
+            Places('Staple Hill North',
+                   colour='white',
+                   outline_width=1,
+                   geom_source=msoa_geoms_20)
+        ]),
+        label=places_from_show,
+        margin_pct=40
+    ),
+    'liverpool': View(
+        show=Places('Liverpool', 'Wirral', 'Sefton', 'Warrington',
+                    geom_source=ltla_geoms_20),
+        outline=[Places('Liverpool')],
+        label=places_from_outline,
+    ),
+    'london': View(show=Places('London'),
+                   outline=places_from_show,
+                   label=places_from_show,
+                   margin_pct=30),
     'reading': View(
         show=Places('Reading'),
         outline=[Places('Reading'),
@@ -306,5 +326,8 @@ views = {
                    colour='white')
         ],
         margin_pct=30,
-    )
+    ),
+    'wokingham': View(show=Places('Wokingham', geom_source=ltla_geoms_20),
+                      outline=places_from_show, label=places_from_show,
+                      margin_pct=100),
 }
