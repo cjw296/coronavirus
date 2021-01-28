@@ -3,7 +3,7 @@ from collections import Counter
 from csv import DictReader, DictWriter
 from datetime import date, datetime
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Optional
 
 from tqdm.auto import tqdm
 
@@ -27,11 +27,16 @@ def lines_from(path: Path):
 class Checker:
 
     expected_msoa = 6791
+    expected_diff = 7
+    expected_gap = 5
 
-    def __init__(self, path_dt: date, path: Path):
+    def __init__(self, path_dt: Optional[date], path: Path):
         self.name = path.name
         self.mtime = datetime.fromtimestamp(path.stat().st_mtime)
         self.path_date = path_dt
+        self.is_composite = path_dt is None
+        if self.is_composite:
+            self.expected_diff = 1
         self.max_date: str = str(date.min)
         self.rows_per_date = Counter()
 
@@ -47,12 +52,13 @@ class Checker:
             d = datetime.strptime(key, '%Y-%m-%d')
             if last_date is not None:
                 diff = (d-last_date).days
-                assert diff == 7, f'{key}: bad diff: {diff}'
+                assert diff == self.expected_diff, f'{key}: bad diff: {diff}'
             last_date = d
 
-        max_date = datetime.strptime(self.max_date, '%Y-%m-%d').date()
-        diff = (self.path_date - max_date).days
-        assert diff == 5, f'bad date gap: {diff} days'
+        if not self.is_composite:
+            max_date = datetime.strptime(self.max_date, '%Y-%m-%d').date()
+            diff = (self.path_date - max_date).days
+            assert diff == self.expected_gap, f'bad date gap: {diff} days'
 
 
 def check_path(path):
