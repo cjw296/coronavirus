@@ -99,7 +99,11 @@ def main():
 
     fieldnames = None
     rows = {}
-    
+
+    if args.start < date(2020, 1, 1):
+        print("It's 2021 now!")
+        return
+
     if args.output.exists() and not args.clean:
         add_from(args.output, rows, check=False)
 
