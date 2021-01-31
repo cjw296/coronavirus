@@ -55,6 +55,8 @@ first_dose_daily_new = "newPeopleVaccinatedFirstDoseByPublishDate"
 second_dose_daily_new = "newPeopleVaccinatedSecondDoseByPublishDate"
 complete_dose_daily_new = "newPeopleVaccinatedCompleteByPublishDate"
 
+first_dose_weekly_cum = 'cumPeopleVaccinatedFirstDoseByVaccinationDate'
+second_dose_weekly_cum = 'cumPeopleVaccinatedSecondDoseByVaccinationDate'
 first_dose_daily_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
 second_dose_daily_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
 complete_dose_daily_cum = "cumPeopleVaccinatedCompleteByPublishDate"
@@ -71,8 +73,8 @@ vaccination_cumulative = [
     first_dose_daily_cum,
     second_dose_daily_cum,
     complete_dose_daily_cum,
-    "cumPeopleVaccinatedFirstDoseByVaccinationDate",
-    "cumPeopleVaccinatedSecondDoseByVaccinationDate",
+    first_dose_weekly_cum,
+    second_dose_weekly_cum,
 ]
 
 

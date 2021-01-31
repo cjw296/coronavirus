@@ -9,15 +9,18 @@ from matplotlib.ticker import StrMethodFormatter, FuncFormatter
 
 from constants import date_col, area_type, area_code, area_name, complete_dose_daily_cum, \
     first_dose_weekly, second_dose_weekly, first_vaccination, first_dose_daily_cum, \
-    second_dose_daily_cum, population, repo_path, first_dose_daily_new, second_dose_daily_new, \
+    second_dose_daily_cum, population, repo_path, second_dose_daily_new, \
     complete_dose_daily_new
 from download import find_latest
 from phe import read_csv, load_population, current_and_previous_data
+from series import Series
 
 
 def raw_vaccination_data(dt='*'):
     if dt == '*':
         dt = '????-*'
+    else:
+        dt = pd.to_datetime(dt).date()
     new_weekly_path, new_weekly_dt = find_latest(f'vaccination_{dt}.csv', date_index=-1)
     cum_path, cum_dt = find_latest(f'vaccination_cum_{dt}.csv', date_index=-1)
     assert cum_dt == new_weekly_dt, f'{cum_dt} != {new_weekly_dt}'
@@ -27,7 +30,7 @@ def raw_vaccination_data(dt='*'):
                    on=[date_col, area_type, area_code, area_name])
     raw.sort_values([date_col, area_code], inplace=True)
     complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
-                    complete_dose_daily_new, second_dose_daily_new]].dropna()
+                    complete_dose_daily_new, second_dose_daily_new]].dropna(how='any')
     cum_equal = (complete[complete_dose_daily_cum] == complete[second_dose_daily_cum]).all()
     new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
     assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
@@ -203,71 +206,61 @@ def vaccination_dashboard():
     return latest
 
 
-def vaccination_corrections(dt='*'):
+def process(raw, index=None):
+    filtered = raw.drop(columns=[area_type, area_code]).set_index(
+        [area_name, date_col]).sort_index()
+    if index is not None:
+        filtered = filtered.reindex(index)
+    return filtered.fillna(0)
 
-    calc_first_dose = 'calcPeopleVaccinatedFirstDoseByPublishDate'
-    calc_second_dose = 'calcPeopleVaccinatedSecondDoseByPublishDate'
 
-    def pivoted(data):
-        return data.pivot_table(
-            values=[first_dose_daily_new, second_dose_daily_new,
-                    first_dose_daily_cum, second_dose_daily_cum],
-            index=date_col, columns=area_name
-        )
-
+def vaccination_changes(dt='*', exclude_okay=False):
     result = current_and_previous_data(raw_vaccination_data, start=dt)
-    all_current_data, current_date, all_previous_data, previous_date = result
+    raw2, current_date, raw1, previous_date = result
+    processed2 = process(raw2)
+    diff = (processed2 - process(raw1, processed2.index)).fillna(0)
+    for type_ in 'vaccination', 'publish':
 
-    pivoted_current = pivoted(all_current_data)
-    corrections = pivoted_current - pivoted(all_previous_data)
+        type_diff = diff.filter(like=f'By{type_.capitalize()}Date')
+        type_diff = type_diff.loc[:, (type_diff != 0).any(axis=0)]
+        type_diff = type_diff.loc[(type_diff != 0).any(axis=1), :]
 
-    current_cum = pivoted_current[[first_dose_daily_cum, second_dose_daily_cum]]
-    calculated = current_cum - current_cum.shift(1)
-    calculated.rename(
-        columns={first_dose_daily_cum: calc_first_dose, second_dose_daily_cum: calc_second_dose},
-        inplace=True
-    )
+        if type_ == 'publish':
+            ok_date = previous_date
+        else:
+            ok_date = current_date - timedelta(days=4)
 
-    observed = pivoted_current[[first_dose_daily_new, second_dose_daily_new]].rename(
-        columns={first_dose_daily_new: calc_first_dose, second_dose_daily_new: calc_second_dose},
-    )
+        if exclude_okay and not type_diff.empty:
+            type_diff.drop(ok_date, level=-1, inplace=True)
 
-    corrections = pd.concat([corrections, observed-calculated], axis=1)
-
-    corrections.dropna(inplace=True)
-    corrections.columns.names = ['', '']
-    corrections.columns = corrections.columns.swaplevel()
-    corrections.rename(inplace=True, level=1, columns={
-        first_dose_daily_cum: 'First Dose (Total)',
-        first_dose_daily_new: 'First Dose (New)',
-    })
-    corrections.sort_index(axis=1, inplace=True)
-    corrections.index.name = ''
-    corrections.index = corrections.index.strftime("%d %b %Y")
-    corrections = corrections.loc[:, (corrections != 0).any(axis=0)]
-    corrections = corrections.loc[(corrections != 0).any(axis=1), :]
-    if corrections.empty:
-        return
-    styled = corrections.style
-    styled.set_caption(
-        "Corrections between https://coronavirus.data.gov.uk/ release on "
-        f"{previous_date:%d %b %Y} and {current_date:%d %b %Y}"
-    )
-    styled.set_table_styles([
-        {'selector': 'caption', 'props': [
-            ("text-align", "center"),
-            ("font-size", "100%"),
-            ("color", 'darkred'),
-        ]},
-        {'selector': 'th.col_heading.level0', 'props': [
-            ("text-align", "center"),
-            ("font-weight", "normal"),
-            ("font-style", "italic"),
-            ("padding-bottom", '0.1em')
-        ]},
-        {'selector': 'td', 'props': [
-            ("text-align", "center")
-        ]},
-    ])
-    styled.format("{:,.0f}")
-    return styled
+        if not type_diff.empty:
+            type_diff.rename(inplace=True, columns=Series.column_names())
+            type_diff.index.names = ['', '']
+            type_diff.index = type_diff.index.set_levels(
+                [type_diff.index.levels[0], type_diff.index.levels[1].strftime('%d %b %y')]
+            )
+            styled = type_diff.style
+            styled.set_caption(
+                f'Changes to "by {type_} date" data between '
+                f'{previous_date:%d %b %Y} and {current_date:%d %b %Y}'
+            )
+            styled.set_table_styles([
+                {'selector': 'caption', 'props': [
+                    ("text-align", "center"),
+                    ("font-size", "100%"),
+                    ("color", 'darkred'),
+                ]},
+                {'selector': 'th.row_heading.level0', 'props': [
+                    ("vertical-align", "top"),
+                    ("background-color", "white"),
+                ]},
+            ])
+            styled.applymap(lambda v: f'background-color: red' if v < 0 else '')
+            idx = pd.IndexSlice
+            styled.format("{:,.0f}")
+            styled.apply(lambda o: ['color: lightgreen'
+                                    if o.name[-1] == ok_date.strftime('%d %b %y') else '']
+                                   * o.shape[0], axis='columns')
+            styled.applymap(
+                lambda v: f'color: lightgrey; background-color: white' if v == 0 else '')
+            return styled
