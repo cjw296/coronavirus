@@ -256,7 +256,6 @@ def vaccination_changes(dt='*', exclude_okay=False):
                 ]},
             ])
             styled.applymap(lambda v: f'background-color: red' if v < 0 else '')
-            idx = pd.IndexSlice
             styled.format("{:,.0f}")
             styled.apply(lambda o: ['color: lightgreen'
                                     if o.name[-1] == ok_date.strftime('%d %b %y') else '']
