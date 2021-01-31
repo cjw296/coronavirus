@@ -256,10 +256,17 @@ def vaccination_changes(dt='*', exclude_okay=False):
                 ]},
             ])
             styled.applymap(lambda v: f'background-color: red' if v < 0 else '')
-            styled.apply(lambda o: ['color: lightgreen'
-                                    if o.name[-1] == ok_date.strftime('%d %b %y') else '']
-                                   * o.shape[0], axis='columns')
             styled.format("{:+,.0f}")
+
+            def lighten(o):
+                if o.name[-1] == ok_date.strftime('%d %b %y'):
+                    color = 'color: lightgreen'
+                else:
+                    color = ''
+                return [color] * o.shape[0]
+
+            styled.apply(lighten, axis='columns')
             styled.applymap(
-                lambda v: f'color: lightgrey; background-color: white' if v == 0 else '')
+                lambda v: f'color: lightgrey; background-color: inherit' if v == 0 else ''
+            )
             return styled
