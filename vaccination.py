@@ -5,7 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 from matplotlib.gridspec import GridSpec
-from matplotlib.ticker import StrMethodFormatter, FuncFormatter
+from matplotlib.ticker import StrMethodFormatter, FuncFormatter, MaxNLocator, FixedLocator
 
 from constants import date_col, area_type, area_code, area_name, complete_dose_daily_cum, \
     first_dose_weekly, second_dose_weekly, first_vaccination, first_dose_daily_cum, \
@@ -133,13 +133,14 @@ def vaccination_dashboard():
     wales_col = 3
     colors = [plt.cm.tab10(i) for i in [england_col, ni_col, scotland_col, wales_col]]
 
-    fig = plt.figure(figsize=(16, 8.5), dpi=100)
+    fig = plt.figure(figsize=(13, 10), dpi=100)
     fig.set_facecolor('white')
     fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
 
-    gs = GridSpec(3, 4, height_ratios=[1, 1, 1])
+    gs = GridSpec(3, 4, height_ratios=[0.8, 1, 1])
     gs.update(top=0.95, bottom=0.15, right=0.95, left=0.02, wspace=0, hspace=0.2)
 
+    # pie charts:
     for x, nation in enumerate(pie_data):
         ax = plt.subplot(gs[0, x])
         ax.add_patch(plt.Circle((0, 0), radius=1, color='k', fill=False))
@@ -150,23 +151,29 @@ def vaccination_dashboard():
         pct = pie_data[nation].loc['full_pct'] + pie_data[nation].loc['partial_pct']
         ax.text(0, 0.5, f"{pct:.1f}%", ha='center', va='top', weight='bold', fontsize=14)
 
+    # stack plot for cumulative
     ax = plt.subplot(gs[1, :])
-    ax.yaxis.set_label_position("right")
-    ax.yaxis.tick_right()
-    ax.yaxis.grid(False)
-    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+    ax.yaxis.grid(zorder=-10)
+    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}%'))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[1, 2, 5, 10]))
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.set_title('Percentage of UK population partially or fully vaccinated')
+    ax.set_title('UK population partially or fully vaccinated')
 
     labels = [f"{nation}: {latest[latest[area_name] == nation]['any'].item():,.0f} people" for
               nation in pct_total.columns]
-    ax.stackplot(pct_total.index, pct_total.values.transpose(), colors=colors, labels=labels)
+    ax.stackplot(pct_total.index, pct_total.values.transpose(), colors=colors, labels=labels, zorder=10)
     ax.legend(loc='upper left')
 
+    pop = ax.twinx()
+    pop.set_ylim(*(total_population*l/100 for l in ax.get_ylim()))
+    pop.yaxis.set_major_locator(FixedLocator([total_population*t/100 for t in ax.get_yticks()]))
+    pop.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+
+    # bar charts for rates
     ax = plt.subplot(gs[2, :], sharex=ax)
-    ax.yaxis.set_label_position("right")
-    ax.yaxis.tick_right()
+    ax.yaxis.grid(zorder=-10)
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+    ax.set_ylabel('weekly')
     ax.set_xlim(first_vaccination, max_date)
     ax.set_xticks(all_data.index.levels[0], minor=True)
     major_ticks = list(weekly[date_col].unique())
@@ -175,7 +182,8 @@ def vaccination_dashboard():
     ax.set_xticks(major_ticks)
     ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
     ax.xaxis.label.set_visible(False)
-    ax.set_title('Rate of injections per week')
+    ax.axvline(weekly[date_col].max(), linestyle='dashed', color='lightgrey', zorder=-10)
+    ax.set_title('Rate of injections (weeky by injection date, daily by publish date)')
 
     bottom = None
     for nation_name, color in zip(pct_total, colors):
@@ -191,10 +199,16 @@ def vaccination_dashboard():
             width=nation_data['duration'].dt.days,
             align='edge',
             color=color,
+            zorder=10,
         )
         bottom += heights
+    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[10], prune='lower'))
 
-    # ax.set_ylim(0, 2_500_000)
+    daily = ax.twinx()
+    daily.set_ylim(*(l/7 for l in ax.get_ylim()))
+    daily.yaxis.set_major_locator(FixedLocator([t/7 for t in ax.get_yticks()]))
+    daily.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+    daily.set_ylabel('daily')
 
     fig.text(0.5, 0.08,
              f'@chriswithers13 - '
