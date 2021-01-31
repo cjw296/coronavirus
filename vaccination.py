@@ -133,7 +133,7 @@ def vaccination_dashboard():
     wales_col = 3
     colors = [plt.cm.tab10(i) for i in [england_col, ni_col, scotland_col, wales_col]]
 
-    fig = plt.figure(figsize=(13, 10), dpi=100)
+    fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')
     fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
 
