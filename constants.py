@@ -11,6 +11,7 @@ msoa = 'msoa'
 earliest_available_download = date(2020, 8, 12)
 earliest_msoa = date(2020, 12, 18)
 earliest_testing = date(2020, 12, 14)
+earliest_vaccination = date(2021, 1, 12)
 
 cases_url = 'https://coronavirus.data.gov.uk/downloads/{data_type}/coronavirus-cases_latest.{data_type}'
 
