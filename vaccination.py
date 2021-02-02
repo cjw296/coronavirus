@@ -157,8 +157,12 @@ def vaccination_dashboard():
     labels = [f"{nation}: {totals[nation].iloc[-1]:,.0f} people" for nation in totals.columns]
     ax.stackplot(totals.index, totals.values.transpose(), colors=colors, labels=labels, zorder=10)
     ax.legend(loc='upper left', framealpha=1)
+
     # make sure the current highest always has a tick:
-    ax.yaxis.set_major_locator(FixedLocator(list(ax.get_yticks())+[latest['any'].sum()]))
+    current = latest['any'].sum()
+    ticks = [t for t in ax.get_yticks() if t <= current]
+    ticks.append(current)
+    ax.yaxis.set_major_locator(FixedLocator(ticks))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
 
     pct = ax.twinx()
