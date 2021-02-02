@@ -121,10 +121,7 @@ def vaccination_dashboard():
 
     pie_data = latest.set_index(area_name).sort_index()
     pie_data = pie_data[['full_pct', 'partial_pct', 'none_pct']].transpose()
-    pct_total = 100 * (
-        data.pivot_table(values='any', index=[date_col], columns=area_name).fillna(0)
-        / total_population
-    )
+    totals = data.pivot_table(values='any', index=[date_col], columns=area_name).fillna(0)
 
     # plotting
     england_col = 0
@@ -154,20 +151,20 @@ def vaccination_dashboard():
     # stack plot for cumulative
     ax = plt.subplot(gs[1, :])
     ax.yaxis.grid(zorder=-10)
-    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}%'))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[1, 2, 5, 10]))
     plt.setp(ax.get_xticklabels(), visible=False)
     ax.set_title('UK population partially or fully vaccinated')
 
-    labels = [f"{nation}: {latest[latest[area_name] == nation]['any'].item():,.0f} people" for
-              nation in pct_total.columns]
-    ax.stackplot(pct_total.index, pct_total.values.transpose(), colors=colors, labels=labels, zorder=10)
-    ax.legend(loc='upper left')
+    labels = [f"{nation}: {totals[nation].iloc[-1]:,.0f} people" for nation in totals.columns]
+    ax.stackplot(totals.index, totals.values.transpose(), colors=colors, labels=labels, zorder=10)
+    ax.legend(loc='upper left', framealpha=1)
+    # make sure the current highest always has a tick:
+    ax.yaxis.set_major_locator(FixedLocator(list(ax.get_yticks())+[latest['any'].sum()]))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
 
-    pop = ax.twinx()
-    pop.set_ylim(*(total_population*l/100 for l in ax.get_ylim()))
-    pop.yaxis.set_major_locator(FixedLocator([total_population*t/100 for t in ax.get_yticks()]))
-    pop.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+    pct = ax.twinx()
+    pct.set_ylim(*(l/total_population for l in ax.get_ylim()))
+    pct.yaxis.set_major_locator(FixedLocator([t/total_population for t in ax.get_yticks()]))
+    pct.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y*100:,.0f}%"))
 
     # bar charts for rates
     ax = plt.subplot(gs[2, :], sharex=ax)
@@ -186,7 +183,7 @@ def vaccination_dashboard():
     ax.set_title('Rate of injections (weeky by injection date, daily by publish date)')
 
     bottom = None
-    for nation_name, color in zip(pct_total, colors):
+    for nation_name, color in zip(totals, colors):
         nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
