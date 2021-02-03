@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import lru_cache, cached_property, partial
+from functools import lru_cache, cached_property
 from typing import Sequence, Union
 
 import geopandas
@@ -13,7 +13,7 @@ from constants import repo_path
 @lru_cache
 def geoportal_geoms(name, code_column=None, name_column=None):
     # geoms that comes from https://geoportal.statistics.gov.uk/
-    geoms = geopandas.read_file(repo_path / 'geo' / f"{name}-shp" / f"{name}.shp")
+    geoms = geopandas.read_file(repo_path / 'geodata' / f"{name}-shp" / f"{name}.shp")
     geoms.to_crs("EPSG:3857", inplace=True)
     if code_column and name_column:
         geoms.rename(columns={code_column: 'code', name_column: 'name'},
@@ -67,7 +67,7 @@ ltla_geoms = ltla_geoms_500
 @lru_cache
 def msoa_geoms_with_names(source):
     # from https://visual.parliament.uk/msoanames
-    names = pd.read_csv(repo_path / 'geo' / 'MSOA-Names-1.10.csv',
+    names = pd.read_csv(repo_path / 'geodata' / 'MSOA-Names-1.10.csv',
                         usecols=['msoa11cd', 'msoa11hclnm'])
     geoms = geoportal_geoms(source)
     with_names = pd.merge(geoms, names, left_on='MSOA11CD', right_on='msoa11cd')
