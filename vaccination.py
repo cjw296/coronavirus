@@ -161,6 +161,8 @@ def vaccination_dashboard():
     # make sure the current highest always has a tick:
     current = latest['any'].sum()
     ticks = [t for t in ax.get_yticks() if t <= current]
+    if current < ticks[-1] + (ticks[-1] - ticks[-2])/2:
+        ticks.pop()
     ticks.append(current)
     ax.yaxis.set_major_locator(FixedLocator(ticks))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
