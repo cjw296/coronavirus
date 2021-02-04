@@ -7,7 +7,7 @@ import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
 
-from constants import repo_path
+from constants import repo_path, ltla, msoa
 
 
 @lru_cache
@@ -102,6 +102,12 @@ def town_and_city_geoms():
         code_column='TCITY15CD',
         name_column='TCITY15NM',
     )
+
+
+area_type_to_geoms = {
+    ltla: ltla_geoms,
+    msoa: msoa_geoms_20,
+}
 
 
 def convert_df(df, geom_col):
