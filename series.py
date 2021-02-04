@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 import constants as c
 
+
 @dataclass
 class Series:
     metric: str
     label: str = None
+    title: str = None
     color: str = 'black'
 
     _lookup = {}
@@ -12,6 +14,8 @@ class Series:
     def __post_init__(self):
         if self.label is None:
             self.label = self.metric
+        if self.title is None:
+            self.title = self.label
         self._lookup[self.metric] = self
 
     @classmethod
@@ -26,9 +30,25 @@ class Series:
         return {series.metric: series.label for series in cls._lookup.values()}
 
 
+new_cases = Series(
+    metric=c.new_cases_by_specimen_date,
+    label='cases',
+    title='new cases by specimen date',
+    color='red',
+)
+
+
 new_cases_sum = Series(
     metric=c.new_cases_sum,
     label='cases',
+    color='red',
+)
+
+
+new_cases_rate = Series(
+    metric=c.new_cases_rate,
+    label='cases',
+    title='7 day rolling average of new cases by specimen date per 100,000 people',
     color='red',
 )
 
