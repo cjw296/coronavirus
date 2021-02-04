@@ -27,7 +27,7 @@ specimen_date = 'Specimen date'
 date_col = 'date'
 cases = 'Daily lab-confirmed cases'
 people_tested = 'Daily number of people tested'
-per100k = 'cases per 100,000 people'
+per100k = 'per 100,000 people'
 population = 'population'
 pct_population = '% of population'
 
