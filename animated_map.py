@@ -14,15 +14,14 @@ from matplotlib.ticker import StrMethodFormatter
 import series as s
 from animated import round_nearest, slowing_durations, parallel_render
 from args import add_date_arg
-from constants import per100k, date_col, area_code, ltla, second_wave, msoa, base_path, \
-    release_timestamp
+from constants import date_col, area_code, ltla, second_wave, msoa, metric
 from geo import View, above, views, area_type_to_geoms
+from phe import with_population, best_data, plot_summary
 from plotting import show_area
 from series import Series
-from phe import with_population, best_data, plot_summary, read_csv
 
 
-def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False, column=per100k):
+def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
 
     cmap = copy(get_cmap(map.cmap))
     cmap.set_under(map.below_color)
@@ -42,14 +41,14 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False, column
 
     ax = data.plot(
         ax=ax,
-        column=column,
+        column=metric,
         legend=True,
         norm=SymLogNorm(linthresh=r.linthresh, vmin=r.vmin, vmax=r.vmax, base=10),
         cmap=cmap,
         vmin=r.vmin,
         vmax=r.vmax,
         antialiased=map.antialiased,
-        missing_kwds={'color': 'lightgrey'},
+        missing_kwds={'color': map.missing_color},
         legend_kwds={
             'fraction': view.legend_fraction,
             'format': StrMethodFormatter('{x:,.0f}'),
@@ -79,7 +78,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False, column
             )
 
     if label_top_5:
-        top_5 = data.sort_values(column, ascending=False).iloc[:5]
+        top_5 = data.sort_values(metric, ascending=False).iloc[:5]
         for name, geometry in zip(top_5['name'], top_5['geometry']):
             ax.annotate(
                 name,
@@ -162,19 +161,25 @@ class Range:
 @dataclass
 class Map:
     series: Series
-    range: Range
+    range: Range = None
     default_exclude: int = 5
     default_view: str = 'uk'
     dpi: int = 90
-    rolling_days: int = 14
+    rolling_days: int = None
     cmap: str = 'inferno_r'
     below_color: str = 'lightgrey'
     missing_color: str = 'grey'
     antialiased: bool = True
     area_type: str = None
+    add_population: bool = True
 
     def axis_label(self):
-        return f'{self.rolling_days} day rolling average of {self.series.title} per 100,000 people'
+        label = self.series.title
+        if self.add_population:
+            label = f'{label} per 100,000 people'
+        if self.rolling_days:
+            label = f'{self.rolling_days} day rolling average of {label}'
+        return label
 
     def for_area_type(self, area_type):
         return replace(self, area_type=area_type)
@@ -182,35 +187,20 @@ class Map:
     @cached_property
     def data(self):
         df, data_date = best_data(area_type=self.area_type)
-        df = with_population(df, source_cols=(self.series.metric,))
-        pivoted = df.pivot_table(values=per100k, index=[date_col], columns=area_code)
-        smoothed = pivoted.fillna(0).rolling(self.rolling_days).mean()
-        return smoothed.unstack().reset_index(name=per100k).set_index(date_col), data_date
 
+        if self.add_population:
+            df = with_population(df, source_cols=(self.series.metric,), dest_cols=(metric,))
+        else:
+            df.rename(columns={self.series.metric: metric}, inplace=True)
 
-@dataclass
-class MSOAMap(Map):
+        if self.rolling_days:
+            pivoted = df.pivot_table(values=metric, index=[date_col], columns=area_code)
+            smoothed = pivoted.fillna(0).rolling(self.rolling_days).mean()
+            df = smoothed.unstack().reset_index(name=metric)
+        else:
+            df = df.fillna(0)
 
-    default_exclude: int = 0
-    default_view: str = 'england'
-    dpi: int = 150
-    rolling_days: int = 7
-    missing_color: str = 'white'
-    antialiased: bool = False
-
-
-    def axis_label(self):
-        return self.series.title
-
-    @cached_property
-    def data(self):
-        assert self.area_type == msoa
-        assert self.rolling_days == 7
-        data = read_csv(base_path / 'msoa_composite.csv', index_col=date_col)
-        return (
-            data.fillna(0).rename(columns={self.series.metric: per100k}),
-            pd.to_datetime(data.iloc[-1][release_timestamp])
-        )
+        return df.set_index(date_col), data_date
 
 
 @lru_cache
@@ -222,15 +212,21 @@ MAPS = {
     ltla: {
         'cases': Map(
             s.new_cases,
-            Range(vmin=0, linthresh=30, vmax=200,
-                  linticks=4, logticks=5, lognearest=10)
+            Range(vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10),
+            rolling_days=14
         )
     },
     msoa: {
-        'cases': MSOAMap(
+        'cases': Map(
             s.new_cases_rate,
             Range(vmin=30, linthresh=700, vmax=4000,
-                  linticks=7, linnearest=10, logticks=5, lognearest=100)
+                  linticks=7, linnearest=10, logticks=5, lognearest=100),
+            default_exclude=0,
+            default_view='england',
+            dpi=150,
+            missing_color='white',
+            antialiased=False,
+            add_population=False,
         )
     },
 }
