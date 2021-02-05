@@ -11,7 +11,7 @@ import series as s
 from constants import (
     base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
-    ltla, utla, code, unique_people_tested_sum, national_lockdowns
+    ltla, utla, code, unique_people_tested_sum, national_lockdowns, msoa, release_timestamp
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
@@ -49,20 +49,26 @@ class NoData(ValueError): pass
 
 
 def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
-    try:
-        data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
-    except FileNotFoundError:
-        data_path, data_date = find_latest(f'coronavirus-cases_{dt}.csv')
-        data = pd.read_csv(data_path, parse_dates=[specimen_date])
-        data = data[data['Area type'].isin(area_type_filters[area_type])]
-        data.rename(inplace=True, errors='raise', columns={
-            area: area_name,
-            code: area_code,
-            specimen_date: date_col,
-            cases: new_cases_by_specimen_date,
-        })
-    else:
+    if area_type == msoa:
+        assert dt == '*'
+        data_path = base_path / 'msoa_composite.csv'
         data = read_csv(data_path)
+        data_date = pd.to_datetime(data.iloc[-1][release_timestamp])
+    else:
+        try:
+            data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
+        except FileNotFoundError:
+            data_path, data_date = find_latest(f'coronavirus-cases_{dt}.csv')
+            data = pd.read_csv(data_path, parse_dates=[specimen_date])
+            data = data[data['Area type'].isin(area_type_filters[area_type])]
+            data.rename(inplace=True, errors='raise', columns={
+                area: area_name,
+                code: area_code,
+                specimen_date: date_col,
+                cases: new_cases_by_specimen_date,
+            })
+        else:
+            data = read_csv(data_path)
 
     if days:
         earliest = datetime.combine(data_date - timedelta(days=days), datetime.min.time())
