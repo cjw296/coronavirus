@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import constants as c
 
 
@@ -30,48 +30,65 @@ class Series:
         return {series.metric: series.label for series in cls._lookup.values()}
 
 
-new_cases = Series(
-    metric=c.new_cases_by_specimen_date,
-    label='cases',
-    title='new cases by specimen date',
-    color='red',
-)
+SUM_TEMPLATE = '7 day rolling sum of {title}'
+RATE_TEMPLATE = '7 day rolling average of {title} per 100,000 people'
 
 
-new_cases_sum = Series(
-    metric=c.new_cases_sum,
-    label='cases',
-    color='red',
-)
+def derived(base: Series, metric, title):
+    return replace(base, metric=metric, title=title.format(title=base.title))
 
 
-new_cases_rate = Series(
-    metric=c.new_cases_rate,
-    label='cases',
-    title='7 day rolling average of new cases by specimen date per 100,000 people',
-    color='red',
-)
+def sum_of(base: Series):
+    return derived(base, base.metric+'RollingSum', SUM_TEMPLATE)
 
 
-new_admissions_sum = Series(
-    metric=c.new_admissions_sum,
-    label='hospitalised',
-    color='darkblue',
-)
-
-
-new_deaths_sum = Series(
-    metric=c.new_deaths_sum,
-    label='died',
-    color='black',
-)
+def rate_of(base: Series):
+    return derived(base, base.metric+'RollingRate', RATE_TEMPLATE)
 
 
 unique_people_tested_sum = Series(
     metric=c.unique_people_tested_sum,
+    title=SUM_TEMPLATE.format(title='unique people tested by specimen date'),
     label='tested',
     color='darkgreen',
 )
+
+
+unique_cases_positivity_sum = Series(
+    metric=c.unique_cases_positivity_sum,
+    title='unique case positivity by specimen date',
+    label='tested',
+    color='darkgreen',
+)
+
+
+new_cases = Series(
+    metric=c.new_cases_by_specimen_date,
+    title='new cases by specimen date',
+    label='cases',
+    color='red',
+)
+new_cases_sum = sum_of(new_cases)
+new_cases_rate = rate_of(new_cases)
+
+
+new_admissions = Series(
+    metric=c.new_admissions,
+    title='new hospital admissions',
+    label='hospitalised',
+    color='darkblue',
+)
+new_admissions_sum = sum_of(new_admissions)
+
+
+new_deaths = Series(
+    metric=c.new_deaths_by_death_date,
+    title='new deaths within 28 days of a positive test',
+    label='died',
+    color='black',
+)
+new_deaths_sum = sum_of(new_deaths)
+
 
 first_dose_weekly = Series(
     metric=c.first_dose_weekly,
