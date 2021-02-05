@@ -95,13 +95,13 @@ def msoa_files(earliest) -> Sequence[Tuple[datetime, Path]]:
         yield dt, path
 
 
-def main():
+def main(args=None):
     parser = ArgumentParser()
     add_date_arg(parser, '--start', default=date.today())
     parser.add_argument('--clean', action='store_true')
     parser.add_argument('--output', default=base_path / 'msoa_composite.csv', type=Path)
     parser.add_argument('--no-check', dest='check', action='store_false')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     fieldnames = None
     rows = {}
