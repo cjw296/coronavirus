@@ -23,8 +23,7 @@ from series import Series
 
 def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
 
-    cmap = copy(get_cmap(map.cmap))
-    cmap.set_under(map.below_color)
+    cmap = map.get_cmap()
     r = map.range
 
     df, _ = map.data
@@ -166,7 +165,7 @@ class Map:
     default_view: str = 'uk'
     dpi: int = 90
     rolling_days: int = None
-    cmap: str = 'inferno_r'
+    cmap: str = None
     below_color: str = 'lightgrey'
     missing_color: str = 'grey'
     antialiased: bool = True
@@ -184,6 +183,11 @@ class Map:
 
     def for_area_type(self, area_type):
         return replace(self, area_type=area_type)
+
+    def get_cmap(self):
+        cmap = copy(get_cmap(self.cmap or self.series.cmap))
+        cmap.set_under(self.below_color)
+        return cmap
 
     @cached_property
     def data(self):
@@ -214,14 +218,16 @@ MAPS = {
         'cases': Map(
             s.new_cases,
             Range(vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10),
-            rolling_days=14
-        )
+            rolling_days=14,
+            cmap='inferno_r',
+        ),
     },
     msoa: {
         'cases': Map(
             s.new_cases_rate,
             Range(vmin=30, linthresh=700, vmax=4000,
                   linticks=7, linnearest=10, logticks=5, lognearest=100),
+            cmap='inferno_r',
             default_exclude=0,
             default_view='england',
             dpi=150,

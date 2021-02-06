@@ -8,6 +8,7 @@ class Series:
     label: str = None
     title: str = None
     color: str = 'black'
+    cmap: str = 'viridis'
 
     _lookup = {}
 
@@ -51,6 +52,7 @@ unique_people_tested_sum = Series(
     title=SUM_TEMPLATE.format(title='unique people tested by specimen date'),
     label='tested',
     color='darkgreen',
+    cmap='Greens',
 )
 
 
@@ -59,6 +61,7 @@ unique_cases_positivity_sum = Series(
     title='unique case positivity by specimen date',
     label='tested',
     color='darkgreen',
+    cmap='Oranges',
 )
 
 
@@ -67,6 +70,7 @@ new_cases = Series(
     title='new cases by specimen date',
     label='cases',
     color='red',
+    cmap='Reds',
 )
 new_cases_sum = sum_of(new_cases)
 new_cases_rate = rate_of(new_cases)
@@ -77,6 +81,7 @@ new_admissions = Series(
     title='new hospital admissions',
     label='hospitalised',
     color='darkblue',
+    cmap='Blues',
 )
 new_admissions_sum = sum_of(new_admissions)
 
@@ -86,6 +91,7 @@ new_deaths = Series(
     title='new deaths within 28 days of a positive test',
     label='died',
     color='black',
+    cmap='Greys',
 )
 new_deaths_sum = sum_of(new_deaths)
 
