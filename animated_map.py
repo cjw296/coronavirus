@@ -51,7 +51,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
         missing_kwds={'color': map.missing_color},
         legend_kwds={
             'fraction': view.legend_fraction,
-            'format': StrMethodFormatter('{x:,.0f}'),
+            'format': StrMethodFormatter(map.tick_format),
             'ticks': ticks,
             'extend': 'max' if map.range.vmin == 0 else 'both',
             'label': map.axis_label()
@@ -172,6 +172,7 @@ class Map:
     antialiased: bool = True
     area_type: str = None
     add_population: bool = True
+    tick_format: str = '{x:,.0f}'
 
     def axis_label(self):
         label = self.series.title
