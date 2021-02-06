@@ -75,8 +75,11 @@ def output_gif(name, data, durations, _):
     optimize(str(gif_path))
 
 
-    # load the images
 def output_mp4(name, data, durations, max_workers=None):
+    # sanity check the images
+    sizes = {frame.shape for frame in data}
+    assert len(sizes) == 1, sizes
+    # turn the image into clips
     clips = [ImageClip(data, duration=d) for (data, d) in zip(data, durations)]
     # save the mp4
     movie = concatenate_videoclips(clips, method="chain")
