@@ -59,8 +59,8 @@ unique_people_tested_sum = Series(
 unique_cases_positivity_sum = Series(
     metric=c.unique_cases_positivity_sum,
     title='unique case positivity by specimen date',
-    label='tested',
-    color='darkgreen',
+    label='positivity',
+    color='darkorange',
     cmap='Oranges',
 )
 
