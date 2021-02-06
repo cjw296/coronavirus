@@ -34,28 +34,42 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
     data = pd.merge(area_type_to_geoms[map.area_type](), data_for_dt,
                     how='outer', left_on='code', right_on=area_code)
 
-    ticks = np.concatenate((
-        round_nearest(np.linspace(r.vmin, r.linthresh, r.linticks), r.linnearest),
-        round_nearest(np.geomspace(r.linthresh, r.vmax, r.logticks), r.lognearest))
-    )
+    ticks = norm = None
+    if map.range.linthresh is not None:
+        ticks = np.concatenate((
+            round_nearest(np.linspace(r.vmin, r.linthresh, r.linticks), r.linnearest),
+            round_nearest(np.geomspace(r.linthresh, r.vmax, r.logticks), r.lognearest))
+        )
+        norm = SymLogNorm(linthresh=r.linthresh, vmin=r.vmin, vmax=r.vmax, base=10)
+    elif map.range.linticks:
+        ticks = round_nearest(np.linspace(r.vmin, r.vmax, r.linticks), r.linnearest),
+
+    plot_kwds = {}
+    legend_kwds = {
+        'fraction': view.legend_fraction,
+        'format': StrMethodFormatter(map.tick_format),
+        'ticks': ticks,
+        'extend': 'max' if map.range.vmin == 0 else 'both',
+        'label': map.axis_label()
+    }
+
+    if ticks is not None:
+        legend_kwds['ticks'] = ticks
+
+    if norm is not None:
+        plot_kwds['norm'] = norm
 
     ax = data.plot(
         ax=ax,
         column=metric,
         legend=True,
-        norm=SymLogNorm(linthresh=r.linthresh, vmin=r.vmin, vmax=r.vmax, base=10),
         cmap=cmap,
         vmin=r.vmin,
         vmax=r.vmax,
         antialiased=map.antialiased,
         missing_kwds={'color': map.missing_color},
-        legend_kwds={
-            'fraction': view.legend_fraction,
-            'format': StrMethodFormatter(map.tick_format),
-            'ticks': ticks,
-            'extend': 'max' if map.range.vmin == 0 else 'both',
-            'label': map.axis_label()
-        },
+        legend_kwds=legend_kwds,
+        **plot_kwds
     )
     show_area(ax, view)
     ax.set_title(f'COVID-19 {map.series.label} as of {frame_date:%d %b %Y}')
@@ -152,9 +166,9 @@ class Range:
     vmin: int = 0
     vmax: int = None
     linthresh: int = None
-    linticks: int = 4
+    linticks: int = None
     linnearest: float = 1
-    logticks: int = 5
+    logticks: int = None
     lognearest: float = 1
 
 
