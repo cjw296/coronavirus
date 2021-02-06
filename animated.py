@@ -43,6 +43,10 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
     with concurrent.futures.ProcessPoolExecutor(max_workers) as executor:
         tuple(tqdm(executor.map(renderer, items), total=len(items), desc='rendering'))
 
+    if None in outputs:
+        # just rendering the frames to be composited later
+        return
+    
     image_paths = sorted(image_path.iterdir())
     image_count = len(image_paths)
     if not isinstance(duration, list):
@@ -95,6 +99,7 @@ def output_mp4(name, data, durations, max_workers=None):
 output_types = {
     'mp4': output_mp4,
     'gif': output_gif,
+    'none': None,
 }
 
 
