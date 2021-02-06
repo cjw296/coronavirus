@@ -59,10 +59,10 @@ def parallel_render(name, render: partial, items, duration: Union[float, list],
                      total=len(image_paths), desc='loading'))
 
     for output in outputs:
-        output(name, data, durations)
+        output(name, data, durations, max_workers)
 
 
-def output_gif(name, data, durations):
+def output_gif(name, data, durations, _):
     # another still last frame to help twitter's broken gif playback
     data.append(data[-1])
     durations.append(3)
@@ -75,14 +75,14 @@ def output_gif(name, data, durations):
     optimize(str(gif_path))
 
 
-def output_mp4(name, data, durations):
     # load the images
+def output_mp4(name, data, durations, max_workers=None):
     clips = [ImageClip(data, duration=d) for (data, d) in zip(data, durations)]
     # save the mp4
     movie = concatenate_videoclips(clips, method="chain")
     movie.write_videofile(str(output_path / (name + '.mp4')),
                           fps=24,
-                          threads=cpu_count(),
+                          threads=max_workers or cpu_count(),
                           bitrate='10M')
 
 # output for twitter:
