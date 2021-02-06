@@ -3,6 +3,7 @@ from copy import copy
 from dataclasses import dataclass, replace
 from datetime import timedelta
 from functools import lru_cache, partial, cached_property
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -170,15 +171,22 @@ class Map:
     missing_color: str = 'grey'
     antialiased: bool = True
     area_type: str = None
-    add_population: bool = True
-    tick_format: str = '{x:,.0f}'
+    per_population: Optional[int] = 100_000
+    tick_format: str = None
+
+    def __post_init__(self):
+        if self.tick_format is None:
+            if self.per_population == 100:
+                self.tick_format = '{x:,.0f}%'
+            else:
+                self.tick_format = '{x:,.0f}'
 
     def axis_label(self):
         label = self.series.title
-        if self.add_population:
-            label = f'{label} per 100,000 people'
         if self.rolling_days:
             label = f'{self.rolling_days} day rolling average of {label}'
+        if self.per_population and self.per_population != 100:
+            label = f'{label} per {self.per_population:,} people'
         return label
 
     def for_area_type(self, area_type):
@@ -193,8 +201,13 @@ class Map:
     def data(self):
         df, data_date = best_data(area_type=self.area_type)
 
-        if self.add_population:
-            df = with_population(df, source_cols=(self.series.metric,), dest_cols=(metric,))
+        if self.per_population:
+            df = with_population(
+                df,
+                source_cols=(self.series.metric,),
+                dest_cols=(metric,),
+                factors=(self.per_population,)
+            )
         else:
             df.rename(columns={self.series.metric: metric}, inplace=True)
 
@@ -233,8 +246,8 @@ MAPS = {
             dpi=150,
             missing_color='white',
             antialiased=False,
-            add_population=False,
-        )
+            per_population=None,
+        ),
     },
 }
 
