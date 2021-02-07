@@ -10,6 +10,7 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
 from matplotlib.cm import get_cmap
+from matplotlib.ticker import FuncFormatter
 
 from constants import phe_vmax, new_cases_by_specimen_date, population, pct_population, base_path
 from geo import views, old_ltla_geoms
@@ -140,3 +141,8 @@ def stacked_bar_plot(ax, data, colormap):
         pos_prior = pos_prior + np.where(mask, series, 0)
         neg_prior = neg_prior + np.where(mask, 0, series)
     return handles
+
+
+per1m_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m")
+per1k_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000:,.0f}k")
+per0k_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000:,.1f}k")
