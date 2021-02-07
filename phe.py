@@ -15,7 +15,7 @@ from constants import (
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import stacked_bar_plot
+from plotting import stacked_bar_plot, per1k_formatter, per1m_formatter
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -326,16 +326,19 @@ def map_data(for_date):
 
 
 def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,
-                 series=(s.new_cases_sum, s.new_admissions_sum, s.new_deaths_sum),
-                 tested_formatter=lambda y, pos: f"{y / 1_000_000:.1f}m", title=True):
-    all_series = [s.unique_people_tested_sum] + list(series)
+                 left_series=(s.unique_people_tested_sum,),
+                 left_formatter=per1k_formatter,
+                 right_series=(s.new_cases_sum, s.new_admissions_sum, s.new_deaths_sum),
+                 right_formatter=per1k_formatter,
+                 title=True, figsize=(16, 5)):
+    all_series = list(left_series)+list(right_series)
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(16, 10))
+        fig, ax = plt.subplots(figsize=figsize)
         fig.set_facecolor('white')
 
-    tests_ax = ax
-    outcomes_ax = ax = tests_ax.twinx()
+    left_ax = ax
+    right_ax = ax = left_ax.twinx()
 
     if data_date is None:
         data_path, data_date = find_latest('england_*.csv')
@@ -352,18 +355,23 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
         if max_date and max_date > data.index.max():
             data = data.reindex(pd.date_range(data.index.min(), max_date))
 
-    data.plot(ax=tests_ax,
-              y=s.unique_people_tested_sum.metric,
-              color=s.unique_people_tested_sum.color, legend=False)
+    for series_ax, series, formatter in (
+            (left_ax, left_series, left_formatter),
+            (right_ax, right_series, right_formatter),
 
-    data.plot(ax=outcomes_ax,
-              y=[s_.metric for s_ in series],
-              color=[s_.color for s_ in series], legend=False)
+    ):
+        data.plot(ax=series_ax,
+                  y=[s_.metric for s_ in series],
+                  color=[s_.color for s_ in series], legend=False)
+
+        series_ax.tick_params(axis='y', labelcolor=series[-1].color)
+        series_ax.yaxis.set_major_formatter(formatter)
+        series_ax.set_ylim(ymin=0)
 
     for lockdown in national_lockdowns:
         lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2, zorder=0)
 
-    lines = tests_ax.get_lines() + outcomes_ax.get_lines() + [lockdown_obj]
+    lines = left_ax.get_lines() + right_ax.get_lines() + [lockdown_obj]
     ax.legend(lines, [s_.label for s_ in all_series]+['lockdown'],
               loc='upper left', framealpha=1)
     if title:
@@ -372,12 +380,5 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
         ax.axvline(frame_date, color='red')
     ax.minorticks_off()
 
-    outcomes_ax.tick_params(axis='y', labelcolor=s.new_admissions_sum.color)
-    outcomes_ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000:.0f}k"))
-    outcomes_ax.set_ylim(ymin=0)
-    tests_ax.tick_params(axis='y', labelcolor=s.unique_people_tested_sum.color)
-    tests_ax.yaxis.set_major_formatter(FuncFormatter(tested_formatter))
-    tests_ax.set_ylim(ymin=0)
-
-    xaxis = tests_ax.get_xaxis()
+    xaxis = left_ax.get_xaxis()
     xaxis.label.set_visible(False)
