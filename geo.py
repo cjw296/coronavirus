@@ -223,7 +223,8 @@ class View:
         else:
             return self.minx, self.miny, self.maxx, self.maxy
 
-    def layout(self):
+    def layout(self, summary_height=None):
+        summary_height = self.summary_height if summary_height is None else summary_height
         minx, miny, maxx, maxy = self.total_bounds
         plot_height = maxy - miny
         plot_width = maxx - minx
@@ -233,15 +234,15 @@ class View:
             width = 15
             map_width = width * (1-self.legend_fraction)
             map_height = map_width / aspect
-            height = map_height + self.summary_height + self.grid_hspace
+            height = map_height + summary_height + self.grid_hspace
         else:
             # uk / england
             height = 15
-            map_height = height - self.summary_height - self.grid_hspace
+            map_height = height - summary_height - self.grid_hspace
             map_width = aspect * height
             width = map_width / (1-self.legend_fraction)
 
-        ratio = map_height / self.summary_height
+        ratio = map_height / summary_height if summary_height else 0
         return width, height, ratio
 
     def __post_init__(self):

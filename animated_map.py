@@ -18,11 +18,12 @@ from args import add_date_arg
 from constants import date_col, area_code, ltla, second_wave, msoa, metric
 from geo import View, above, views, area_type_to_geoms
 from phe import with_population, best_data, plot_summary
-from plotting import show_area
+from plotting import show_area, per1m_formatter
 from series import Series
 
 
-def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
+def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
+               title: Optional[str] = 'COVID-19 {map.series.label} as of {frame_date:%d %b %Y}'):
 
     cmap = map.get_cmap()
     r = map.range
@@ -72,7 +73,8 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
         **plot_kwds
     )
     show_area(ax, view)
-    ax.set_title(f'COVID-19 {map.series.label} as of {frame_date:%d %b %Y}')
+    if title:
+        ax.set_title(title.format(map=map, frame_date=frame_date))
 
     for places in view.outline:
         places.frame().geometry.boundary.plot(
@@ -102,23 +104,33 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False):
             )
 
 
-def render_dt(data_date, earliest_date, to_date, area_type, map_type, view, frame_date, image_path):
+def render_dt(
+        data_date, earliest_date, to_date, area_type, map_type, view, bare,
+        frame_date, image_path
+):
     map = get_map(area_type, map_type)
     view = views[view]
-    width, height, height_ratio = view.layout()
-    fig, (map_ax, lines_ax) = plt.subplots(
-        figsize=(width, height),
-        nrows=2,
-        gridspec_kw={'height_ratios': [height_ratio, 1], 'hspace': view.grid_hspace}
-    )
-    render_map(map_ax, frame_date, map, view)
-    plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
-                 series=(s.new_admissions_sum, s.new_deaths_sum), title=False)
-    fig.text(0.25, 0.07,
-             f'@chriswithers13 - '
-             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
-             color='darkgrey',
-             zorder=-1)
+    if bare:
+        width, height, _ = view.layout(summary_height=0)
+        plt.figure(figsize=(width, height), dpi=map.dpi)
+        render_map(plt.gca(), frame_date, map, view, title=None)
+    else:
+        width, height, height_ratio = view.layout()
+        fig, (map_ax, lines_ax) = plt.subplots(
+            figsize=(width, height),
+            nrows=2,
+            gridspec_kw={'height_ratios': [height_ratio, 1], 'hspace': view.grid_hspace}
+        )
+        render_map(map_ax, frame_date, map, view)
+        plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
+                     left_formatter=per1m_formatter,
+                     right_series=(s.new_admissions_sum, s.new_deaths_sum),
+                     title=False)
+        fig.text(0.25, 0.07,
+                 f'@chriswithers13 - '
+                 f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
+                 color='darkgrey',
+                 zorder=-1)
     plt.savefig(image_path / f'{frame_date.date()}.png', dpi=map.dpi, bbox_inches='tight')
     plt.close()
 
@@ -139,6 +151,7 @@ def main():
     parser.add_argument('--max-workers', type=int)
     parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
     add_date_arg(group, '--single')
+    parser.add_argument('--bare', action='store_true', help='just the map')
     args = parser.parse_args()
 
     map = get_map(args.area_type, args.map)
@@ -152,7 +165,9 @@ def main():
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 
-    render = partial(render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view)
+    render = partial(
+        render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view, args.bare
+    )
 
     duration = args.duration or slowing_durations(dates)
     parallel_render(f'animated_map_{map.area_type}_{map.series.label}_{view}',
