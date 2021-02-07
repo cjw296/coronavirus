@@ -105,7 +105,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
 
 
 def render_dt(
-        data_date, earliest_date, to_date, area_type, map_type, view, bare,
+        data_date, earliest_date, to_date, area_type, map_type, view, bare, title,
         frame_date, image_path
 ):
     map = get_map(area_type, map_type)
@@ -113,7 +113,7 @@ def render_dt(
     if bare:
         width, height, _ = view.layout(summary_height=0)
         plt.figure(figsize=(width, height), dpi=map.dpi)
-        render_map(plt.gca(), frame_date, map, view, title=None)
+        render_map(plt.gca(), frame_date, map, view, title=title)
     else:
         width, height, height_ratio = view.layout()
         fig, (map_ax, lines_ax) = plt.subplots(
@@ -121,7 +121,10 @@ def render_dt(
             nrows=2,
             gridspec_kw={'height_ratios': [height_ratio, 1], 'hspace': view.grid_hspace}
         )
-        render_map(map_ax, frame_date, map, view)
+        kw = {}
+        if title:
+            kw['title'] = title
+        render_map(map_ax, frame_date, map, view, **kw)
         plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                      left_formatter=per1m_formatter,
                      right_series=(s.new_admissions_sum, s.new_deaths_sum),
@@ -152,6 +155,7 @@ def main():
     parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
     add_date_arg(group, '--single')
     parser.add_argument('--bare', action='store_true', help='just the map')
+    parser.add_argument('--title', help='override title template')
     args = parser.parse_args()
 
     map = get_map(args.area_type, args.map)
@@ -166,7 +170,8 @@ def main():
     dates = pd.date_range(args.from_date, to_date)
 
     render = partial(
-        render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view, args.bare
+        render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view,
+        args.bare, args.title,
     )
 
     duration = args.duration or slowing_durations(dates)
