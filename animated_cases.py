@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from functools import partial
 
 from animated import parallel_render
-from args import add_date_arg
+from args import add_date_arg, add_parallel_args, parallel_params
 from constants import my_areas, london_areas, oxford_areas, region, ltla, second_wave, \
     earliest_testing
 from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
@@ -43,13 +43,12 @@ def render(date, image_path, **kw):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('area', choices=all_params.keys())
     add_date_arg(parser, help='first release to use', default=earliest_testing)
+    add_parallel_args(parser, default_duration=0.1, default_output='gif', from_date=False)
+    parser.add_argument('area', choices=all_params.keys())
     add_date_arg(parser, '--earliest', help='min for x-axis', default=second_wave)
-    parser.add_argument('--duration', type=float, default=0.1)
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--diff-no-lims', action='store_true')
-    parser.add_argument('--raise-errors', action='store_true')
     parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
@@ -77,7 +76,7 @@ def main():
                             earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
                             **params),
-                    dates, duration=args.duration, raise_errors=args.raise_errors)
+                    dates, **parallel_params(args))
 
 
 if __name__ == '__main__':

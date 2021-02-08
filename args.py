@@ -1,6 +1,7 @@
 from datetime import date
 
 from dateutil.parser import parse as parse_date
+import pandas as pd
 
 from constants import (
     data_start, second_wave, lockdown2, earliest_available_download,
@@ -32,3 +33,31 @@ def add_date_arg(parser, name='--from-date', **kw):
     if help_text:
         help_text += ': '
     parser.add_argument(name, type=date_lookup, help=help_text+', '.join(special_dates), **kw)
+
+
+def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_date=True):
+    if from_date:
+        add_date_arg(parser, default=second_wave)
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--exclude-days', type=int)
+    add_date_arg(group, '--to-date')
+
+    parser.add_argument('--output', default=default_output)
+    parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
+
+    parser.add_argument('--max-workers', type=int)
+    parser.add_argument('--duration', type=float, default=default_duration,
+                        help='fast=0.05, slow=0.3')
+
+    add_date_arg(parser, '--single')
+
+
+def parallel_params(args):
+    return dict(
+        duration=args.duration,
+        outputs=args.output,
+        raise_errors=args.raise_errors,
+        max_workers=args.max_workers,
+        item=pd.to_datetime(args.single) if args.single else None
+    )

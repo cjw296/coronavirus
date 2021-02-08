@@ -14,7 +14,7 @@ from matplotlib.ticker import StrMethodFormatter
 
 import series as s
 from animated import round_nearest, slowing_durations, parallel_render
-from args import add_date_arg
+from args import add_date_arg, add_parallel_args, parallel_params
 from constants import date_col, area_code, ltla, second_wave, msoa, metric
 from geo import View, above, views, area_type_to_geoms
 from phe import with_population, best_data, plot_summary
@@ -142,20 +142,10 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('area_type', choices=MAPS.keys())
     parser.add_argument('map')
-    add_date_arg(parser, default=second_wave)
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--exclude-days', type=int)
-    add_date_arg(group, '--to-date')
-
-    parser.add_argument('--output', default='mp4')
-    parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
-    parser.add_argument('--view', choices=views.keys())
-    parser.add_argument('--max-workers', type=int)
-    parser.add_argument('--duration', type=float, help='fast=0.05, slow=0.3')
-    add_date_arg(group, '--single')
     parser.add_argument('--bare', action='store_true', help='just the map')
     parser.add_argument('--title', help='override title template')
+    parser.add_argument('--view', choices=views.keys())
+    add_parallel_args(parser, default_duration=None)
     args = parser.parse_args()
 
     map = get_map(args.area_type, args.map)
@@ -174,11 +164,10 @@ def main():
         args.bare, args.title,
     )
 
-    duration = args.duration or slowing_durations(dates)
+    params = parallel_params(args)
+    params['duration'] = args.duration or slowing_durations(dates)
     parallel_render(f'animated_map_{map.area_type}_{map.series.label}_{view}',
-                    render, dates, duration,
-                    args.output, raise_errors=args.raise_errors, max_workers=args.max_workers,
-                    item=pd.to_datetime(args.single) if args.single else None)
+                    render, dates, **params)
 
 
 @dataclass
@@ -262,11 +251,27 @@ def get_map(area_type: str, map_type: str) -> Map:
 
 MAPS = {
     ltla: {
+        'tested': Map(
+            s.unique_people_tested_sum,
+            Range(vmin=0, linthresh=3, vmax=15, linticks=4, logticks=5),
+            per_population=100,
+        ),
+        'positivity': Map(
+            s.unique_cases_positivity_sum,
+            Range(vmin=1, linthresh=20, vmax=100, linticks=4, logticks=5),
+            per_population=None,
+        ),
         'cases': Map(
             s.new_cases,
             Range(vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10),
             rolling_days=14,
             cmap='inferno_r',
+        ),
+        'deaths': Map(
+            s.new_deaths,
+            Range(vmin=0, vmax=8),
+            rolling_days=7,
+            missing_color='white'
         ),
     },
     msoa: {
