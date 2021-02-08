@@ -325,6 +325,17 @@ def map_data(for_date):
     return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
+def summary_data(series, start=None, end=None, data_date=None):
+    if data_date is None:
+        data_path, data_date = find_latest('england_*.csv')
+    else:
+        data_path = base_path / f'england_{pd.to_datetime(data_date).date()}.csv'
+    data = read_csv(
+        data_path, start, end, [s_.metric for s_ in series], index_col=[date_col]
+    ) / 7
+    return data, data_date
+
+
 def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,
                  left_series=(s.unique_people_tested_sum,),
                  left_formatter=per1k_formatter,
@@ -340,14 +351,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
     left_ax = ax
     right_ax = ax = left_ax.twinx()
 
-    if data_date is None:
-        data_path, data_date = find_latest('england_*.csv')
-    else:
-        data_path = base_path / f'england_{pd.to_datetime(data_date).date()}.csv'
-
-    data = read_csv(
-        data_path, earliest_date, to_date, [s_.metric for s_ in all_series], index_col=[date_col]
-    ) / 7
+    data, data_date = summary_data(all_series, earliest_date, to_date, data_date)
 
     possible_max = [dt for dt in (frame_date, to_date) if dt is not None]
     if possible_max:
