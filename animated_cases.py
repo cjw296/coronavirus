@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from functools import partial
 
 from animated import parallel_render
-from args import add_date_arg, add_parallel_args, parallel_params
+from args import add_date_arg, add_parallel_args, parallel_params, parallel_to_date
 from constants import my_areas, london_areas, oxford_areas, region, ltla, second_wave, \
     earliest_testing
 from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
@@ -60,9 +60,11 @@ def main():
     area_type = params.get('area_type', ltla)
     areas = params.get('areas')
 
-    from_date = max(args.from_date, args.from_date if args.earliest is None else args.earliest)
-
+    from_date = max(args.from_date, args.earliest)
     dates = available_dates(area_type, earliest=from_date)
+    to_date = parallel_to_date(args, dates[0])
+    if to_date != dates[0]:
+        dates = [d for d in dates if d <= to_date]
 
     data, _ = best_data(dates[0], area_type, areas, args.earliest)
 

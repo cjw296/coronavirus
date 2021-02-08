@@ -14,7 +14,7 @@ from matplotlib.ticker import StrMethodFormatter
 
 import series as s
 from animated import round_nearest, slowing_durations, parallel_render
-from args import add_date_arg, add_parallel_args, parallel_params
+from args import add_date_arg, add_parallel_args, parallel_params, parallel_to_date
 from constants import date_col, area_code, ltla, second_wave, msoa, metric
 from geo import View, above, views, area_type_to_geoms
 from phe import with_population, best_data, plot_summary
@@ -154,8 +154,7 @@ def main():
 
     df, data_date = map.data
 
-    exclude_days = map.default_exclude if args.exclude_days is None else map.default_exclude
-    to_date = args.to_date or df.index.max().date() - timedelta(days=exclude_days)
+    to_date = parallel_to_date(args, df.index.max().date(), map.default_exclude)
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 

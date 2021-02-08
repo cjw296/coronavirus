@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from dateutil.parser import parse as parse_date
 import pandas as pd
@@ -61,3 +61,12 @@ def parallel_params(args):
         max_workers=args.max_workers,
         item=pd.to_datetime(args.single) if args.single else None
     )
+
+
+def parallel_to_date(args, max_date: date, default_exclude=None) -> date:
+    exclude_days = default_exclude if args.exclude_days is None else default_exclude
+    if exclude_days is not None:
+        return max_date - timedelta(days=exclude_days)
+    elif args.to_date:
+        return args.to_date
+    return max_date
