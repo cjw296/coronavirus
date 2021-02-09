@@ -265,7 +265,7 @@ def plot_with_diff(data_date, uncertain_days,
 
 
 def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_type=ltla,
-               earliest=second_wave, **kw):
+               earliest='2020-10-01', **kw):
     plot_with_diff(
         for_date, uncertain_days, diff_days,
         earliest=earliest, areas=areas, area_type=area_type, **kw
