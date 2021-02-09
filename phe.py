@@ -5,17 +5,17 @@ from functools import lru_cache
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.dates import DayLocator, DateFormatter
-from matplotlib.ticker import MaxNLocator, StrMethodFormatter, FuncFormatter
+from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 
 import series as s
 from constants import (
     base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
-    area_name, new_cases_by_specimen_date, pct_population, second_wave, nation, region,
+    area_name, new_cases_by_specimen_date, pct_population, nation, region,
     ltla, utla, code, unique_people_tested_sum, national_lockdowns, msoa, release_timestamp
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import stacked_bar_plot, per1k_formatter, per1m_formatter
+from plotting import stacked_bar_plot, per1k_formatter
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -152,7 +152,7 @@ def plot_stacked_bars(
                                     label=f'Latest {average_label}: {latest_average:,.0f}'))
 
     if show_testing:
-        tested_ax = ax.twinx()
+        tested_ax = legend_ax = ax.twinx()
         tested_label = '% Population tested'
         if unique_people_tested_sum in all_data:
             tested = tests_data(all_data)
@@ -169,6 +169,8 @@ def plot_stacked_bars(
         tested_ax.yaxis.tick_left()
         tested_ax.yaxis.set_label_position("left")
         tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+    else:
+        legend_ax = ax
 
     fix_x_axis(ax, data, earliest)
 
@@ -186,7 +188,7 @@ def plot_stacked_bars(
         if not i:
             handles.append(h)
 
-    ax.legend(handles=handles, loc='upper left', framealpha=1)
+    legend_ax.legend(handles=handles, loc='upper left', framealpha=1)
 
     if title:
         ax.set_title(title)
