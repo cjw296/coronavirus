@@ -134,7 +134,7 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 
 def plot_stacked_bars(
-        ax, data, all_data, average_days, average_end, title, show_testing,
+        ax, data, average_days, average_end, title, testing_data,
         ylim, tested_ylim, earliest
 ):
 
@@ -151,11 +151,11 @@ def plot_stacked_bars(
             handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
                                     label=f'Latest {average_label}: {latest_average:,.0f}'))
 
-    if show_testing:
+    if testing_data is not None:
         tested_ax = legend_ax = ax.twinx()
         tested_label = '% Population tested'
-        if unique_people_tested_sum in all_data:
-            tested = tests_data(all_data)
+        if unique_people_tested_sum in testing_data:
+            tested = tests_data(testing_data)
             if average_end is not None:
                 tested = tested[:average_end]
             tested_color = 'darkblue'
@@ -210,7 +210,7 @@ def current_and_previous_data(get_data, start='*', diff_days=1):
     return data, data_date, previous_data, previous_data_date
 
 
-def plot_with_diff(data_date, uncertain_days,
+def plot_with_diff(data_date, uncertain_days=5,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
                    earliest=None, area_type=ltla, areas=None, tested_ylim=None,
@@ -223,11 +223,14 @@ def plot_with_diff(data_date, uncertain_days,
 
     def get_data(dt):
         all_data_, data_date_ = best_data(dt, area_type, areas, earliest_data)
-        data_ = cases_data(all_data_)
-        return (all_data_, data_), data_date_
+        return cases_data(all_data_), data_date_
 
     results = current_and_previous_data(get_data, data_date, diff_days)
-    (all_data, data), data_date, (all_previous_data, previous_data), previous_data_date = results
+    data, data_date, previous_data, previous_data_date = results
+    if show_testing:
+        testing_data = best_data(data_date, area_type, areas, earliest_data)[0]
+    else:
+        testing_data = None
 
     if uncertain_days is None:
         average_end = None
@@ -254,7 +257,7 @@ def plot_with_diff(data_date, uncertain_days,
             earliest
         )
         plot_stacked_bars(
-            bars_ax, data, all_data, average_days, average_end, title, show_testing,
+            bars_ax, data, average_days, average_end, title, testing_data,
             ylim, tested_ylim,
             earliest
         )
@@ -266,10 +269,10 @@ def plot_with_diff(data_date, uncertain_days,
         plt.show()
 
 
-def plot_areas(for_date, areas=None, uncertain_days=5, diff_days=1, area_type=ltla,
-               earliest='2020-10-01', **kw):
+def plot_cases_by_area(for_date, areas=None, area_type=ltla,
+                       earliest='2020-10-01', **kw):
     plot_with_diff(
-        for_date, uncertain_days, diff_days,
+        for_date,
         earliest=earliest, areas=areas, area_type=area_type, **kw
     )
 

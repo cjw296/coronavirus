@@ -5,7 +5,7 @@ from animated import parallel_render
 from args import add_date_arg, add_parallel_args, parallel_params, parallel_to_date
 from constants import my_areas, london_areas, oxford_areas, region, ltla, second_wave, \
     earliest_testing
-from phe import plot_with_diff, available_dates, best_data, cases_data, tests_data
+from phe import available_dates, best_data, cases_data, tests_data, plot_cases_by_area
 
 all_params = dict(
     my_area=dict(
@@ -31,9 +31,8 @@ all_params = dict(
 
 
 def render(date, image_path, **kw):
-    plot_with_diff(
+    plot_cases_by_area(
         date,
-        uncertain_days=5,
         image_path=image_path,
         title='Evolution of PHE case reporting',
         to_date=date.today(),
