@@ -47,6 +47,7 @@ new_cases_sum = 'newCasesBySpecimenDateRollingSum'
 new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
+case_demographics = 'newCasesBySpecimenDateAgeDemographics'
 
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
@@ -62,6 +63,13 @@ second_dose_weekly_cum = 'cumPeopleVaccinatedSecondDoseByVaccinationDate'
 first_dose_daily_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
 second_dose_daily_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
 complete_dose_daily_cum = "cumPeopleVaccinatedCompleteByPublishDate"
+
+england_metrics = [
+    new_admissions_sum,
+    new_cases_sum,
+    new_deaths_sum,
+    unique_people_tested_sum
+]
 
 vaccination_new_and_weekly = [
     first_dose_daily_new,
@@ -79,14 +87,13 @@ vaccination_cumulative = [
     second_dose_weekly_cum,
 ]
 
-
-standard_metrics = (
+standard_metrics = [
     new_cases_by_specimen_date,
     new_deaths_by_death_date,
     unique_people_tested_sum,
     unique_cases_positivity_sum,
     new_cases_rate
-)
+]
 
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)

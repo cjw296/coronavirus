@@ -5,13 +5,12 @@ import requests
 from dateutil.parser import parse as parse_date
 
 from constants import msoa, new_cases_sum, new_cases_rate, new_cases_change
-from download import download_phe, find_latest
+from download import download_phe, find_latest, get_release_timestamp
 from msoa_composite import check_path, main as composite
 
 
 def is_msoa_data_ready(dt):
-    response = requests.get('https://api.coronavirus.data.gov.uk/v1/timestamp')
-    release_timestamp = parse_date(response.json()['websiteTimestamp'])
+    release_timestamp = get_release_timestamp()
     response = requests.head('https://coronavirus.data.gov.uk/downloads/maps/msoa_data_latest.geojson')
     msoa_timestamp = parse_date(response.headers['Last-Modified'])
     print(f'requested: {dt}, release: {release_timestamp}, msoa: {msoa_timestamp}')

@@ -1,7 +1,9 @@
 import concurrent.futures
 import json
 from argparse import ArgumentParser
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from itertools import chain
 from pathlib import Path
 from time import sleep
 from typing import List, Tuple
@@ -14,7 +16,8 @@ from requests import ReadTimeout
 from tqdm.notebook import tqdm
 
 from args import add_date_arg
-from constants import base_path, nation, region, ltla, standard_metrics
+from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
+    vaccination_cumulative, vaccination_new_and_weekly, england_metrics, case_demographics, overview
 
 
 def download(url, path):
@@ -141,35 +144,71 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
     return path
 
 
+def get_release_timestamp():
+    response = requests.get('https://api.coronavirus.data.gov.uk/v1/timestamp')
+    return parse_date(response.json()['websiteTimestamp'])
+
+
+@dataclass
+class Download:
+    area_type: str
+    metrics: List[str]
+    area_name: str = None
+    name: str = None
+
+
+sets = {
+    'daily': [
+        Download(nation, england_metrics, area_name='england'),
+        Download(nation, vaccination_new_and_weekly, name='vaccination'),
+        Download(nation, vaccination_cumulative, name='vaccination_cum'),
+        Download(nation, [new_admissions]+standard_metrics),
+    ]+[
+        Download(area_type, standard_metrics) for area_type in (region, ltla)
+    ],
+    'demographics': [
+        Download(overview, [case_demographics], name='case_demographics_summary'),
+    ]
+}
+
+
 def main():
     parser = ArgumentParser()
+    parser.add_argument('sets', choices=list(sets), nargs='+')
+    parser.add_argument('--name')
     add_date_arg(parser, '--start')
     add_date_arg(parser, '--end')
-    add_date_arg(parser, '--date')
+    add_date_arg(parser, '--date', default=date.today())
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
 
-    if not (args.date or (args.start and args.end)):
-        parser.error('--date or --start and --end must be supplied')
-
-    if args.date:
-        dates = [args.date]
-    else:
+    if args.start and args.end:
         points = args.start, args.end
         dates = [dt.date() for dt in pd.date_range(min(*points), max(*points))]
+    else:
+        dates = [args.date]
 
-    print('calls to make: ', len(dates)*3)
+    release_timestamp = get_release_timestamp()
 
-    for d in reversed(dates):
-        for area_type in nation, region, ltla:
-            data_path = (base_path / f'{area_type}_{d}.csv')
+    for dt in reversed(dates):
+
+        if pd.to_datetime(dt, utc=True) > release_timestamp:
+            print(f'{dt} not yet available, current: {release_timestamp}')
+            continue
+
+        for dl in chain(*(sets[s] for s in args.sets)):
+            name = dl.name or dl.area_name or dl.area_type
+            if args.name and name != args.name:
+                continue
+            data_path = (base_path / f'{name}_{dt}.csv')
             if data_path.exists() and not args.overwrite:
                 print('already exists:', data_path)
                 continue
             try:
                 while True:
                     try:
-                        data_path = download_phe(area_type, area_type, *standard_metrics, release=d)
+                        data_path = download_phe(name, dl.area_type, *dl.metrics,
+                                                 area_name=dl.area_name, release=dt)
                     except RateLimited as e:
                         dt = datetime.now()+timedelta(seconds=e.retry_after)
                         print(f'retrying after {e.retry_after}s at {dt:%H:%M:%S} ({e})')
@@ -179,7 +218,7 @@ def main():
                     else:
                         break
             except NoContent:
-                print(f'no content for {area_type} on {d}')
+                print(f'no content for {name} on {dt}')
             else:
                 print('downloaded: ', data_path)
 
