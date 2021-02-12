@@ -183,7 +183,7 @@ def vaccination_dashboard():
     if max_date > major_ticks[-1]+np.timedelta64(1,'D'):
         major_ticks.append(max_date.to_datetime64())
     ax.set_xticks(major_ticks)
-    ax.xaxis.set_major_formatter(DateFormatter('%d %b %y'))
+    ax.xaxis.set_major_formatter(DateFormatter('%d %b'))
     ax.xaxis.label.set_visible(False)
     ax.axvline(weekly[date_col].max(), linestyle='dashed', color='lightgrey', zorder=-10)
     ax.set_title('Rate of injections (weeky by injection date, daily by publish date)')
