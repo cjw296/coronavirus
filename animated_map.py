@@ -165,7 +165,7 @@ def main():
 
     params = parallel_params(args)
     params['duration'] = args.duration or slowing_durations(dates)
-    parallel_render(f'animated_map_{map.area_type}_{map.series.label}_{view}',
+    parallel_render(f'animated_map_{map.area_type}_{args.map}_{view}',
                     render, dates, **params)
 
 
@@ -248,24 +248,39 @@ def get_map(area_type: str, map_type: str) -> Map:
     return MAPS[area_type][map_type].for_area_type(area_type)
 
 
+ltla_cases = Map(
+    s.new_cases,
+    Range(vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10),
+    rolling_days=14,
+)
+
+
+msoa_cases = Map(
+    s.new_cases_rate,
+    Range(vmin=30, linthresh=700, vmax=4000,
+          linticks=7, linnearest=10, logticks=5, lognearest=100),
+    default_exclude=0,
+    default_view='england',
+    missing_color='white',
+    antialiased=False,
+    per_population=None,
+)
+
+
 MAPS = {
     ltla: {
         'tested': Map(
             s.unique_people_tested_sum,
-            Range(vmin=0, linthresh=3, vmax=15, linticks=4, logticks=5),
+            Range(linthresh=3, vmax=15, linticks=4, logticks=5),
             per_population=100,
         ),
         'positivity': Map(
             s.unique_cases_positivity_sum,
-            Range(vmin=1, linthresh=20, vmax=100, linticks=4, logticks=5),
+            Range(linthresh=20, vmax=100, linticks=4, logticks=5),
             per_population=None,
         ),
-        'cases': Map(
-            s.new_cases,
-            Range(vmin=0, linthresh=30, vmax=200, linticks=4, logticks=5, lognearest=10),
-            rolling_days=14,
-            cmap='inferno_r',
-        ),
+        'cases': replace(ltla_cases, cmap='inferno_r'),
+        'cases-red': replace(ltla_cases, default_view='england', rolling_days=7),
         'deaths': Map(
             s.new_deaths,
             Range(vmin=0, vmax=8),
@@ -274,18 +289,8 @@ MAPS = {
         ),
     },
     msoa: {
-        'cases': Map(
-            s.new_cases_rate,
-            Range(vmin=30, linthresh=700, vmax=4000,
-                  linticks=7, linnearest=10, logticks=5, lognearest=100),
-            cmap='inferno_r',
-            default_exclude=0,
-            default_view='england',
-            dpi=150,
-            missing_color='white',
-            antialiased=False,
-            per_population=None,
-        ),
+        'cases': replace(msoa_cases, dpi=150, cmap='inferno_r'),
+        'cases-red': msoa_cases,
     },
 }
 
