@@ -108,10 +108,10 @@ def tests_from(data):
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None, earliest=None):
+              diff_ylims=None, diff_log_scale=None, earliest=None, colormap='viridis'):
     diff = data.sub(previous_data, fill_value=0)
     total_diff = diff.sum().sum()
-    stacked_bar_plot(ax, diff, colormap='viridis')
+    stacked_bar_plot(ax, diff, colormap)
     ax.set_title(f'Change between reports on {previous_date} and {for_date}: {total_diff:,.0f}')
     fix_x_axis(ax, diff, earliest)
     ax.yaxis.set_label_position("right")
@@ -143,10 +143,10 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 def plot_stacked_bars(
         ax, data, average_days, average_end, title, testing_data,
-        ylim, tested_ylim, earliest
+        ylim, tested_ylim, earliest, colormap='viridis'
 ):
 
-    handles = stacked_bar_plot(ax, data, colormap='viridis')
+    handles = stacked_bar_plot(ax, data, colormap)
 
     if average_end is not None:
         average_label = f'{average_days} day average'
@@ -221,8 +221,8 @@ def current_and_previous_data(get_data, start='*', diff_days=1):
 def plot_with_diff(data_date, get_data=cases_data, uncertain_days=5,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
-                   average_days=7, show_testing=True):
                    earliest='2020-10-01', area_type=ltla, areas=None, tested_ylim=None,
+                   average_days=7, show_testing=True, colormap='viridis'):
 
     if earliest is None:
         earliest_data = None
@@ -260,12 +260,12 @@ def plot_with_diff(data_date, get_data=cases_data, uncertain_days=5,
     with pd.plotting.plot_params.use("x_compat", True):
         plot_diff(
             diff_ax, data_date, data, previous_data_date, previous_data, diff_ylims, diff_log_scale,
-            earliest
+            earliest, colormap
         )
         plot_stacked_bars(
             bars_ax, data, average_days, average_end, title, testing_data,
             ylim, tested_ylim,
-            earliest
+            earliest, colormap
         )
 
     if image_path:
