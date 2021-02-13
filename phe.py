@@ -216,8 +216,8 @@ def current_and_previous_data(get_data, start='*', diff_days=1):
 def plot_with_diff(data_date, uncertain_days=5,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
-                   earliest=None, area_type=ltla, areas=None, tested_ylim=None,
                    average_days=7, show_testing=True):
+                   earliest='2020-10-01', area_type=ltla, areas=None, tested_ylim=None,
 
     if earliest is None:
         earliest_data = None
@@ -270,14 +270,6 @@ def plot_with_diff(data_date, uncertain_days=5,
         plt.close()
     else:
         plt.show()
-
-
-def plot_cases_by_area(for_date, areas=None, area_type=ltla,
-                       earliest='2020-10-01', **kw):
-    plot_with_diff(
-        for_date,
-        earliest=earliest, areas=areas, area_type=area_type, **kw
-    )
 
 
 @lru_cache

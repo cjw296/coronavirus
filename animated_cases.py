@@ -9,7 +9,7 @@ from phe import available_dates, best_data, cases_data, tests_data, plot_cases_b
 
 
 def render(date, image_path, **kw):
-    plot_cases_by_area(
+    plot_with_diff(
         date,
         image_path=image_path,
         title='Evolution of PHE case reporting',
