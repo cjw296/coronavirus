@@ -195,8 +195,8 @@ def main():
                         data_path = download_phe(name, dl.area_type, *dl.metrics,
                                                  area_name=dl.area_name, release=dt)
                     except RateLimited as e:
-                        dt = datetime.now()+timedelta(seconds=e.retry_after)
-                        print(f'retrying after {e.retry_after}s at {dt:%H:%M:%S} ({e})')
+                        rldt = datetime.now()+timedelta(seconds=e.retry_after)
+                        print(f'retrying after {e.retry_after}s at {rldt:%H:%M:%S} ({e})')
                         sleep(e.retry_after)
                     except ReadTimeout:
                         print('read timeout')
