@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 import series as s
 from animated import parallel_render
-from animated_map import Map
+from maps import Map
 from args import add_parallel_args, parallel_to_date, parallel_params
 from phe import plot_summary, summary_data
 
