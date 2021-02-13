@@ -58,9 +58,12 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
         try:
             data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
         except FileNotFoundError:
+            area_type_filter = area_type_filters.get(area_type)
+            if area_type_filter is None:
+                raise
             data_path, data_date = find_latest(f'coronavirus-cases_{dt}.csv')
             data = pd.read_csv(data_path, parse_dates=[specimen_date])
-            data = data[data['Area type'].isin(area_type_filters[area_type])]
+            data = data[data['Area type'].isin(area_type_filter)]
             data.rename(inplace=True, errors='raise', columns={
                 area: area_name,
                 code: area_code,
