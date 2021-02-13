@@ -157,24 +157,9 @@ class Download:
     name: str = None
 
 
-sets = {
-    'daily': [
-        Download(nation, england_metrics, area_name='england'),
-        Download(nation, vaccination_new_and_weekly, name='vaccination'),
-        Download(nation, vaccination_cumulative, name='vaccination_cum'),
-        Download(nation, [new_admissions]+standard_metrics),
-    ]+[
-        Download(area_type, standard_metrics) for area_type in (region, ltla)
-    ],
-    'demographics': [
-        Download(overview, [case_demographics], name='case_demographics_summary'),
-    ]
-}
-
-
 def main():
     parser = ArgumentParser()
-    parser.add_argument('sets', choices=list(sets), nargs='+')
+    parser.add_argument('sets', choices=list(SETS), nargs='+')
     parser.add_argument('--name')
     add_date_arg(parser, '--start')
     add_date_arg(parser, '--end')
@@ -196,7 +181,7 @@ def main():
             print(f'{dt} not yet available, current: {release_timestamp}')
             continue
 
-        for dl in chain(*(sets[s] for s in args.sets)):
+        for dl in chain(*(SETS[s] for s in args.sets)):
             name = dl.name or dl.area_name or dl.area_type
             if args.name and name != args.name:
                 continue
@@ -221,6 +206,21 @@ def main():
                 print(f'no content for {name} on {dt}')
             else:
                 print('downloaded: ', data_path)
+
+
+SETS = {
+    'daily': [
+        Download(nation, england_metrics, area_name='england'),
+        Download(nation, vaccination_new_and_weekly, name='vaccination'),
+        Download(nation, vaccination_cumulative, name='vaccination_cum'),
+        Download(nation, [new_admissions]+standard_metrics),
+    ]+[
+        Download(area_type, standard_metrics) for area_type in (region, ltla)
+    ],
+    'demographics': [
+        Download(overview, [case_demographics], name='case_demographics_summary'),
+    ]
+}
 
 
 if __name__ == '__main__':
