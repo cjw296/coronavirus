@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta, date, datetime
-from functools import lru_cache
+from functools import lru_cache, partial
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -87,14 +87,19 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     return data, data_date
 
 
-def cases_data(data):
+def cases_from(data):
     data = data.pivot_table(
         values=new_cases_by_specimen_date, index=[date_col], columns=area_name
     ).fillna(0)
     return data
 
 
-def tests_data(data):
+def cases_data(area_type, areas, earliest_data, dt):
+    all_data_, data_date_ = best_data(dt, area_type, areas, earliest_data)
+    return cases_from(all_data_), data_date_
+
+
+def tests_from(data):
     data = data.merge(load_population(), on=area_code, how='left')
     agg = data.groupby(date_col).agg(
         {unique_people_tested_sum: 'sum', population: 'sum'}
@@ -158,7 +163,7 @@ def plot_stacked_bars(
         tested_ax = legend_ax = ax.twinx()
         tested_label = '% Population tested'
         if unique_people_tested_sum in testing_data:
-            tested = tests_data(testing_data)
+            tested = tests_from(testing_data)
             if average_end is not None:
                 tested = tested[:average_end]
             tested_color = 'darkblue'
@@ -213,7 +218,7 @@ def current_and_previous_data(get_data, start='*', diff_days=1):
     return data, data_date, previous_data, previous_data_date
 
 
-def plot_with_diff(data_date, uncertain_days=5,
+def plot_with_diff(data_date, get_data=cases_data, uncertain_days=5,
                    diff_days=1, diff_ylims=None, diff_log_scale=False,
                    image_path=None, title=None, to_date=None, ylim=None,
                    average_days=7, show_testing=True):
@@ -224,11 +229,9 @@ def plot_with_diff(data_date, uncertain_days=5,
     else:
         earliest_data = pd.to_datetime(earliest) - timedelta(days=average_days)
 
-    def get_data(dt):
-        all_data_, data_date_ = best_data(dt, area_type, areas, earliest_data)
-        return cases_data(all_data_), data_date_
+    get_data_for_areas = partial(get_data, area_type, areas, earliest_data)
 
-    results = current_and_previous_data(get_data, data_date, diff_days)
+    results = current_and_previous_data(get_data_for_areas, data_date, diff_days)
     data, data_date, previous_data, previous_data_date = results
     if show_testing:
         testing_data = best_data(data_date, area_type, areas, earliest_data)[0]

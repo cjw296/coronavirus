@@ -5,7 +5,7 @@ from animated import parallel_render
 from args import add_date_arg, add_parallel_args, parallel_params, parallel_to_date
 from constants import my_areas, london_areas, oxford_areas, region, ltla, second_wave, \
     earliest_testing
-from phe import available_dates, best_data, cases_data, tests_data, plot_cases_by_area
+from phe import available_dates, best_data, cases_from, tests_from, plot_with_diff
 
 
 def render(date, image_path, **kw):
@@ -45,8 +45,8 @@ def main():
 
     data, _ = best_data(dates[0], area_type, areas, args.earliest)
 
-    max_cases = cases_data(data).sum(axis=1).max()*args.y_max_factor
-    max_tests = tests_data(data).max()*args.y_max_factor
+    max_cases = cases_from(data).sum(axis=1).max() * args.y_max_factor
+    max_tests = tests_from(data).max() * args.y_max_factor
 
     parallel_render(f'animated_cases_{args.area}',
                     partial(render,
