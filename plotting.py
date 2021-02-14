@@ -136,7 +136,7 @@ def stacked_bar_plot(ax, data, colormap):
         mask = series > 0
         bottom = np.where(mask, pos_prior, neg_prior)
         handles.append(
-            ax.bar(data.index, series, width=1, bottom=bottom, label=name, color=colors[i])
+            ax.bar(data.index, series, width=1.001, bottom=bottom, label=name, color=colors[i])
         )
         pos_prior = pos_prior + np.where(mask, series, 0)
         neg_prior = neg_prior + np.where(mask, 0, series)
