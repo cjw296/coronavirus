@@ -53,7 +53,8 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 def plot_stacked_bars(
         ax, data, label, average_days, average_end, title, testing_data,
-        ylim, tested_ylim, earliest, colormap='viridis'
+        ylim, tested_ylim, earliest, colormap='viridis',
+        legend_loc='upper left', legend_ncol=1
 ):
 
     handles = stacked_bar_plot(ax, data, colormap)
@@ -104,7 +105,7 @@ def plot_stacked_bars(
         if not i:
             handles.append(h)
 
-    legend_ax.legend(handles=handles, loc='upper left', framealpha=1)
+    legend_ax.legend(handles=handles, loc=legend_loc, framealpha=1, ncol=legend_ncol)
 
     if title:
         ax.set_title(title)
@@ -148,7 +149,7 @@ def plot_with_diff(
             bars_ax, data, config.series.title,
             config.average_days, average_end, config.title,
             config.testing_data_for(data_date), config.ylim, config.tested_ylim,
-            config.earliest, config.colormap
+            config.earliest, config.colormap, config.legend_loc, config.legend_ncol
         )
 
     if image_path:
@@ -177,6 +178,8 @@ class Bars:
     to_date: Union[date, pd.Timestamp] = None
     title_template: str = 'Evolution of PHE {config.series.label} reporting'
     show_title: bool = False
+    legend_loc: str = 'upper left'
+    legend_ncol: int = 1
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
