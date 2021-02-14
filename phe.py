@@ -49,7 +49,8 @@ def available_dates(metric, area_type=ltla, earliest=None):
 class NoData(ValueError): pass
 
 
-def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
+def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
+              metric=new_cases_by_specimen_date):
     if area_type == msoa:
         assert dt == '*'
         data_path = base_path / 'msoa_composite.csv'
@@ -59,6 +60,8 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
         try:
             data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
         except FileNotFoundError:
+            if metric != new_cases_by_specimen_date:
+                raise
             area_type_filter = area_type_filters.get(area_type)
             if area_type_filter is None:
                 raise
@@ -82,7 +85,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     if areas:
         data = data[data[area_code].isin(areas)]
 
-    if data.empty:
+    if metric not in data or data.empty:
         raise NoData(f'No {area_type} for {areas} available in {data_path}')
 
     return data, data_date

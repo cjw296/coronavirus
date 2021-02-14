@@ -187,7 +187,7 @@ class Map:
 
     @cached_property
     def data(self):
-        df, data_date = best_data(area_type=self.area_type)
+        df, data_date = best_data(area_type=self.area_type, metric=self.series.metric)
 
         if self.per_population:
             df = with_population(

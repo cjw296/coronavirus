@@ -205,7 +205,8 @@ class Bars:
         return self.area_type
 
     def data_for(self, dt):
-        data, data_date = best_data(dt, self.data_file_stem, self.areas, self.earliest_data)
+        data, data_date = best_data(dt, self.data_file_stem, self.areas, self.earliest_data,
+                                    metric=self.metric)
         data = data.pivot_table(
             values=self.metric, index=[date_col], columns=self.columns_from
         ).fillna(0)
