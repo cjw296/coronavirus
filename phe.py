@@ -43,6 +43,8 @@ def available_dates(metric, area_type=ltla, earliest=None):
     for pattern in patterns:
         for dt, _ in find_all(pattern, date_index=-1, earliest=earliest):
             dates.add(dt)
+    if not dates:
+        raise ValueError(f'nothing matching {patterns}')
     return sorted(dates, reverse=True)
 
 
