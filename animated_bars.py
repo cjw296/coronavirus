@@ -50,7 +50,7 @@ def main():
                             title=f'Evolution of PHE {config.series.label} reporting',
                             to_date=date.today(),
                             **params),
-                    dates, **parallel_params(args))
+                    dates, **parallel_params(args, item_is_timestamp=False))
 
 
 if __name__ == '__main__':

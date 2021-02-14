@@ -53,13 +53,13 @@ def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_
     add_date_arg(parser, '--single')
 
 
-def parallel_params(args):
+def parallel_params(args, item_is_timestamp=True):
     return dict(
         duration=args.duration,
         outputs=args.output,
         raise_errors=args.raise_errors,
         max_workers=args.max_workers,
-        item=pd.to_datetime(args.single) if args.single else None
+        item=pd.to_datetime(args.single) if args.single and item_is_timestamp else args.single
     )
 
 
