@@ -10,7 +10,8 @@ from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 from constants import (
     unique_people_tested_sum, cases, national_lockdowns, ltla, my_areas,
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
-    scotland, northern_ireland, wales, area_code, population
+    scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
+    new_admissions
 )
 from phe import best_data, current_and_previous_data, load_population
 from plotting import stacked_bar_plot
@@ -259,5 +260,24 @@ BARS = dict(
         areas=[scotland, northern_ireland, wales],
         diff_ylims=[-100, 3_000],
         show_testing=False
+    ),
+    admissions_nations=Bars(
+        metric=new_admissions,
+        title_template='Evolution of PHE new hospital admissions reporting',
+        colormap='summer',
+        area_type=nation,
+        show_testing=False,
+        diff_ylims=[-100, 3_500],
+        legend_loc='upper center',
+    ),
+    deaths_regions=Bars(
+        metric=new_deaths_by_death_date,
+        title_template='Evolution of PHE deaths reporting in England',
+        colormap='cividis',
+        area_type=region,
+        show_testing=False,
+        diff_ylims=[-10, 300],
+        legend_loc='upper center',
+        uncertain_days=21,
     ),
 )
