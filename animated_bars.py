@@ -47,7 +47,7 @@ def main():
                             ylim=max_metric,
                             earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
-                            title=f'Evolution of PHE {config.series.label} reporting',
+                            show_title=True,
                             to_date=date.today(),
                             **params),
                     dates, **parallel_params(args, item_is_timestamp=False))

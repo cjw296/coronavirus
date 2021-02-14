@@ -168,7 +168,6 @@ class Bars:
     diff_days: int = 1
     diff_ylims: List[float] = None
     diff_log_scale: bool = False
-    title: str = None
     ylim: float = None
     tested_ylim: float = None
     earliest: Union[str, date, pd.Timestamp] = '2020-10-01'
@@ -176,6 +175,8 @@ class Bars:
     areas: List[str] = None
     colormap: str = 'viridis'
     to_date: Union[date, pd.Timestamp] = None
+    title_template: str = 'Evolution of PHE {config.series.label} reporting'
+    show_title: bool = False
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
@@ -192,6 +193,11 @@ class Bars:
     @property
     def series(self):
         return Series.lookup(self.metric)
+
+    @property
+    def title(self):
+        if self.show_title:
+            return self.title_template.format(config=self)
 
     @property
     def earliest_data(self):
