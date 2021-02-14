@@ -1,11 +1,9 @@
 import json
-from datetime import timedelta, date, datetime
-from functools import lru_cache, partial
+from datetime import timedelta, datetime, date
+from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.dates import DayLocator, DateFormatter
-from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 
 import series as s
 from constants import (
@@ -15,7 +13,7 @@ from constants import (
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import stacked_bar_plot, per1k_formatter
+from plotting import per1k_formatter
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -37,9 +35,12 @@ area_type_filters = {
 }
 
 
-def available_dates(area_type=ltla, earliest=None):
+def available_dates(metric, area_type=ltla, earliest=None):
     dates = set()
-    for pattern in f'{area_type}_*.csv', 'coronavirus-cases_*.csv':
+    patterns = [f'{area_type}_*.csv']
+    if metric == new_cases_by_specimen_date:
+        patterns.append('coronavirus-cases_*.csv')
+    for pattern in patterns:
         for dt, _ in find_all(pattern, date_index=-1, earliest=earliest):
             dates.add(dt)
     return sorted(dates, reverse=True)
@@ -87,121 +88,6 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None):
     return data, data_date
 
 
-def cases_from(data):
-    data = data.pivot_table(
-        values=new_cases_by_specimen_date, index=[date_col], columns=area_name
-    ).fillna(0)
-    return data
-
-
-def cases_data(area_type, areas, earliest_data, dt):
-    all_data_, data_date_ = best_data(dt, area_type, areas, earliest_data)
-    return cases_from(all_data_), data_date_
-
-
-def tests_from(data):
-    data = data.merge(load_population(), on=area_code, how='left')
-    agg = data.groupby(date_col).agg(
-        {unique_people_tested_sum: 'sum', population: 'sum'}
-    )
-    return 100 * agg[unique_people_tested_sum] / agg[population]
-
-
-def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None, earliest=None, colormap='viridis'):
-    diff = data.sub(previous_data, fill_value=0)
-    total_diff = diff.sum().sum()
-    stacked_bar_plot(ax, diff, colormap)
-    ax.set_title(f'Change between reports on {previous_date} and {for_date}: {total_diff:,.0f}')
-    fix_x_axis(ax, diff, earliest)
-    ax.yaxis.set_label_position("right")
-    ax.yaxis.tick_right()
-    ax.yaxis.grid(True)
-    if diff_ylims:
-        ax.set_ylim(diff_ylims)
-    if diff_log_scale:
-        ax.set_yscale('symlog')
-    else:
-        ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', integer=True))
-    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-    ax.axhline(y=0, color='k')
-
-
-def fix_x_axis(ax, data, earliest=None, number_to_show=50):
-    ax.axes.set_axisbelow(True)
-    ax.xaxis.set_tick_params(rotation=-90)
-    ax.xaxis.label.set_visible(False)
-    interval = max(1, round(data.shape[0]/number_to_show))
-    ax.xaxis.set_minor_locator(DayLocator())
-    ax.xaxis.set_major_locator(DayLocator(interval=interval))
-    ax.xaxis.set_major_formatter(DateFormatter('%d %b %Y'))
-    ax.set_xlim(
-        (pd.to_datetime(earliest) or data.index.min())-timedelta(days=0.5),
-        data.index.max()+timedelta(days=0.5)
-    )
-
-
-def plot_stacked_bars(
-        ax, data, average_days, average_end, title, testing_data,
-        ylim, tested_ylim, earliest, colormap='viridis'
-):
-
-    handles = stacked_bar_plot(ax, data, colormap)
-
-    if average_end is not None:
-        average_label = f'{average_days} day average'
-        mean = data.loc[:average_end].sum(axis=1).rolling(average_days).mean()
-        handles.extend(
-            ax.plot(mean.index, mean, color='k', label=average_label)
-        )
-        if not mean.empty:
-            latest_average = mean.iloc[-1]
-            handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
-                                    label=f'Latest {average_label}: {latest_average:,.0f}'))
-
-    if testing_data is not None:
-        tested_ax = legend_ax = ax.twinx()
-        tested_label = '% Population tested'
-        if unique_people_tested_sum in testing_data:
-            tested = tests_from(testing_data)
-            if average_end is not None:
-                tested = tested[:average_end]
-            tested_color = 'darkblue'
-            handles.extend(
-                tested_ax.plot(tested.index, tested, color=tested_color,
-                               label=tested_label, linestyle='dotted')
-            )
-        tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
-                             rotation=-90, labelpad=14)
-        tested_ax.set_ylim(0, tested_ylim)
-        tested_ax.yaxis.tick_left()
-        tested_ax.yaxis.set_label_position("left")
-        tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
-    else:
-        legend_ax = ax
-
-    fix_x_axis(ax, data, earliest)
-
-    ax.set_ylabel(cases)
-    if ylim:
-        ax.set_ylim((0, ylim))
-    ax.yaxis.grid(True)
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-    ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-
-    for i, lockdown in enumerate(national_lockdowns):
-        h = ax.axvspan(*lockdown, color='black', alpha=0.05,
-                       zorder=-1000, label=f'National Lockdown')
-        if not i:
-            handles.append(h)
-
-    legend_ax.legend(handles=handles, loc='upper left', framealpha=1)
-
-    if title:
-        ax.set_title(title)
-
-
 def current_and_previous_data(get_data, start='*', diff_days=1):
     data, data_date = get_data(start)
     previous_date = data_date - timedelta(days=diff_days)
@@ -216,63 +102,6 @@ def current_and_previous_data(get_data, start='*', diff_days=1):
         previous_data = data
         previous_data_date = data_date
     return data, data_date, previous_data, previous_data_date
-
-
-def plot_with_diff(data_date, get_data=cases_data, uncertain_days=5,
-                   diff_days=1, diff_ylims=None, diff_log_scale=False,
-                   image_path=None, title=None, to_date=None, ylim=None,
-                   earliest='2020-10-01', area_type=ltla, areas=None, tested_ylim=None,
-                   average_days=7, show_testing=True, colormap='viridis'):
-
-    if earliest is None:
-        earliest_data = None
-    else:
-        earliest_data = pd.to_datetime(earliest) - timedelta(days=average_days)
-
-    get_data_for_areas = partial(get_data, area_type, areas, earliest_data)
-
-    results = current_and_previous_data(get_data_for_areas, data_date, diff_days)
-    data, data_date, previous_data, previous_data_date = results
-    if show_testing:
-        testing_data = best_data(data_date, area_type, areas, earliest_data)[0]
-    else:
-        testing_data = None
-
-    if uncertain_days is None:
-        average_end = None
-    else:
-        average_end = data.index.max()-timedelta(days=uncertain_days)
-
-    end_dates = [previous_data.index.max(), data.index.max()]
-    if to_date:
-        end_dates.append(to_date)
-
-    labels = pd.date_range(start=min(previous_data.index.min(), data.index.min()),
-                           end=max(end_dates))
-    data = data.reindex(labels, fill_value=0)
-    previous_data = previous_data.reindex(labels, fill_value=0)
-
-    fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
-                                           gridspec_kw={'height_ratios': [12, 2]})
-    fig.set_facecolor('white')
-    fig.subplots_adjust(hspace=0.45)
-
-    with pd.plotting.plot_params.use("x_compat", True):
-        plot_diff(
-            diff_ax, data_date, data, previous_data_date, previous_data, diff_ylims, diff_log_scale,
-            earliest, colormap
-        )
-        plot_stacked_bars(
-            bars_ax, data, average_days, average_end, title, testing_data,
-            ylim, tested_ylim,
-            earliest, colormap
-        )
-
-    if image_path:
-        plt.savefig(image_path / f'{data_date}.png', bbox_inches='tight')
-        plt.close()
-    else:
-        plt.show()
 
 
 @lru_cache
