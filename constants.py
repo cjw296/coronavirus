@@ -48,6 +48,7 @@ new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 case_demographics = 'newCasesBySpecimenDateAgeDemographics'
+death_demographics = 'newDeaths28DaysByDeathDateAgeDemographics'
 
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
