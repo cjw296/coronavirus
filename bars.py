@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
 from typing import List, Union, Optional
@@ -11,7 +12,7 @@ from constants import (
     unique_people_tested_sum, cases, national_lockdowns, ltla, my_areas,
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
     scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
-    new_admissions
+    new_admissions, overview, england
 )
 from phe import best_data, current_and_previous_data, load_population
 from plotting import stacked_bar_plot
@@ -235,6 +236,52 @@ class Bars:
                 return pd.Series(0, index=[pd.to_datetime(dt)])
 
 
+@dataclass()
+class DemographicBars(Bars):
+
+    columns_from: str = 'age'
+    bands: List[str] = None
+    show_testing: bool = False
+    reverse_bands: bool = False
+
+    all_detail = ['00_04', '05_09', '10_14', '15_19', '20_24', '25_29', '30_34',
+                  '35_39', '40_44', '45_49', '50_54', '55_59', '60_64', '65_69',
+                  '70_74', '75_79', '80_84', '85_89', '90+']
+
+    split_60 = ['00_59', '60+']
+
+    detail_above_60 = ['00_59', '60_64', '65_69', '70_74', '75_79', '80_84', '85_89', '90+']
+
+    @property
+    def data_file_stem(self):
+        return f'{self.metric[:-1]}_demographics_{self.area_type}'
+
+    def data_for(self, dt):
+        data, data_date = super().data_for(dt)
+
+        def tidy(name):
+            return re.sub(r'0(\d)', r'\1', name).replace('_', '-')
+
+        bands = self.bands or self.all_detail
+        if self.reverse_bands:
+            bands = reversed(bands)
+        columns = list(bands)
+        return data[columns].rename(columns=tidy), data_date
+
+
+death_demographics = DemographicBars(
+    'deaths',
+    area_type=nation,
+    areas=[england],
+    title_template='Evolution of COVID-10 {config.series.title} in England by age',
+    legend_loc='upper center',
+    legend_ncol=2,
+    uncertain_days=16,
+    diff_log_scale=True,
+    diff_ylims=[-10, 1000],
+)
+
+
 BARS = dict(
     cases_my_areas=Bars(
         diff_ylims=[-2, 350],
@@ -261,6 +308,15 @@ BARS = dict(
         diff_ylims=[-100, 3_000],
         show_testing=False
     ),
+    cases_demographics=DemographicBars(
+        'cases',
+        area_type=overview,
+        title_template='Evolution of COVID-10 {config.series.title} in the UK by age',
+        legend_ncol=2,
+        diff_log_scale=True,
+        uncertain_days=0,
+        diff_ylims=[-50, 80_000],
+    ),
     admissions_nations=Bars(
         metric=new_admissions,
         title_template='Evolution of PHE new hospital admissions reporting',
@@ -279,5 +335,16 @@ BARS = dict(
         diff_ylims=[-10, 300],
         legend_loc='upper center',
         uncertain_days=21,
+    ),
+    deaths_demographics_for_comparison=death_demographics,
+    deaths_demographics=replace(
+        death_demographics,
+        colormap='cividis',
+        bands=DemographicBars.detail_above_60,
+        reverse_bands=True,
+        legend_loc='upper center',
+        uncertain_days=16,
+        diff_log_scale=True,
+        diff_ylims=[-10, 1000],
     ),
 )
