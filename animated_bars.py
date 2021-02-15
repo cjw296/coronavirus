@@ -17,6 +17,7 @@ def main():
     add_date_arg(parser, '--earliest', help='min for x-axis', default=second_wave)
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--diff-no-lims', action='store_true')
+    parser.add_argument('--ylim', type=float)
     parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
@@ -44,7 +45,7 @@ def main():
     parallel_render(f'animated_{args.config}',
                     partial(plot_with_diff,
                             config=config,
-                            ylim=max_metric,
+                            ylim=args.ylim or max_metric,
                             earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
                             show_title=True,
