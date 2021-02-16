@@ -2,15 +2,16 @@ import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
 from statistics import mean
-from typing import List, Union, Optional, Tuple
+from typing import List, Union, Optional, Tuple, Iterable
 
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DayLocator, DateFormatter
 from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 
+import series as s
 from constants import (
-    unique_people_tested_sum, cases, national_lockdowns, ltla, my_areas,
+    unique_people_tested_sum, national_lockdowns, ltla, my_areas,
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
     scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
     new_admissions, overview, england
@@ -18,7 +19,6 @@ from constants import (
 from phe import best_data, current_and_previous_data, load_population
 from plotting import stacked_bar_plot
 from series import Series
-import series as s
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
@@ -272,9 +272,8 @@ class DemographicBars(Bars):
 
     columns_from: str = 'age'
     average_days: int = None
-    bands: List[str] = None
+    bands: Iterable[str] = None
     show_testing: bool = False
-    reverse_bands: bool = False
     data_file: str = None
     band_centered_colormap: bool = True
     band_max: int = 90
@@ -295,10 +294,7 @@ class DemographicBars(Bars):
 
     def __post_init__(self):
         super().__post_init__()
-        if not self.bands:
-            self.bands = self.all_detail
-        if self.reverse_bands:
-            self.bands.reverse()
+        self.bands = list(self.bands or self.all_detail)
 
     @staticmethod
     def _pretty_band(name):
@@ -306,7 +302,7 @@ class DemographicBars(Bars):
 
     def data_for(self, dt):
         data, data_date = super().data_for(dt)
-        return data[list(self.bands)].rename(columns=self._pretty_band), data_date
+        return data[self.bands].rename(columns=self._pretty_band), data_date
 
     def colormap_values(self):
         if self.band_centered_colormap:
@@ -405,9 +401,8 @@ BARS = dict(
     deaths_demographics=replace(
         death_demographics,
         colormap='cividis',
-        bands=DemographicBars.detail_above_60,
+        bands=reversed(DemographicBars.detail_above_60),
         band_centered_colormap=False,
-        reverse_bands=True,
         legend_loc='upper center',
         uncertain_days=16,
         diff_log_scale=True,
