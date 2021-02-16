@@ -4,7 +4,7 @@ from functools import partial
 
 from animated import parallel_render
 from args import add_date_arg, add_parallel_args, parallel_params, parallel_to_date
-from bars import plot_with_diff, BARS, Bars
+from bars import plot_bars, BARS, Bars
 from constants import second_wave, earliest_testing
 from phe import available_dates
 
@@ -43,7 +43,7 @@ def main():
         params['tested_ylim'] = testing_data.max() * args.y_max_factor
 
     parallel_render(f'animated_{args.config}',
-                    partial(plot_with_diff,
+                    partial(plot_bars,
                             config=config,
                             ylim=args.ylim or max_metric,
                             earliest=args.earliest,

@@ -114,40 +114,55 @@ def plot_stacked_bars(
         ax.set_title(title)
 
 
-def plot_with_diff(
+def plot_bars(
         data_date,
         config: Union['Bars', str] = None,
         image_path=None,
         **overrides
 ):
     config = Bars.get(config, **overrides)
-    results = current_and_previous_data(config.data_for, data_date, config.diff_days)
-    data, data_date, previous_data, previous_data_date = results
+    if config.with_diff:
+        results = current_and_previous_data(config.data_for, data_date, config.diff_days)
+        data, data_date, previous_data, previous_data_date = results
+
+        end_dates = [previous_data.index.max(), data.index.max()]
+        if config.to_date:
+            end_dates.append(config.to_date)
+
+        labels = pd.date_range(start=min(previous_data.index.min(), data.index.min()),
+                               end=max(end_dates))
+        data = data.reindex(labels, fill_value=0)
+        previous_data = previous_data.reindex(labels, fill_value=0)
+
+        fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
+                                               gridspec_kw={'height_ratios': [12, 2]})
+    else:
+        data, data_date = config.data_for(data_date)
+        diff_ax = previous_data_date = previous_data = None
+
+        end_dates = [data.index.max()]
+        if config.to_date:
+            end_dates.append(config.to_date)
+        labels = pd.date_range(start=data.index.min(), end=max(end_dates))
+        data = data.reindex(labels, fill_value=0)
+
+        fig = plt.figure(figsize=(14, 10))
+        bars_ax = plt.gca()
 
     if config.uncertain_days is None or not config.average_days:
         average_end = None
     else:
-        average_end = data.index.max()-timedelta(days=config.uncertain_days)
+        average_end = data.index.max() - timedelta(days=config.uncertain_days)
 
-    end_dates = [previous_data.index.max(), data.index.max()]
-    if config.to_date:
-        end_dates.append(config.to_date)
-
-    labels = pd.date_range(start=min(previous_data.index.min(), data.index.min()),
-                           end=max(end_dates))
-    data = data.reindex(labels, fill_value=0)
-    previous_data = previous_data.reindex(labels, fill_value=0)
-
-    fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
-                                           gridspec_kw={'height_ratios': [12, 2]})
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.45)
 
     with pd.plotting.plot_params.use("x_compat", True):
-        plot_diff(
-            diff_ax, data_date, data, previous_data_date, previous_data,
-            config.diff_ylims, config.diff_log_scale, config.earliest, config.colormap
-        )
+        if config.with_diff:
+            plot_diff(
+                diff_ax, data_date, data, previous_data_date, previous_data,
+                config.diff_ylims, config.diff_log_scale, config.earliest, config.colormap
+            )
         plot_stacked_bars(
             bars_ax, data, config.series.title,
             config.average_days, average_end, config.title,
@@ -185,6 +200,7 @@ class Bars:
     legend_loc: str = 'upper left'
     legend_ncol: int = 1
     data_is_cumulative: bool = False
+    with_diff: bool = True
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
@@ -254,6 +270,7 @@ class DemographicBars(Bars):
     data_file: str = None
     band_centered_colormap: bool = True
     band_max: int = 90
+    with_diff: bool = False
 
     all_detail = ['00_04', '05_09', '10_14', '15_19', '20_24', '25_29', '30_34',
                   '35_39', '40_44', '45_49', '50_54', '55_59', '60_64', '65_69',
