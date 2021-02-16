@@ -251,6 +251,7 @@ class DemographicBars(Bars):
     bands: List[str] = None
     show_testing: bool = False
     reverse_bands: bool = False
+    data_file: str = None
     band_centered_colormap: bool = True
     band_max: int = 90
 
@@ -264,7 +265,7 @@ class DemographicBars(Bars):
 
     @property
     def data_file_stem(self):
-        return f'{self.metric[:-1]}_demographics_{self.area_type}'
+        return self.data_file
 
     def __post_init__(self):
         self.bands = self.bands or self.all_detail
@@ -291,6 +292,7 @@ class DemographicBars(Bars):
 
 death_demographics = DemographicBars(
     'deaths',
+    data_file=f'death_demographics_{nation}',
     area_type=nation,
     areas=[england],
     title_template='Evolution of COVID-10 {config.series.title} in England by age',
@@ -330,6 +332,7 @@ BARS = dict(
     ),
     cases_demographics=DemographicBars(
         'cases',
+        data_file=f'case_demographics_{overview}',
         area_type=overview,
         title_template='Evolution of COVID-10 {config.series.title} in the UK by age',
         legend_ncol=2,
