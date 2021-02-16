@@ -182,6 +182,7 @@ class Bars:
     show_title: bool = False
     legend_loc: str = 'upper left'
     legend_ncol: int = 1
+    data_is_cumulative: bool = False
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
@@ -221,6 +222,8 @@ class Bars:
         data = data.pivot_table(
             values=self.metric, index=[date_col], columns=self.columns_from
         ).fillna(0)
+        if self.data_is_cumulative:
+            data = data.diff().iloc[1:]
         return data, data_date
 
     def testing_data_for(self, dt):
