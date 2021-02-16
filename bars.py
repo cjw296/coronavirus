@@ -265,6 +265,7 @@ class Bars:
 class DemographicBars(Bars):
 
     columns_from: str = 'age'
+    average_days: int = None
     bands: List[str] = None
     show_testing: bool = False
     reverse_bands: bool = False
