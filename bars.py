@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
+from statistics import mean
 from typing import List, Union, Optional
 
 import pandas as pd
@@ -55,11 +56,11 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 def plot_stacked_bars(
         ax, data, label, average_days, average_end, title, testing_data,
-        ylim, tested_ylim, earliest, colormap='viridis',
+        ylim, tested_ylim, earliest, colormap='viridis', normalized_values=None,
         legend_loc='upper left', legend_ncol=1
 ):
 
-    handles = stacked_bar_plot(ax, data, colormap)
+    handles = stacked_bar_plot(ax, data, colormap, normalized_values)
 
     if average_end is not None:
         average_label = f'{average_days} day average'
@@ -151,7 +152,8 @@ def plot_with_diff(
             bars_ax, data, config.series.title,
             config.average_days, average_end, config.title,
             config.testing_data_for(data_date), config.ylim, config.tested_ylim,
-            config.earliest, config.colormap, config.legend_loc, config.legend_ncol
+            config.earliest, config.colormap, config.colormap_values(),
+            config.legend_loc, config.legend_ncol
         )
 
     if image_path:
@@ -238,6 +240,9 @@ class Bars:
             else:
                 return pd.Series(0, index=[pd.to_datetime(dt)])
 
+    def colormap_values(self):
+        return None
+
 
 @dataclass()
 class DemographicBars(Bars):
@@ -246,6 +251,8 @@ class DemographicBars(Bars):
     bands: List[str] = None
     show_testing: bool = False
     reverse_bands: bool = False
+    band_centered_colormap: bool = True
+    band_max: int = 90
 
     all_detail = ['00_04', '05_09', '10_14', '15_19', '20_24', '25_29', '30_34',
                   '35_39', '40_44', '45_49', '50_54', '55_59', '60_64', '65_69',
@@ -259,17 +266,27 @@ class DemographicBars(Bars):
     def data_file_stem(self):
         return f'{self.metric[:-1]}_demographics_{self.area_type}'
 
+    def __post_init__(self):
+        self.bands = self.bands or self.all_detail
+        if self.reverse_bands:
+            self.bands.reverse()
+
+    @staticmethod
+    def _pretty_band(name):
+        return re.sub(r'0(\d)', r'\1', name).replace('_to_', ' to ').replace('_', ' to ')
+
     def data_for(self, dt):
         data, data_date = super().data_for(dt)
+        return data[list(self.bands)].rename(columns=self._pretty_band), data_date
 
-        def tidy(name):
-            return re.sub(r'0(\d)', r'\1', name).replace('_', '-')
-
-        bands = self.bands or self.all_detail
-        if self.reverse_bands:
-            bands = reversed(bands)
-        columns = list(bands)
-        return data[columns].rename(columns=tidy), data_date
+    def colormap_values(self):
+        if self.band_centered_colormap:
+            band_labels = (self._pretty_band(name) for name in self.bands)
+            band_values = ([int(label[:-1]), self.band_max]
+                           if label.endswith('+')
+                           else [int(p) for p in label.split(' to ')]
+                           for label in band_labels)
+            return [mean(values)/self.band_max for values in band_values]
 
 
 death_demographics = DemographicBars(
@@ -344,6 +361,7 @@ BARS = dict(
         death_demographics,
         colormap='cividis',
         bands=DemographicBars.detail_above_60,
+        band_centered_colormap=False,
         reverse_bands=True,
         legend_loc='upper center',
         uncertain_days=16,

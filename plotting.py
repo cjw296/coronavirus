@@ -126,11 +126,15 @@ def bokeh_zoe_vs_phe_map(zoe_df, zoe_date, phe_recent_geo, phe_recent_title):
     save_to_disk(p, "zoe_phe.html", title='ZOE modelled estimates versus PHE lab confirmed cases', show_inline=False)
 
 
-def stacked_bar_plot(ax, data, colormap):
+def stacked_bar_plot(ax, data, colormap, normalised_values=None):
     pos_prior = neg_prior = pd.Series(0, data.index)
     colormap = get_cmap(colormap)
     ncolors = data.shape[1]
-    colors = [colormap(num) for num in np.linspace(0, 1, num=ncolors)]
+    if normalised_values:
+        assert len(normalised_values) == ncolors
+    else:
+        normalised_values = np.linspace(0, 1, num=ncolors)
+    colors = [colormap(value) for value in normalised_values]
     handles = []
     for i, (name, series) in enumerate(data.iteritems()):
         mask = series > 0
