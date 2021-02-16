@@ -18,6 +18,7 @@ from constants import (
 from phe import best_data, current_and_previous_data, load_population
 from plotting import stacked_bar_plot
 from series import Series
+import series as s
 
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
@@ -164,7 +165,7 @@ def plot_bars(
                 config.diff_ylims, config.diff_log_scale, config.earliest, config.colormap
             )
         plot_stacked_bars(
-            bars_ax, data, config.series.title,
+            bars_ax, data, config.ylabel,
             config.average_days, average_end, config.title,
             config.testing_data_for(data_date), config.ylim, config.tested_ylim,
             config.earliest, config.colormap, config.colormap_values(),
@@ -189,6 +190,7 @@ class Bars:
     diff_ylims: List[float] = None
     diff_log_scale: bool = False
     ylim: float = None
+    ylabel: str = None
     tested_ylim: float = None
     earliest: Union[str, date, pd.Timestamp] = '2020-10-01'
     area_type: str = ltla
@@ -202,6 +204,10 @@ class Bars:
     data_is_cumulative: bool = False
     with_diff: bool = True
     fig_size: Tuple[float, float] = 14, 10
+
+    def __post_init__(self):
+        if not self.ylabel:
+            self.ylabel = self.series.title
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
@@ -288,7 +294,9 @@ class DemographicBars(Bars):
         return self.data_file
 
     def __post_init__(self):
-        self.bands = self.bands or self.all_detail
+        super().__post_init__()
+        if not self.bands:
+            self.bands = self.all_detail
         if self.reverse_bands:
             self.bands.reverse()
 
@@ -316,6 +324,7 @@ death_demographics = DemographicBars(
     area_type=nation,
     areas=[england],
     title_template='Evolution of COVID-10 {config.series.title} in England by age',
+    ylabel=s.new_deaths.title,
     legend_loc='upper center',
     legend_ncol=2,
     uncertain_days=16,
@@ -355,6 +364,7 @@ BARS = dict(
         data_file=f'case_demographics_{overview}',
         area_type=overview,
         title_template='Evolution of COVID-10 {config.series.title} in the UK by age',
+        ylabel=s.new_cases.title,
         legend_ncol=2,
         diff_log_scale=True,
         uncertain_days=0,
@@ -376,6 +386,7 @@ BARS = dict(
         area_type=nation,
         areas=[england],
         title_template='Evolution of COVID-10 hospital admissions in England by age',
+        ylabel=s.new_admissions.title,
         legend_loc='upper center',
         bands=['0_to_5', '6_to_17', '18_to_64', '65_to_84', '85+'],
         diff_log_scale=True,
