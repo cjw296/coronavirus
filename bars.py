@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
 from statistics import mean
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Tuple
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -134,7 +134,7 @@ def plot_bars(
         data = data.reindex(labels, fill_value=0)
         previous_data = previous_data.reindex(labels, fill_value=0)
 
-        fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=(14, 10),
+        fig, (bars_ax, diff_ax) = plt.subplots(nrows=2, ncols=1, figsize=config.fig_size,
                                                gridspec_kw={'height_ratios': [12, 2]})
     else:
         data, data_date = config.data_for(data_date)
@@ -146,7 +146,7 @@ def plot_bars(
         labels = pd.date_range(start=data.index.min(), end=max(end_dates))
         data = data.reindex(labels, fill_value=0)
 
-        fig = plt.figure(figsize=(14, 10))
+        fig = plt.figure(figsize=config.fig_size)
         bars_ax = plt.gca()
 
     if config.uncertain_days is None or not config.average_days:
@@ -201,6 +201,7 @@ class Bars:
     legend_ncol: int = 1
     data_is_cumulative: bool = False
     with_diff: bool = True
+    fig_size: Tuple[float, float] = 14, 10
 
     @classmethod
     def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
@@ -271,6 +272,7 @@ class DemographicBars(Bars):
     band_centered_colormap: bool = True
     band_max: int = 90
     with_diff: bool = False
+    fig_size: Tuple[float, float] = 14, 8.3
 
     all_detail = ['00_04', '05_09', '10_14', '15_19', '20_24', '25_29', '30_34',
                   '35_39', '40_44', '45_49', '50_54', '55_59', '60_64', '65_69',
