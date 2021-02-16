@@ -349,6 +349,17 @@ BARS = dict(
         diff_ylims=[-100, 3_500],
         legend_loc='upper center',
     ),
+    admissions_demographics=DemographicBars(
+        'value',
+        data_file=f'admission_demographics_{nation}',
+        data_is_cumulative=True,
+        area_type=nation,
+        areas=[england],
+        title_template='Evolution of COVID-10 hospital admissions in England by age',
+        legend_loc='upper center',
+        bands=['0_to_5', '6_to_17', '18_to_64', '65_to_84', '85+'],
+        diff_log_scale=True,
+    ),
     deaths_regions=Bars(
         metric=new_deaths_by_death_date,
         title_template='Evolution of PHE deaths reporting in England',

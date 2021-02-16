@@ -18,7 +18,7 @@ from tqdm.notebook import tqdm
 from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
     vaccination_cumulative, vaccination_new_and_weekly, england_metrics, case_demographics, \
-    overview, death_demographics
+    overview, death_demographics, admission_demographics
 
 
 def download(url, path):
@@ -221,6 +221,7 @@ SETS = {
     'demographics': [
         Download(overview, [case_demographics], name=f'case_demographics_{overview}'),
         Download(nation, [death_demographics], name=f'death_demographics_{nation}'),
+        Download(nation, [admission_demographics], name=f'admission_demographics_{nation}'),
     ]
 }
 
