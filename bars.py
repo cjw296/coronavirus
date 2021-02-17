@@ -153,7 +153,7 @@ def plot_bars(
     if config.uncertain_days is None or not config.average_days:
         average_end = None
     else:
-        average_end = data.index.max() - timedelta(days=config.uncertain_days)
+        average_end = data_date - timedelta(days=config.uncertain_days)
 
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.45)
