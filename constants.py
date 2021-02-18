@@ -111,8 +111,6 @@ lockdown3 = (date(2021, 1, 5), date(2021, 3, 8))
 national_lockdowns = lockdown1, lockdown2, lockdown3
 
 
-phe_vmax = None
-
 brighton = 'E06000043'
 west_sussex = 'E10000032'
 east_sussex = 'E10000011'
