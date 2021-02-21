@@ -107,6 +107,15 @@ class NoContent(ValueError):
     pass
 
 
+class WrongDate(ValueError):
+
+    def __init__(self, requested, actual):
+        self.requested, self.actual = requested, actual
+
+    def __str__(self):
+        return f'requested: {self.requested}, actual: {self.actual}'
+
+
 def download_phe(name, area_type, *metrics, area_name=None, release=None, format='csv'):
     release = release or date.today()
 
@@ -139,7 +148,7 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
         response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.{format}"'
     ).date()
     if str(actual_release) != str(release):
-        raise ValueError(f'downloaded: {actual_release}, requested: {release}')
+        raise WrongDate(release, actual_release)
     path = (base_path / f'{name}_{actual_release}.csv')
     path.write_bytes(response.content)
     return path

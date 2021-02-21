@@ -5,7 +5,7 @@ import requests
 from dateutil.parser import parse as parse_date
 
 from constants import msoa, new_cases_sum, new_cases_rate, new_cases_change
-from download import download_phe, find_latest, get_release_timestamp
+from download import download_phe, find_latest, get_release_timestamp, WrongDate
 from msoa_composite import check_path, main as composite
 
 
@@ -24,15 +24,22 @@ def main():
 
     for dt in pd.date_range(latest, date.today(), closed='right', tz='Europe/London'):
         if is_msoa_data_ready(dt):
-            path = download_phe(
-                msoa, msoa,
-                new_cases_sum, new_cases_rate, new_cases_change, 'release',
-                release=dt.date()
-            )
-            print(path)
-            check_path(path)
-            if start_for_composite is None:
-                start_for_composite = str(dt.date())
+            try:
+                path = download_phe(
+                    msoa, msoa,
+                    new_cases_sum, new_cases_rate, new_cases_change, 'release',
+                    release=dt.date()
+                )
+            except WrongDate as e:
+                if e.requested < e.actual:
+                    print(f'Missed {e.requested} :-(')
+                else:
+                    raise
+            else:
+                print(path)
+                check_path(path)
+                if start_for_composite is None:
+                    start_for_composite = str(dt.date())
 
     if start_for_composite:
         print('\nAdding to composite...')
