@@ -1,12 +1,13 @@
 import concurrent.futures
 import json
 from argparse import ArgumentParser
+from csv import DictWriter
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from itertools import chain
 from pathlib import Path
 from time import sleep
-from typing import List, Tuple
+from typing import List, Tuple, Iterable, Mapping
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
@@ -26,6 +27,17 @@ def download(url, path):
     assert response.status_code == 200
     with path.open('wb') as target:
         target.write(response.content)
+
+
+def write_csv(rows: Iterable[Mapping[str, str]], filename: str):
+    rows = iter(rows)
+    row = next(rows)
+    with (base_path / filename).open('w') as target:
+        writer = DictWriter(target, fieldnames=row.keys())
+        writer.writeheader()
+        writer.writerow(row)
+        for row in rows:
+            writer.writerow(row)
 
 
 def find_all(glob, date_index=-1, earliest=None) -> List[Tuple[date, Path]]:

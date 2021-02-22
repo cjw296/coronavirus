@@ -1,15 +1,14 @@
 import re
 from argparse import ArgumentParser
-from csv import DictReader, DictWriter
+from csv import DictReader
 from datetime import datetime
 from decimal import Decimal
 from io import StringIO
-from pathlib import Path
 from typing import Iterable
 
 import requests
 
-from constants import base_path
+from download import write_csv
 
 google_docs_csv = 'https://docs.google.com/spreadsheets/d/{key}/export?format=csv&sheet=table_1'
 
@@ -53,17 +52,6 @@ def parse(text: str) -> Iterable:
         yield row
 
 
-def write(rows: Iterable, path: Path):
-    rows = iter(rows)
-    row = next(rows)
-    with path.open('w') as target:
-        writer = DictWriter(target, fieldnames=row.keys())
-        writer.writeheader()
-        writer.writerow(row)
-        for row in rows:
-            writer.writerow(row)
-
-
 def parse_date(text):
     return datetime.strptime(text, '%Y-%m-%d').date()
 
@@ -74,11 +62,11 @@ def main():
     parser.add_argument('date', type=parse_date, help='yyyy-mm-dd')
     args = parser.parse_args()
     key = re.search('d/(.+)/edit', args.url).group(1)
-    path = base_path / f'react_{args.date}.csv'
+    filename = f'react_england_{args.date}.csv'
 
     text = download(key)
     rows = parse(text)
-    write(rows, path)
+    write_csv(rows, filename)
 
 
 if __name__ == '__main__':
