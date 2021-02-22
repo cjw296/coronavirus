@@ -8,7 +8,9 @@ from typing import Iterable
 
 import requests
 
+from constants import england
 from download import write_csv
+from phe import load_population
 
 google_docs_csv = 'https://docs.google.com/spreadsheets/d/{key}/export?format=csv&sheet=table_1'
 
@@ -33,6 +35,12 @@ def add_mid_date(row, start, end):
     row['mid'] = row[start] + (row[end]-row[start])/2
 
 
+def add_with_population(row, source, dest):
+    england_population = load_population().loc[england].item()
+    for suffix in '', '-lower-95', '-upper-95':
+        row[dest+suffix] = int(float(row[source+suffix])*england_population)
+
+
 def download(key) -> str:
     response = requests.get(google_docs_csv.format(key=key))
     assert response.status_code == 200, response.status_code
@@ -54,6 +62,7 @@ def parse(text: str) -> Iterable:
         fix_date(row, 'First sample')
         fix_date(row, 'Last sample')
         add_mid_date(row, 'First sample', 'Last sample')
+        add_with_population(row, 'weighted', 'people')
         yield row
 
 
