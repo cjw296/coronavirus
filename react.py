@@ -21,12 +21,12 @@ def fix_number(row, key):
     row[key] = row[key].replace(',', '')
 
 
-def fix_ci(row, key, name):
+def split_confidence(row, key, name):
     ci = re.search(r'(\d+)% CI', key).group(1)
     actual, lower, upper = re.match(r'([\d.]+)% \(([\d.]+)%, +([\d.]+)%\)', row.pop(key)).groups()
     row[name] = str(Decimal(actual)/100)
-    row[f'{name}_lower_{ci}'] = str(Decimal(lower)/100)
-    row[f'{name}_upper_{ci}'] = str(Decimal(upper)/100)
+    row[f'{name}-lower-{ci}'] = str(Decimal(lower)/100)
+    row[f'{name}-upper-{ci}'] = str(Decimal(upper)/100)
 
 
 def download(key) -> str:
@@ -45,8 +45,8 @@ def parse(text: str) -> Iterable:
         del row['']
         fix_number(row, 'Tested swabs')
         fix_number(row, 'Positive swabs')
-        fix_ci(row, 'Unweighted prevalence (95% CI)', 'unweighted')
-        fix_ci(row, 'Weighted prevalence (95% CI)', 'weighted')
+        split_confidence(row, 'Unweighted prevalence (95% CI)', 'unweighted')
+        split_confidence(row, 'Weighted prevalence (95% CI)', 'weighted')
         fix_date(row, 'First sample')
         fix_date(row, 'Last sample')
         yield row
