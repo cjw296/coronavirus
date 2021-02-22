@@ -14,7 +14,7 @@ google_docs_csv = 'https://docs.google.com/spreadsheets/d/{key}/export?format=cs
 
 
 def fix_date(row, key):
-    row[key] = str(datetime.strptime(row[key].rstrip('*'), '%d/%m/%Y').date())
+    row[key] = datetime.strptime(row[key].rstrip('*'), '%d/%m/%Y').date()
 
 
 def fix_number(row, key):
@@ -27,6 +27,10 @@ def split_confidence(row, key, name):
     row[name] = str(Decimal(actual)/100)
     row[f'{name}-lower-{ci}'] = str(Decimal(lower)/100)
     row[f'{name}-upper-{ci}'] = str(Decimal(upper)/100)
+
+
+def add_mid_date(row, start, end):
+    row['mid'] = row[start] + (row[end]-row[start])/2
 
 
 def download(key) -> str:
@@ -49,6 +53,7 @@ def parse(text: str) -> Iterable:
         split_confidence(row, 'Weighted prevalence (95% CI)', 'weighted')
         fix_date(row, 'First sample')
         fix_date(row, 'Last sample')
+        add_mid_date(row, 'First sample', 'Last sample')
         yield row
 
 
