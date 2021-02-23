@@ -243,19 +243,16 @@ def vaccination_changes(dt='*', exclude_okay=False):
     raw2, current_date, raw1, previous_date = result
     processed2 = process(raw2)
     diff = (processed2 - process(raw1, processed2.index)).fillna(0)
-    for type_ in 'vaccination', 'publish':
+    for type_, okay_date in (
+        ('vaccination', current_date - timedelta(days=4)),
+        ('publish', previous_date),
+    ):
 
         type_diff = diff.filter(like=f'By{type_.capitalize()}Date')
-        type_diff = type_diff.loc[:, (type_diff != 0).any(axis=0)]
-        type_diff = type_diff.loc[(type_diff != 0).any(axis=1), :]
-
-        if type_ == 'publish':
-            ok_date = previous_date
-        else:
-            ok_date = current_date - timedelta(days=4)
+        type_diff = type_diff.loc[(type_diff != 0).any(axis=1), (type_diff != 0).any(axis=0)]
 
         if exclude_okay and not type_diff.empty:
-            type_diff.drop(ok_date, level=-1, inplace=True)
+            type_diff.drop(okay_date, level=-1, inplace=True)
 
         if not type_diff.empty:
             type_diff.rename(inplace=True, columns=Series.column_names())
