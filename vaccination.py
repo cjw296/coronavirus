@@ -82,6 +82,13 @@ def daily_data(raw, weekly):
     )
 
     daily = pd.concat([initial, daily_rows[initial_date:]])
+
+    # take the latest count as most accurate and cap any previous values at it.
+    dates = daily.index.levels[0]
+    latest = daily.loc[dates.max()]
+    for d in dates:
+        daily.loc[d][daily.loc[d] > latest] = latest
+
     return daily.groupby(area_code).diff().dropna().reset_index()
 
 
