@@ -283,11 +283,10 @@ def vaccination_changes(dt='*', exclude_okay=False):
             styled.format("{:+,.0f}")
 
             def lighten(o):
-                if o.name[-1] == ok_date.strftime('%d %b %y'):
-                    color = 'color: lightgreen'
+                if o.name[-1] == okay_date.strftime('%d %b %y'):
+                    return ['color: lightgreen' if v > 0 else '' for v in o]
                 else:
-                    color = ''
-                return [color] * o.shape[0]
+                    return [''] * o.shape[0]
 
             styled.apply(lighten, axis='columns')
             styled.applymap(
