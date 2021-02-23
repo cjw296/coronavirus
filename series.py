@@ -137,7 +137,7 @@ first_dose_daily_cum = Series(
 )
 
 second_dose_daily_cum = Series(
-    metric=c.second_dose_daily_new,
+    metric=c.second_dose_daily_cum,
     label='Second Dose (Total)',
 )
 
