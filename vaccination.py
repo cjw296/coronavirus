@@ -253,15 +253,8 @@ def vaccination_changes(dt='*', exclude_okay=False):
 
         if exclude_okay:
             okay_date = pd.to_datetime(okay_date)
-            for area in type_diff.index.levels[0]:
-                for col in type_diff.columns:
-                    try:
-                        value = type_diff.loc[pd.IndexSlice[area, okay_date], col]
-                    except KeyError:
-                        pass
-                    else:
-                        if value > 0:
-                            type_diff.loc[pd.IndexSlice[area, okay_date], col] = 0
+            idx = type_diff.index.get_level_values(date_col)
+            type_diff.loc[idx == okay_date] = type_diff.loc[idx == okay_date].clip(upper=0)
 
         type_diff = type_diff.loc[(type_diff != 0).any(axis=1), (type_diff != 0).any(axis=0)]
 
