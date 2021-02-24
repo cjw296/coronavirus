@@ -245,15 +245,25 @@ def vaccination_changes(dt='*', exclude_okay=False):
     processed2 = process(raw2)
     diff = (processed2 - process(raw1, processed2.index)).fillna(0)
     for type_, okay_date in (
-        ('vaccination', current_date - timedelta(days=4)),
-        ('publish', previous_date),
+            ('vaccination', current_date - timedelta(days=4)),
+            ('publish', previous_date),
     ):
 
-        type_diff = diff.filter(like=f'By{type_.capitalize()}Date')
-        type_diff = type_diff.loc[(type_diff != 0).any(axis=1), (type_diff != 0).any(axis=0)]
+        type_diff = diff.filter(like=f'By{type_.capitalize()}Date').copy()
 
-        if exclude_okay and not type_diff.empty:
-            type_diff.drop(okay_date, level=-1, inplace=True)
+        if exclude_okay:
+            okay_date = pd.to_datetime(okay_date)
+            for area in type_diff.index.levels[0]:
+                for col in type_diff.columns:
+                    try:
+                        value = type_diff.loc[pd.IndexSlice[area, okay_date], col]
+                    except KeyError:
+                        pass
+                    else:
+                        if value > 0:
+                            type_diff.loc[pd.IndexSlice[area, okay_date], col] = 0
+
+        type_diff = type_diff.loc[(type_diff != 0).any(axis=1), (type_diff != 0).any(axis=0)]
 
         if not type_diff.empty:
             type_diff.rename(inplace=True, columns=Series.column_names())
