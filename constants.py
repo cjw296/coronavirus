@@ -54,6 +54,8 @@ admission_demographics = 'cumAdmissionsByAge'
 new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
 
+in_hospital = 'hospitalCases'
+
 first_dose_weekly = 'weeklyPeopleVaccinatedFirstDoseByVaccinationDate'
 second_dose_weekly = 'weeklyPeopleVaccinatedSecondDoseByVaccinationDate'
 first_dose_daily_new = "newPeopleVaccinatedFirstDoseByPublishDate"
@@ -70,7 +72,8 @@ england_metrics = [
     new_admissions_sum,
     new_cases_sum,
     new_deaths_sum,
-    unique_people_tested_sum
+    unique_people_tested_sum,
+    in_hospital,
 ]
 
 vaccination_new_and_weekly = [
