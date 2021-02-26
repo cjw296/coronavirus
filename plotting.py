@@ -83,17 +83,19 @@ def matplotlib_zoe_vs_phe_map(
 ):
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 10))
 
+    max_value = zoe_df['percentage'].max()
     geoplot_matplotlib(zoe_df, axes[0],
                        column='percentage',
                        title=f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}',
-                       label='Estimated Symptomatic Percentage',
+                       label=f'Estimated Symptomatic Percentage (max: {max_value:.1f})',
                        vmax=zoe_max,
                        missing_kwds={'color': 'lightgrey'})
 
+    max_value = phe_recent_geo[pct_population].max()
     geoplot_matplotlib(phe_recent_geo, axes[1],
                        column=pct_population,
                        title=phe_recent_title,
-                       label='lab-confirmed cases as % of population',
+                       label=f'lab-confirmed cases as % of population (max: {max_value:.2f})',
                        vmax=phe_max,
                        missing_kwds={'color': 'lightgrey'})
 
