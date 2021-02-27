@@ -27,7 +27,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
 
     df, _ = map.data
     dt = frame_date.date()
-    data_for_dt = df.loc[dt]
+    data_for_dt = df.loc[pd.to_datetime(dt)]
 
     data = pd.merge(area_type_to_geoms[map.area_type](), data_for_dt,
                     how='outer', left_on='code', right_on=area_code)
