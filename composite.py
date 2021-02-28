@@ -2,6 +2,7 @@ import subprocess
 import sys
 from argparse import ArgumentParser
 from datetime import date
+from functools import partial
 from itertools import chain
 from multiprocessing import cpu_count
 from typing import List, Tuple
@@ -103,8 +104,30 @@ class TextPart(Part):
         return clip
 
 
-def maps(*metrics: str, area_type: str = ltla, area: str = 'england') -> List[Part]:
-    return [Part(f'animated_map_{area_type}_{m}_{area}') for m in metrics]
+class MapPart(Part):
+
+    prefix = 'animated_map_'
+
+    def __init__(self, area_type: str, view: str, map_name: str, title: str = None,
+                 start: date = None, end: date = None):
+        super().__init__(f'{area_type}_{map_name}_{view}')
+        self.area_type = area_type
+        self.map = map_name
+        self.view = view
+        self.title = title
+        self.start = start
+        self.end = end
+
+    def build(self):
+        cmd = [sys.executable, 'animated_map.py', self.area_type, self.map, '--view', self.view,
+               '--bare', '--output', 'none']
+        if self.title:
+            cmd.extend(('--title', self.title))
+        if self.start:
+            cmd.extend(('--from', self.start))
+        if self.end:
+            cmd.extend(('--to', self.end))
+        run(cmd)
 
 
 class Composition:
@@ -153,10 +176,17 @@ def main():
                           fps=24, threads=args.threads, bitrate='10M')
 
 
+all_ltla_england = partial(MapPart, ltla, 'england', start=data_start)
+
+
 compositions = {
         'tested-positivity-cases': Composition(
             [TextPart('title', "PHE data for {date:%d %b %Y}")],
-            maps('tested', 'positivity')+maps('cases-red', area_type='msoa'),
+            [
+                all_ltla_england('tested', "Population Tested"),
+                all_ltla_england('positivity', "Test Positivity"),
+                all_ltla_england('cases-red', "Confirmed Case Rate"),
+            ],
             [TextPart(
                 'footer',
                 "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
