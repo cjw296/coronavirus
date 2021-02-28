@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 import series as s
 from animated import parallel_render
+from constants import data_start
 from maps import Map
 from args import add_parallel_args, parallel_to_date, parallel_params
 from phe import plot_summary, summary_data
@@ -30,7 +31,7 @@ def main():
     df, data_date = summary_data(series, end=args.to_date)
 
     to_date = parallel_to_date(args, df.index.max().date())
-    earliest_date = df.index.min().date()
+    earliest_date = data_start
     dates = pd.date_range(args.from_date, to_date)
 
     figsize = (args.width, args.height)
