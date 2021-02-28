@@ -149,7 +149,7 @@ def main():
 
     # 4k = 3840
     # 1080p = 1920
-    final.write_videofile(str(output_path / "composite.mp4"),
+    final.write_videofile(str(output_path / f"{args.name}.mp4"),
                           fps=24, threads=args.threads, bitrate='10M')
 
 
