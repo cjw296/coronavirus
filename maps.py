@@ -235,12 +235,12 @@ MAPS = {
     ltla: {
         'tested': Map(
             s.unique_people_tested_sum,
-            Range(linthresh=3, vmax=15, linticks=4, logticks=5),
+            Range(linthresh=3, vmax=15, linticks=4, logticks=4, lognearest=1),
             per_population=100,
         ),
         'positivity': Map(
             s.unique_cases_positivity_sum,
-            Range(linthresh=20, vmax=100, linticks=4, logticks=5),
+            Range(linthresh=20, vmax=100, linticks=5, linnearest=5, logticks=5, lognearest=5),
             per_population=None,
         ),
         'cases': replace(ltla_cases, cmap='inferno_r'),
