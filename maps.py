@@ -36,8 +36,8 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
     if map.range.linthresh is not None:
         ticks = np.concatenate((
             round_nearest(np.linspace(r.vmin, r.linthresh, r.linticks), r.linnearest),
-            round_nearest(np.geomspace(r.linthresh, r.vmax, r.logticks), r.lognearest))
-        )
+            round_nearest(np.geomspace(r.linthresh, r.vmax, r.logticks), r.lognearest)[1:]
+        ))
         norm = SymLogNorm(linthresh=r.linthresh, vmin=r.vmin, vmax=r.vmax, base=10)
     elif map.range.linticks:
         ticks = round_nearest(np.linspace(r.vmin, r.vmax, r.linticks), r.linnearest),
