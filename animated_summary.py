@@ -10,11 +10,15 @@ from constants import data_start
 from maps import Map
 from args import add_parallel_args, parallel_to_date, parallel_params
 from phe import plot_summary, summary_data
+from plotting import per0k_formatter
 
 
 def render_dt(data_date, earliest_date, to_date, dpi, figsize, frame_date, image_path):
     plot_summary(None, data_date, frame_date, earliest_date, to_date,
-                 title=False, figsize=figsize)
+                 title=False, figsize=figsize,
+                 left_series=(s.new_cases_sum,),
+                 right_series=(s.new_admissions_sum, s.new_deaths_sum),
+                 right_formatter=per0k_formatter)
     plt.savefig(image_path / f'{frame_date.date()}.png', dpi=dpi, bbox_inches='tight')
     plt.close()
 
