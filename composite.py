@@ -130,6 +130,25 @@ class MapPart(Part):
         run(cmd)
 
 
+class SummaryPart(Part):
+
+    def __init__(self, start: date = None, end: date = None, width: int = 15, height: float = 2):
+        super().__init__(f'animated_summary_{width}_{height}')
+        self.start = start
+        self.end = end
+        self.width = width
+        self.height = height
+
+    def build(self):
+        cmd = [sys.executable, 'animated_summary.py',
+               '--width', self.width, '--height', self.height]
+        if self.start:
+            cmd.extend(('--from', self.start))
+        if self.end:
+            cmd.extend(('--to', self.end))
+        run(cmd)
+
+
 class Composition:
 
     def __init__(self, *rows: List[Part]):
@@ -181,12 +200,12 @@ all_ltla_england = partial(MapPart, ltla, 'england', start=data_start)
 
 compositions = {
         'tested-positivity-cases': Composition(
-            [TextPart('title', "PHE data for {date:%d %b %Y}")],
             [
                 all_ltla_england('tested', "Population Tested"),
                 all_ltla_england('positivity', "Test Positivity"),
                 all_ltla_england('cases-red', "Confirmed Case Rate"),
             ],
+            [SummaryPart(start=data_start, width=28, height=4)],
             [TextPart(
                 'footer',
                 "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
