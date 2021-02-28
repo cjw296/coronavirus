@@ -22,6 +22,10 @@ def rgb_color(name):
     return tuple(e*255 for e in to_rgba(name)[:3])
 
 
+def humanize(dt):
+    return dt.strftime('%d %b %y')
+
+
 white = rgb_color('white')
 fps = 24
 
@@ -132,8 +136,8 @@ def main():
         part_end = part_dates[-1]
         start = max(start, part_start)
         end = min(end, part_end)
-        print(f'{part.name}: {part_start} to {part_end}')
-    print(f'final: {start} to {end}')
+        print(f'{part.name}: {humanize(part_start)} to {humanize(part_end)}')
+    print(f'final: {humanize(start)} to {humanize(end)}')
     dates = pd.date_range(start, end)
 
     final = clips_array(
