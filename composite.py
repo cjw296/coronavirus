@@ -1,19 +1,21 @@
+import subprocess
+import sys
 from argparse import ArgumentParser
-from dataclasses import dataclass
+from datetime import date
 from itertools import chain
 from multiprocessing import cpu_count
-from typing import List
+from typing import List, Tuple
 
 import imageio
 import pandas as pd
 from matplotlib.colors import to_rgba
-from moviepy.video.VideoClip import ImageClip, TextClip
+from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import clips_array
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.margin import margin
 from tqdm.auto import tqdm
 
-from constants import output_path, ltla
+from constants import output_path, ltla, data_start
 
 
 def rgb_color(name):
@@ -24,49 +26,71 @@ white = rgb_color('white')
 fps = 24
 
 
+def run(cmd):
+    cmd = [str(c.date()) if isinstance(c, pd.Timestamp) else str(c) for c in cmd]
+    print('Running: ', subprocess.list2cmdline(['python']+cmd[1:]))
+    subprocess.run(cmd)
+
+
 class Part:
+
+    prefix = ''
 
     def __init__(self, name):
         self.name = name
+        self.dirname = f'{self.prefix}{name}'
         self.frames = {}
-        for path in (output_path / name).glob('*'):
+
+    def build(self):
+        pass
+
+    def discover_frames(self):
+        for path in (output_path / self.dirname).glob('*.png'):
             self.frames[pd.to_datetime(path.stem)] = path
         if not self.frames:
-            raise ValueError(f'No frames for {name}')
-
-    def dates(self):
+            raise ValueError(f'No frames for {self.name}')
         return sorted(self.frames)
 
-    def clip(self, dates, frame_duration):
+    def clip(self, frames, frame_duration):
         clips = []
-        for d in tqdm(dates, desc=self.name):
-            path = self.frames[d]
+        for f in tqdm(frames, desc=self.name):
+            path = self.frames[f]
             clips.append(ImageClip(imageio.imread(path), duration=frame_duration))
         return concatenate_videoclips(clips, method="chain")
 
 
-class TextPart:
+class TextPart(Part):
 
-    def __init__(self, template, fontsize, color="black", **margin):
-        self.name = template
+    prefix = 'animated_text_'
+
+    def __init__(self, name, template, dates=None, fontsize=20, color="black", **margin):
+        super().__init__(name)
         self.dynamic = '{' in template
         self.template = template
-        self.params = dict(font="DejaVu Sans", fontsize=fontsize, color=color, bg_color='white')
-        self.margin = margin
+        self.dates = dates or pd.date_range(data_start, date.today())
+        self.margin = margin or {'margin': 5}
+        self.fontsize = fontsize
+        self.color = color
 
-    def _clip(self, text, duration):
-        clip = TextClip(text, **self.params)
-        return clip.set_duration(duration)
+    def build(self):
+        cmd = [sys.executable, 'animated_text.py', self.name, self.template,
+               '--fontsize', self.fontsize, '--color', self.color,
+               '--from', self.dates[0], '--to', self.dates[-1]]
+        if not self.dynamic:
+            cmd.extend(('--single', self.dates[0]))
+        run(cmd)
+
+    def discover_frames(self):
+        if self.dynamic:
+            return super().discover_frames()
+        return self.dates
 
     def clip(self, dates, frame_duration):
         if self.dynamic:
-            clip = concatenate_videoclips(
-                list(tqdm((self._clip(self.template.format(date=d), frame_duration) for d in dates),
-                     desc=self.name, total=len(dates))),
-                method="chain"
-            )
+            clip = super().clip(dates, frame_duration)
         else:
-            clip = self._clip(self.template, frame_duration * len(dates))
+            clip = ImageClip(imageio.imread(next((output_path / self.dirname).glob('*.png'))),
+                             duration=frame_duration * len(dates))
         if self.margin:
             params = self.margin.copy()
             params['mar'] = params.pop('margin')
@@ -79,52 +103,42 @@ def maps(*metrics: str, area_type: str = ltla, area: str = 'england') -> List[Pa
     return [Part(f'animated_map_{area_type}_{m}_{area}') for m in metrics]
 
 
-@dataclass
 class Composition:
-    title: TextPart
-    parts: List[List[Part]]
-    date_lock: bool = True
 
-    def all_parts(self):
-        yield [self.title]
-        for row in self.parts:
-            yield row
-        yield [TextPart(
-            "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
-            fontsize=14, color="darkgrey", margin=5
-        )]
+    def __init__(self, *rows: List[Part]):
+        self.parts: List[Part] = list(chain(*rows))
+        self.rows: Tuple[List[Part]] = rows
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('name')
     parser.add_argument('--threads', type=int, default=cpu_count())
+    parser.add_argument('--build', action='store_true')
     parser.add_argument('--duration', type=float, default=1/fps,
                         help='fast=0.05, slow=0.3')
     args = parser.parse_args()
 
     composition = compositions[args.name]
-
-    rows = list(composition.all_parts())
+    if args.build:
+        for part in composition.parts:
+            part.build()
 
     start = pd.Timestamp.min
     end = pd.Timestamp.max
-    for part in chain(*rows):
-        get_dates = getattr(part, 'dates', None)
-        if get_dates:
-            part_dates = get_dates()
-            part_start = part_dates[0]
-            part_end = part_dates[-1]
-            start = max(start, part_start)
-            end = min(end, part_end)
-            print(f'{part.name}: {part_start}-{part_end}')
-    print(f'final: {start}-{end}')
+    for part in composition.parts:
+        part_dates = part.discover_frames()
+        part_start = part_dates[0]
+        part_end = part_dates[-1]
+        start = max(start, part_start)
+        end = min(end, part_end)
+        print(f'{part.name}: {part_start} to {part_end}')
+    print(f'final: {start} to {end}')
     dates = pd.date_range(start, end)
 
-    print(rows)
     final = clips_array(
         [[clips_array([[p.clip(dates, args.duration) for p in row]], bg_color=white)]
-         for row in rows],
+         for row in composition.rows],
         bg_color=white
     )
     final = final.set_duration(args.duration * len(dates))
@@ -137,8 +151,13 @@ def main():
 
 compositions = {
         'tested-positivity-cases': Composition(
-            TextPart("PHE data for {date: %d %b %Y}", fontsize=20, margin=5),
-            [maps('tested', 'positivity')+maps('cases-red', area_type='msoa')],
+            [TextPart('title', "PHE data for {date:%d %b %Y}")],
+            maps('tested', 'positivity')+maps('cases-red', area_type='msoa'),
+            [TextPart(
+                'footer',
+                "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
+                fontsize=14, color="darkgrey"
+            )]
         ),
 }
 
