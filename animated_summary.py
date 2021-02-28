@@ -37,7 +37,8 @@ def main():
     figsize = (args.width, args.height)
     render = partial(render_dt, data_date, earliest_date, to_date, args.dpi, figsize)
 
-    parallel_render(f'animated_summary', render, dates, **parallel_params(args))
+    parallel_render(f'animated_summary_{args.width}_{args.height}',
+                    render, dates, **parallel_params(args))
 
 
 if __name__ == '__main__':
