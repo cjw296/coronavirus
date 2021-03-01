@@ -7,6 +7,7 @@ region = 'region'
 utla = 'utla'
 ltla = 'ltla'
 msoa = 'msoa'
+nhs_region = 'nhsRegion'
 
 earliest_available_download = date(2020, 8, 12)
 earliest_msoa = date(2020, 12, 18)

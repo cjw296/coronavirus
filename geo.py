@@ -7,13 +7,13 @@ import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
 
-from constants import repo_path, ltla, msoa
+from constants import repo_path, ltla, msoa, nhs_region
 
 
 @lru_cache
-def geoportal_geoms(name, code_column=None, name_column=None):
+def geoportal_geoms(name, code_column=None, name_column=None, suffix='-shp'):
     # geoms that comes from https://geoportal.statistics.gov.uk/
-    geoms = geopandas.read_file(repo_path / 'geodata' / f"{name}-shp" / f"{name}.shp")
+    geoms = geopandas.read_file(repo_path / 'geodata' / f"{name}{suffix}" / f"{name}.shp")
     geoms.to_crs("EPSG:3857", inplace=True)
     if code_column and name_column:
         geoms.rename(columns={code_column: 'code', name_column: 'name'},
@@ -104,9 +104,19 @@ def town_and_city_geoms():
     )
 
 
+def nhs_regions_geoms():
+    return geoportal_geoms(
+        "NHS_England_Regions_(April_2020)_Boundaries_EN_BFC",
+        code_column='nhser20cd',
+        name_column='nhser20nm',
+        suffix='',
+    )
+
+
 area_type_to_geoms = {
     ltla: ltla_geoms,
     msoa: msoa_geoms_20,
+    nhs_region: nhs_regions_geoms,
 }
 
 

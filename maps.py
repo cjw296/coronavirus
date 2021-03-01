@@ -12,7 +12,7 @@ from matplotlib.ticker import StrMethodFormatter
 
 import series as s
 from animated import round_nearest
-from constants import area_code, metric, date_col, ltla, msoa
+from constants import area_code, metric, date_col, ltla, msoa, nhs_region
 from geo import View, area_type_to_geoms, above, views
 from phe import plot_summary, best_data, with_population
 from plotting import show_area, per1m_formatter
@@ -259,4 +259,12 @@ MAPS = {
         'cases': replace(msoa_cases, dpi=150, cmap='inferno_r'),
         'cases-red': msoa_cases,
     },
+    nhs_region: {
+        'admissions': Map(
+            s.new_admissions,
+            Range(vmin=0, vmax=9),
+            rolling_days=7,
+            missing_color=None,
+        )
+    }
 }
