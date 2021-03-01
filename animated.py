@@ -79,14 +79,14 @@ def output_gif(name, data, durations, _):
     optimize(str(gif_path))
 
 
-def output_mp4(name, data, durations, max_workers=None):
+def output_mp4(name, data, durations, max_workers=None, method='chain'):
     # sanity check the images
     sizes = {frame.shape for frame in data}
-    assert len(sizes) == 1, sizes
+    assert method == 'compose' or len(sizes) == 1, sizes
     # turn the image into clips
     clips = [ImageClip(data, duration=d) for (data, d) in zip(data, durations)]
     # save the mp4
-    movie = concatenate_videoclips(clips, method="chain")
+    movie = concatenate_videoclips(clips, method=method)
     movie.write_videofile(str(output_path / (name + '.mp4')),
                           fps=24,
                           threads=max_workers or cpu_count(),
@@ -98,6 +98,7 @@ def output_mp4(name, data, durations, max_workers=None):
 
 output_types = {
     'mp4': output_mp4,
+    'mp4-compose': partial(output_mp4, method='compose'),
     'gif': output_gif,
     'none': None,
 }
