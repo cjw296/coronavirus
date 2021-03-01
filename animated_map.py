@@ -1,3 +1,5 @@
+import os
+import warnings
 from argparse import ArgumentParser
 from functools import partial
 
@@ -33,6 +35,10 @@ def main():
         render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view,
         args.bare, args.title,
     )
+
+    if args.raise_errors:
+        warnings.filterwarnings('error', category=UserWarning)
+        os.environ['PYTHONWARNINGS'] = 'error::UserWarning'
 
     params = parallel_params(args)
     params['duration'] = args.duration or slowing_durations(dates)
