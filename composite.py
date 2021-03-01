@@ -16,7 +16,7 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.margin import margin
 from tqdm.auto import tqdm
 
-from constants import output_path, ltla, data_start
+from constants import output_path, ltla, data_start, nhs_region
 
 
 def rgb_color(name):
@@ -198,12 +198,29 @@ def main():
 all_ltla_england = partial(MapPart, ltla, 'england', start=data_start)
 
 
+def admissions_start(map_name, title, area_type=ltla):
+    return MapPart(area_type, 'england', map_name, title, start='2020-03-19')
+
+
 compositions = {
         'tested-positivity-cases': Composition(
             [
                 all_ltla_england('tested', "Population Tested"),
                 all_ltla_england('positivity', "Test Positivity"),
                 all_ltla_england('cases-red', "Confirmed Case Rate"),
+            ],
+            [SummaryPart(start=data_start, width=28, height=4)],
+            [TextPart(
+                'footer',
+                "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
+                fontsize=14, color="darkgrey"
+            )]
+        ),
+        'cases-admissions-deaths': Composition(
+            [
+                admissions_start('cases-red', "New Cases"),
+                admissions_start('admissions', "Hospital Admissions", nhs_region),
+                admissions_start('deaths', "Deaths"),
             ],
             [SummaryPart(start=data_start, width=28, height=4)],
             [TextPart(
