@@ -57,6 +57,10 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
     if norm is not None:
         plot_kwds['norm'] = norm
 
+    # workaround until geopandas 0.9.0 available through conda
+    if map.missing_color:
+        plot_kwds['missing_kwds'] = {'color': map.missing_color}
+
     ax = data.plot(
         ax=ax,
         column=metric,
@@ -65,7 +69,6 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
         vmin=r.vmin,
         vmax=r.vmax,
         antialiased=map.antialiased,
-        missing_kwds={'color': map.missing_color},
         legend_kwds=legend_kwds,
         **plot_kwds
     )
@@ -156,7 +159,7 @@ class Map:
     rolling_days: int = None
     cmap: str = None
     below_color: str = 'lightgrey'
-    missing_color: str = 'grey'
+    missing_color: Optional[str] = 'grey'
     antialiased: bool = True
     area_type: str = None
     per_population: Optional[int] = 100_000
