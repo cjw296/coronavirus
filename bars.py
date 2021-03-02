@@ -328,6 +328,19 @@ death_demographics = DemographicBars(
     diff_ylims=[-10, 1000],
 )
 
+admission_demographics = DemographicBars(
+        'value',
+        data_file=f'admission_demographics_{nation}',
+        data_is_cumulative=True,
+        area_type=nation,
+        areas=[england],
+        title_template='Evolution of COVID-10 hospital admissions in England by age',
+        ylabel=s.new_admissions.title,
+        legend_loc='upper center',
+        bands=['0_to_5', '6_to_17', '18_to_64', '65_to_84', '85+'],
+        diff_log_scale=True,
+    )
+
 
 BARS = dict(
     cases_my_areas=Bars(
@@ -375,17 +388,11 @@ BARS = dict(
         diff_ylims=[-100, 3_500],
         legend_loc='upper center',
     ),
-    admissions_demographics=DemographicBars(
-        'value',
-        data_file=f'admission_demographics_{nation}',
-        data_is_cumulative=True,
-        area_type=nation,
-        areas=[england],
-        title_template='Evolution of COVID-10 hospital admissions in England by age',
-        ylabel=s.new_admissions.title,
-        legend_loc='upper center',
-        bands=['0_to_5', '6_to_17', '18_to_64', '65_to_84', '85+'],
-        diff_log_scale=True,
+    admissions_demographics_for_comparison=admission_demographics,
+    admissions_demographics=replace(
+        admission_demographics,
+        colormap='plasma_r',
+        bands=reversed(admission_demographics.bands),
     ),
     deaths_regions=Bars(
         metric=new_deaths_by_death_date,
