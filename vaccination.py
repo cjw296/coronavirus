@@ -1,4 +1,5 @@
 from datetime import timedelta
+from itertools import chain
 
 import numpy as np
 import pandas as pd
@@ -129,14 +130,18 @@ def vaccination_dashboard(savefig=True):
 
     pie_data = latest.set_index(area_name).sort_index()
     pie_data = pie_data[['full_pct', 'partial_pct', 'none_pct']].transpose()
-    totals = data.pivot_table(values='any', index=[date_col], columns=area_name).fillna(0)
+    totals = data.pivot_table(values=['partial', 'full'], index=[date_col],
+                              columns=area_name).fillna(0)
+    totals = totals.swaplevel(axis='columns').sort_index(axis='columns')
 
     # plotting
     england_col = 0
     ni_col = 6
     scotland_col = 2
     wales_col = 3
-    colors = [plt.cm.tab10(i) for i in [england_col, ni_col, scotland_col, wales_col]]
+
+    colors = list(chain(*((plt.cm.tab20(i * 2), plt.cm.tab20(i * 2 + 1))
+                          for i in [england_col, ni_col, scotland_col, wales_col])))
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')
@@ -162,7 +167,12 @@ def vaccination_dashboard(savefig=True):
     plt.setp(ax.get_xticklabels(), visible=False)
     ax.set_title('UK population partially or fully vaccinated')
 
-    labels = [f"{nation}: {totals[nation].iloc[-1]:,.0f} people" for nation in totals.columns]
+    labels = []
+    for nation, level in totals.columns:
+        if level == 'full':
+            labels.append(f"{nation}: {totals[nation].iloc[-1].sum():,.0f} people")
+        else:
+            labels.append(None)
     ax.stackplot(totals.index, totals.values.transpose(), colors=colors, labels=labels, zorder=10)
     ax.legend(loc='upper left', framealpha=1)
 
@@ -197,12 +207,12 @@ def vaccination_dashboard(savefig=True):
     ax.set_title('Rate of injections (weeky by injection date, daily by publish date)')
 
     bottom = None
-    for nation_name, color in zip(totals, colors):
+    for (nation_name, level), color in zip(totals, colors):
         nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
-        heights = (nation_data['first_dose'] + nation_data['second_dose']) * (
-                    7 / nation_data['duration'].dt.days)
+        nation_level_data = nation_data['first_dose' if level == 'partial' else 'second_dose']
+        heights = nation_level_data * 7 / nation_data['duration'].dt.days
         ax.bar(
             nation_data.index - nation_data['duration'],
             bottom=bottom,
