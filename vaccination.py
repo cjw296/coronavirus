@@ -169,16 +169,16 @@ def vaccination_dashboard(savefig=True):
     # make sure the current highest always has a tick:
     current = latest['any'].sum()
     ticks = [t for t in ax.get_yticks() if t <= current]
-    if current < ticks[-1] + (ticks[-1] - ticks[-2])/2:
+    if current < ticks[-1] + (ticks[-1] - ticks[-2]) / 2:
         ticks.pop()
     ticks.append(current)
     ax.yaxis.set_major_locator(FixedLocator(ticks))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
 
     pct = ax.twinx()
-    pct.set_ylim(*(l/total_population for l in ax.get_ylim()))
-    pct.yaxis.set_major_locator(FixedLocator([t/total_population for t in ax.get_yticks()]))
-    pct.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y*100:,.0f}%"))
+    pct.set_ylim(*(l / total_population for l in ax.get_ylim()))
+    pct.yaxis.set_major_locator(FixedLocator([t / total_population for t in ax.get_yticks()]))
+    pct.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 100:,.0f}%"))
 
     # bar charts for rates
     ax = plt.subplot(gs[2, :], sharex=ax)
@@ -188,7 +188,7 @@ def vaccination_dashboard(savefig=True):
     ax.set_xlim(first_vaccination, max_date)
     ax.set_xticks(all_data.index.levels[0], minor=True)
     major_ticks = list(weekly[date_col].unique())
-    if max_date > major_ticks[-1]+np.timedelta64(1,'D'):
+    if max_date > major_ticks[-1] + np.timedelta64(1, 'D'):
         major_ticks.append(max_date.to_datetime64())
     ax.set_xticks(major_ticks)
     ax.xaxis.set_major_formatter(DateFormatter('%d %b'))
@@ -216,15 +216,15 @@ def vaccination_dashboard(savefig=True):
     ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[10], prune='lower'))
 
     daily = ax.twinx()
-    daily.set_ylim(*(l/7 for l in ax.get_ylim()))
-    daily.yaxis.set_major_locator(FixedLocator([t/7 for t in ax.get_yticks()]))
+    daily.set_ylim(*(l / 7 for l in ax.get_ylim()))
+    daily.yaxis.set_major_locator(FixedLocator([t / 7 for t in ax.get_yticks()]))
     daily.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
     daily.set_ylabel('daily')
 
     fig.text(0.5, 0.08,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
-            ha='center')
+             ha='center')
 
     # return latest data so it gets displayed
     if savefig:
