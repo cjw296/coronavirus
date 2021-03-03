@@ -93,7 +93,7 @@ def daily_data(raw, weekly):
     return daily.groupby(area_code).diff().dropna().reset_index()
 
 
-def vaccination_dashboard():
+def vaccination_dashboard(savefig=True):
     # input data:
     raw, data_date = raw_vaccination_data()
     names_frame = raw[[area_code, area_name]].drop_duplicates()
@@ -227,7 +227,8 @@ def vaccination_dashboard():
             ha='center')
 
     # return latest data so it gets displayed
-    plt.savefig(repo_path / f'vaccination.png', bbox_inches='tight')
+    if savefig:
+        plt.savefig(repo_path / f'vaccination.png', bbox_inches='tight')
     return latest
 
 
