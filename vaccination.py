@@ -94,7 +94,7 @@ def daily_data(raw, weekly):
     return daily.groupby(area_code).diff().dropna().reset_index()
 
 
-def vaccination_dashboard(savefig=True):
+def vaccination_dashboard(savefig=True, show_partial=True):
     # input data:
     raw, data_date = raw_vaccination_data()
     names_frame = raw[[area_code, area_name]].drop_duplicates()
@@ -140,7 +140,7 @@ def vaccination_dashboard(savefig=True):
     scotland_col = 2
     wales_col = 3
 
-    colors = list(chain(*((plt.cm.tab20(i * 2), plt.cm.tab20(i * 2 + 1))
+    colors = list(chain(*((plt.cm.tab20(i * 2), plt.cm.tab20(i * 2 + (1 if show_partial else 0)))
                           for i in [england_col, ni_col, scotland_col, wales_col])))
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
