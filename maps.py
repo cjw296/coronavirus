@@ -105,7 +105,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
 
 
 def render_dt(
-        data_date, earliest_date, to_date, area_type, map_type, view, bare, title,
+        data_date, earliest_date, to_date, area_type, map_type, view, bare, title, dpi,
         frame_date, image_path
 ):
     map = get_map(area_type, map_type)
@@ -134,7 +134,7 @@ def render_dt(
                  f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
                  color='darkgrey',
                  zorder=-1)
-    plt.savefig(image_path / f'{frame_date.date()}.png', dpi=map.dpi, bbox_inches='tight')
+    plt.savefig(image_path / f'{frame_date.date()}.png', dpi=dpi, bbox_inches='tight')
     plt.close()
 
 

@@ -109,7 +109,7 @@ class MapPart(Part):
     prefix = 'animated_map_'
 
     def __init__(self, area_type: str, view: str, map_name: str, title: str = None,
-                 start: date = None, end: date = None):
+                 start: date = None, end: date = None, dpi: int = None):
         super().__init__(f'{area_type}_{map_name}_{view}')
         self.area_type = area_type
         self.map = map_name
@@ -117,6 +117,7 @@ class MapPart(Part):
         self.title = title
         self.start = start
         self.end = end
+        self.dpi = dpi
 
     def build(self):
         cmd = [sys.executable, 'animated_map.py', self.area_type, self.map, '--view', self.view,
@@ -127,17 +128,23 @@ class MapPart(Part):
             cmd.extend(('--from', self.start))
         if self.end:
             cmd.extend(('--to', self.end))
+        if self.dpi:
+            cmd.extend(('--dpi', self.dpi))
         run(cmd)
 
 
 class SummaryPart(Part):
 
-    def __init__(self, start: date = None, end: date = None, width: int = 15, height: float = 2):
+    def __init__(self,
+                 start: date = None, end: date = None,
+                 width: int = 15, height: float = 2,
+                 dpi: int = None):
         super().__init__(f'animated_summary_{width}_{height}')
         self.start = start
         self.end = end
         self.width = width
         self.height = height
+        self.dpi = dpi
 
     def build(self):
         cmd = [sys.executable, 'animated_summary.py',
@@ -146,14 +153,17 @@ class SummaryPart(Part):
             cmd.extend(('--from', self.start))
         if self.end:
             cmd.extend(('--to', self.end))
+        if self.dpi:
+            cmd.extend(('--dpi', self.dpi))
         run(cmd)
 
 
 class Composition:
 
-    def __init__(self, *rows: List[Part]):
+    def __init__(self, *rows: List[Part], dpi: int = None):
         self.parts: List[Part] = list(chain(*rows))
         self.rows: Tuple[List[Part]] = rows
+        self.dpi = dpi
 
 
 def main():
@@ -168,6 +178,7 @@ def main():
     composition = compositions[args.name]
     if args.build:
         for part in composition.parts:
+            part.dpi = composition.dpi or part.dpi
             part.build()
 
     start = pd.Timestamp.min

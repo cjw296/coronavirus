@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--bare', action='store_true', help='just the map')
     parser.add_argument('--title', help='override title template')
     parser.add_argument('--view', choices=views.keys())
+    parser.add_argument('--dpi', type=int)
     add_parallel_args(parser, default_duration=None)
     args = parser.parse_args()
 
@@ -31,9 +32,11 @@ def main():
     earliest_date = df.index.min().date()
     dates = pd.date_range(args.from_date, to_date)
 
+    dpi = args.dpi or map.dpi
+
     render = partial(
         render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view,
-        args.bare, args.title,
+        args.bare, args.title, dpi
     )
 
     if args.raise_errors:
