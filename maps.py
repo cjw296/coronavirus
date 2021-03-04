@@ -19,7 +19,7 @@ from plotting import show_area, per1m_formatter
 from series import Series
 
 
-def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
+def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
                title: Optional[str] = 'COVID-19 {map.series.label} as of {frame_date:%d %b %Y}'):
 
     cmap = map.get_cmap()
@@ -93,11 +93,11 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
                 color=places.colour
             )
 
-    if label_top_5:
-        top_5 = data.sort_values(metric, ascending=False).iloc[:5]
-        for name, geometry in zip(top_5['name'], top_5['geometry']):
+    if top:
+        top_n = data.sort_values(metric, ascending=False).iloc[:top]
+        for n, (name, geometry) in enumerate(zip(top_n['name'], top_n['geometry']), start=1):
             ax.annotate(
-                name,
+                f'{n}: {name}',
                 xy=above(geometry),
                 ha='center',
                 fontsize='x-large',
@@ -105,7 +105,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, label_top_5=False,
 
 
 def render_dt(
-        data_date, earliest_date, to_date, area_type, map_type, view, bare, title, dpi,
+        data_date, earliest_date, to_date, area_type, map_type, view, bare, title, top, dpi,
         frame_date, image_path
 ):
     map = get_map(area_type, map_type)
@@ -124,7 +124,7 @@ def render_dt(
         kw = {}
         if title:
             kw['title'] = title
-        render_map(map_ax, frame_date, map, view, **kw)
+        render_map(map_ax, frame_date, map, view, top, **kw)
         plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
                      left_formatter=per1m_formatter,
                      right_series=(s.new_admissions_sum, s.new_deaths_sum),

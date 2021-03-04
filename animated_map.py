@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--title', help='override title template')
     parser.add_argument('--view', choices=views.keys())
     parser.add_argument('--dpi', type=int)
+    parser.add_argument('--top', type=int, help='label the top n areas')
     add_parallel_args(parser, default_duration=None)
     args = parser.parse_args()
 
@@ -36,7 +37,7 @@ def main():
 
     render = partial(
         render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view,
-        args.bare, args.title, dpi
+        args.bare, args.title, args.top, dpi
     )
 
     if args.raise_errors:
