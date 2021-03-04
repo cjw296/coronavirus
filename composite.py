@@ -213,6 +213,13 @@ def admissions_start(map_name, title, area_type=ltla):
     return MapPart(area_type, 'england', map_name, title, start='2020-03-19')
 
 
+footer = [TextPart(
+    'footer',
+    "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
+    fontsize=14, color="darkgrey"
+)]
+
+
 compositions = {
         'tested-positivity-cases': Composition(
             [
@@ -221,11 +228,7 @@ compositions = {
                 all_ltla_england('cases-red', "Confirmed Case Rate"),
             ],
             [SummaryPart(start=data_start, width=28, height=4)],
-            [TextPart(
-                'footer',
-                "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
-                fontsize=14, color="darkgrey"
-            )]
+            footer
         ),
         'cases-admissions-deaths': Composition(
             [
@@ -234,11 +237,7 @@ compositions = {
                 admissions_start('deaths', "Deaths"),
             ],
             [SummaryPart(start=data_start, width=28, height=4)],
-            [TextPart(
-                'footer',
-                "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
-                fontsize=14, color="darkgrey"
-            )]
+            footer
         ),
 }
 
