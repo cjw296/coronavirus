@@ -5,7 +5,7 @@ from datetime import date
 from functools import partial
 from itertools import chain
 from multiprocessing import cpu_count
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import imageio
 import pandas as pd
@@ -17,6 +17,9 @@ from moviepy.video.fx.margin import margin
 from tqdm.auto import tqdm
 
 from constants import output_path, ltla, data_start, nhs_region
+
+
+Date = Union[date, str]
 
 
 def rgb_color(name):
@@ -109,7 +112,7 @@ class MapPart(Part):
     prefix = 'animated_map_'
 
     def __init__(self, area_type: str, view: str, map_name: str, title: str = None,
-                 start: date = None, end: date = None, dpi: int = None):
+                 start: Date = None, end: Date = None, dpi: int = None):
         super().__init__(f'{area_type}_{map_name}_{view}')
         self.area_type = area_type
         self.map = map_name
@@ -136,7 +139,7 @@ class MapPart(Part):
 class SummaryPart(Part):
 
     def __init__(self,
-                 start: date = None, end: date = None,
+                 start: Date = None, end: Date = None,
                  width: int = 15, height: float = 2,
                  dpi: int = None):
         super().__init__(f'animated_summary_{width}_{height}')
