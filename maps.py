@@ -15,7 +15,7 @@ from animated import round_nearest
 from constants import area_code, metric, date_col, ltla, msoa, nhs_region
 from geo import View, area_type_to_geoms, above, views
 from phe import plot_summary, best_data, with_population
-from plotting import show_area, per1m_formatter
+from plotting import show_area, per1m_formatter, per1k_formatter
 from series import Series
 
 
@@ -126,8 +126,10 @@ def render_dt(
             kw['title'] = title
         render_map(map_ax, frame_date, map, view, top, **kw)
         plot_summary(lines_ax, data_date, frame_date, earliest_date, to_date,
+                     left_series=(s.unique_people_tested_sum,),
                      left_formatter=per1m_formatter,
                      right_series=(s.new_admissions_sum, s.new_deaths_sum),
+                     right_formatter=per1k_formatter,
                      title=False)
         fig.text(0.25, 0.07,
                  f'@chriswithers13 - '

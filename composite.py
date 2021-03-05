@@ -5,7 +5,7 @@ from datetime import date
 from functools import partial
 from itertools import chain
 from multiprocessing import cpu_count
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Sequence
 
 import imageio
 import pandas as pd
@@ -16,8 +16,10 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.margin import margin
 from tqdm.auto import tqdm
 
-from constants import output_path, ltla, data_start, nhs_region
-
+from constants import (
+    output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
+    new_cases_sum, new_deaths_sum, unique_people_tested_sum
+)
 
 Date = Union[date, str]
 
@@ -139,10 +141,16 @@ class MapPart(Part):
 class SummaryPart(Part):
 
     def __init__(self,
+                 left_series: Sequence[str], right_series: Sequence[str],
+                 left_formatter: str = None, right_formatter: str = None,
                  start: Date = None, end: Date = None,
                  width: int = 15, height: float = 2,
                  dpi: int = None):
         super().__init__(f'animated_summary_{width}_{height}')
+        self.left_series = left_series
+        self.right_series = right_series
+        self.left_formatter = left_formatter
+        self.right_formatter = right_formatter
         self.start = start
         self.end = end
         self.width = width
@@ -151,7 +159,12 @@ class SummaryPart(Part):
 
     def build(self):
         cmd = [sys.executable, 'animated_summary.py',
+               ','.join(self.left_series), ','.join(self.right_series),
                '--width', self.width, '--height', self.height]
+        if self.left_formatter:
+            cmd.extend(('--lf', self.left_formatter))
+        if self.right_formatter:
+            cmd.extend(('--rf', self.right_formatter))
         if self.start:
             cmd.extend(('--from', self.start))
         if self.end:
@@ -223,6 +236,12 @@ footer = [TextPart(
     fontsize=14, color="darkgrey"
 )]
 
+cases_admissions_deaths_summary = [SummaryPart(
+    left_series=[new_cases_sum],
+    right_series=[new_admissions_sum, new_deaths_sum],
+    right_formatter='0k',
+    start=data_start, width=28, height=4
+)]
 
 compositions = {
         'tested-positivity-cases': Composition(
@@ -231,7 +250,7 @@ compositions = {
                 all_ltla_england('positivity', "Test Positivity"),
                 all_ltla_england('cases-red', "Confirmed Case Rate"),
             ],
-            [SummaryPart(start=data_start, width=28, height=4)],
+            cases_admissions_deaths_summary,
             footer
         ),
         'cases-admissions-deaths': Composition(
@@ -240,7 +259,7 @@ compositions = {
                 admissions_start('admissions', "Hospital Admissions", nhs_region),
                 admissions_start('deaths', "Deaths"),
             ],
-            [SummaryPart(start=data_start, width=28, height=4)],
+            cases_admissions_deaths_summary,
             footer
         ),
 }

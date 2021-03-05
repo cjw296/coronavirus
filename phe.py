@@ -1,15 +1,17 @@
 import json
 from datetime import timedelta, datetime, date
 from functools import lru_cache
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.ticker import NullLocator
 
 import series as s
 from constants import (
     base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, nation, region,
-    ltla, utla, code, unique_people_tested_sum, national_lockdowns, msoa, release_timestamp
+    ltla, utla, code, national_lockdowns, msoa, release_timestamp
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
@@ -173,13 +175,16 @@ def summary_data(series, start=None, end=None, data_date=None):
     return data, data_date
 
 
-def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, to_date=None,
-                 left_series=(s.unique_people_tested_sum,),
+def plot_summary(ax=None, data_date=None, frame_date=None,
+                 earliest_date='2020-03-01', to_date=None,
+                 left_series: Sequence[s.Series] = (),
                  left_formatter=per1k_formatter,
-                 right_series=(s.new_cases_sum, s.new_admissions_sum, s.new_deaths_sum),
+                 right_series: Sequence[s.Series] = (),
                  right_formatter=per1k_formatter,
                  title=True, figsize=(16, 5)):
     all_series = list(left_series)+list(right_series)
+    if not all_series:
+        return
 
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -201,6 +206,9 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
             (right_ax, right_series, right_formatter),
 
     ):
+        if not series:
+            series_ax.yaxis.set_major_locator(NullLocator())
+            continue
         data.plot(ax=series_ax,
                   y=[s_.metric for s_ in series],
                   color=[s_.color for s_ in series], legend=False)
@@ -208,6 +216,10 @@ def plot_summary(ax=None, data_date=None, frame_date=None, earliest_date=None, t
         series_ax.tick_params(axis='y', labelcolor=series[-1].color)
         series_ax.yaxis.set_major_formatter(formatter)
         series_ax.set_ylim(ymin=0)
+
+    if not right_series:
+        right_ax.xaxis.set_major_locator(left_ax.xaxis.get_major_locator())
+        right_ax.xaxis.set_major_formatter(left_ax.xaxis.get_major_formatter())
 
     for lockdown in national_lockdowns:
         lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2, zorder=0)
