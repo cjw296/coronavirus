@@ -1,3 +1,4 @@
+import re
 from argparse import ArgumentParser
 from datetime import datetime, date
 from decimal import Decimal
@@ -25,7 +26,9 @@ def ignore_empty(rows, threshold):
 
 def worksheet_rows(path, sheet):
     wb = load_workbook(path, read_only=True)
-    return wb[sheet].values
+    # FFS :-/
+    stripped = {n.strip(): n for n in wb.sheetnames}
+    return wb[stripped[sheet]].values
 
 
 def confidence(base, header_rows):
@@ -102,7 +105,8 @@ def main():
     parser.add_argument('path', help='xlsx file path', type=Path)
     args = parser.parse_args()
 
-    date = datetime.strptime(args.path.stem, 'covid19infectionsurveydatasets%Y%m%d').date()
+    date_text = re.match(r'covid19infectionsurveydatasets(\d+)', args.path.stem).group(1)
+    date = datetime.strptime(date_text, '%Y%m%d').date()
     process(
         args.path, '1a', f'ons_weekly_england_{date}.csv',
         rename={
