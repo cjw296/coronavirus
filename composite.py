@@ -262,6 +262,20 @@ compositions = {
             cases_admissions_deaths_summary,
             footer
         ),
+        'cases-area-type': Composition(
+            [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
+                      fontsize=40)],
+            [
+                MapPart(ltla, 'england', 'cases', start=data_start),
+                MapPart(msoa, 'england', 'cases', start=data_start),
+            ],
+            [SummaryPart(left_series=[unique_people_tested_sum],
+                         left_formatter='1m',
+                         right_series=[new_admissions_sum, new_deaths_sum],
+                         start=data_start)],
+            footer,
+            dpi=150
+        )
 }
 
 
