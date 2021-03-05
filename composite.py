@@ -181,7 +181,8 @@ def main():
     composition = compositions[args.name]
     if args.build:
         for part in composition.parts:
-            part.dpi = composition.dpi or part.dpi
+            if hasattr(part, 'dpi'):
+                part.dpi = composition.dpi or part.dpi
             part.build()
 
     start = pd.Timestamp.min
