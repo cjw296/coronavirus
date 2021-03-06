@@ -46,10 +46,17 @@ class Part:
 
     prefix = ''
 
-    def __init__(self, name):
-        self.name = name
-        self.dirname = f'{self.prefix}{name}'
+    def __init__(self, name: str =None):
+        self._name = name
         self.frames = {}
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def dirname(self):
+        return f'{self.prefix}{self.name}'
 
     def build(self):
         pass
@@ -113,9 +120,9 @@ class MapPart(Part):
 
     prefix = 'animated_map_'
 
-    def __init__(self, area_type: str, view: str, map_name: str, title: str = None,
+    def __init__(self, map_name: str, title: str = None, area_type: str = None, view: str = None,
                  start: Date = None, end: Date = None, dpi: int = None):
-        super().__init__(f'{area_type}_{map_name}_{view}')
+        super().__init__()
         self.area_type = area_type
         self.map = map_name
         self.view = view
@@ -123,6 +130,10 @@ class MapPart(Part):
         self.start = start
         self.end = end
         self.dpi = dpi
+
+    @property
+    def name(self):
+        return f'{self.area_type}_{self.map}_{self.view}'
 
     def build(self):
         cmd = [sys.executable, 'animated_map.py', self.area_type, self.map, '--view', self.view,
@@ -176,10 +187,15 @@ class SummaryPart(Part):
 
 class Composition:
 
-    def __init__(self, *rows: List[Part], dpi: int = None):
+    def __init__(self, *rows: List[Part], **attrs):
         self.parts: List[Part] = list(chain(*rows))
         self.rows: Tuple[List[Part]] = rows
-        self.dpi = dpi
+        for part in self.parts:
+            for attr, value in attrs.items():
+                if hasattr(part, attr):
+                    current = getattr(part, attr)
+                    if current is None:
+                        setattr(part, attr, value)
 
 
 def main():
@@ -194,8 +210,6 @@ def main():
     composition = compositions[args.name]
     if args.build:
         for part in composition.parts:
-            if hasattr(part, 'dpi'):
-                part.dpi = composition.dpi or part.dpi
             part.build()
 
     start = pd.Timestamp.min
@@ -223,13 +237,6 @@ def main():
                           fps=24, threads=args.threads, bitrate='10M')
 
 
-all_ltla_england = partial(MapPart, ltla, 'england', start=data_start)
-
-
-def admissions_start(map_name, title, area_type=ltla):
-    return MapPart(area_type, 'england', map_name, title, start='2020-03-19')
-
-
 footer = [TextPart(
     'footer',
     "@chriswithers13 - data from https://coronavirus.data.gov.uk/",
@@ -240,42 +247,43 @@ cases_admissions_deaths_summary = [SummaryPart(
     left_series=[new_cases_sum],
     right_series=[new_admissions_sum, new_deaths_sum],
     right_formatter='0k',
-    start=data_start, width=28, height=4
+    width=28, height=4
 )]
 
 compositions = {
-        'tested-positivity-cases': Composition(
-            [
-                all_ltla_england('tested', "Population Tested"),
-                all_ltla_england('positivity', "Test Positivity"),
-                all_ltla_england('cases-red', "Confirmed Case Rate"),
-            ],
-            cases_admissions_deaths_summary,
-            footer
-        ),
-        'cases-admissions-deaths': Composition(
-            [
-                admissions_start('cases-red', "New Cases"),
-                admissions_start('admissions', "Hospital Admissions", nhs_region),
-                admissions_start('deaths', "Deaths"),
-            ],
-            cases_admissions_deaths_summary,
-            footer
-        ),
-        'cases-area-type': Composition(
-            [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
-                      fontsize=40)],
-            [
-                MapPart(ltla, 'england', 'cases-7', start=data_start),
-                MapPart(msoa, 'england', 'cases', start=data_start),
-            ],
-            [SummaryPart(left_series=[unique_people_tested_sum],
-                         left_formatter='1m',
-                         right_series=[new_admissions_sum, new_deaths_sum],
-                         start=data_start)],
-            footer,
-            dpi=150
-        )
+    'tested-positivity-cases': Composition(
+        [
+            MapPart('tested', "Population Tested"),
+            MapPart('positivity', "Test Positivity"),
+            MapPart('cases-red', "Confirmed Case Rate"),
+        ],
+        cases_admissions_deaths_summary,
+        footer,
+        area_type=ltla, view='england', start=data_start
+    ),
+    'cases-admissions-deaths': Composition(
+        [
+            MapPart('cases-red', "New Cases"),
+            MapPart('admissions', "Hospital Admissions", area_type=nhs_region),
+            MapPart('deaths', "Deaths"),
+        ],
+        cases_admissions_deaths_summary,
+        footer,
+        area_type=ltla, view='england', start='2020-03-19',
+    ),
+    'cases-area-type': Composition(
+        [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
+                  fontsize=40)],
+        [
+            MapPart('cases-7', area_type=ltla),
+            MapPart('cases', area_type=msoa),
+        ],
+        [SummaryPart(left_series=[unique_people_tested_sum],
+                     left_formatter='1m',
+                     right_series=[new_admissions_sum, new_deaths_sum])],
+        footer,
+        start=data_start, view='england', dpi=150
+    ),
 }
 
 
