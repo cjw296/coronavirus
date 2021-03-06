@@ -17,7 +17,7 @@ def formatter_from_string(text):
     return getattr(plotting, f'per{text}_formatter')
 
 
-def render_dt(data_date, earliest_date, to_date, dpi, figsize,
+def render_dt(data_date, earliest_date, latest_date, dpi, figsize,
               left_series, right_series, left_formatter, right_formatter,
               frame_date, image_path):
     kw = {}
@@ -26,7 +26,7 @@ def render_dt(data_date, earliest_date, to_date, dpi, figsize,
     if right_formatter:
         kw['right_formatter'] = formatter_from_string(right_formatter)
 
-    plot_summary(None, data_date, frame_date, earliest_date, to_date,
+    plot_summary(None, data_date, frame_date, earliest_date, latest_date,
                  title=False, figsize=figsize,
                  left_series=left_series,
                  right_series=right_series,
@@ -51,15 +51,17 @@ def main():
     add_parallel_args(parser, default_output='none')
     args = parser.parse_args()
 
-    df, data_date = summary_data(args.left + args.right, end=args.to_date)
+    df, data_date = summary_data(args.left + args.right)
 
-    to_date = parallel_to_date(args, df.index.max().date())
     earliest_date = data_start
+    latest_date = df.index.max().date()
+    to_date = parallel_to_date(args, latest_date)
     dates = pd.date_range(args.from_date, to_date)
 
+    print(latest_date)
     figsize = (args.width, args.height)
     render = partial(
-        render_dt, data_date, earliest_date, to_date, args.dpi, figsize,
+        render_dt, data_date, earliest_date, latest_date, args.dpi, figsize,
         args.left, args.right, args.lf, args.rf
     )
 

@@ -143,7 +143,7 @@ class MapPart(Part):
         if self.start:
             cmd.extend(('--from', self.start))
         if self.end:
-            cmd.extend(('--to', self.end))
+            cmd.extend(('--to-date', self.end))
         if self.dpi:
             cmd.extend(('--dpi', self.dpi))
         run(cmd)
