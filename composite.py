@@ -243,12 +243,27 @@ footer = [TextPart(
     fontsize=14, color="darkgrey"
 )]
 
-cases_admissions_deaths_summary = [SummaryPart(
-    left_series=[new_cases_sum],
-    right_series=[new_admissions_sum, new_deaths_sum],
-    right_formatter='0k',
-    width=28, height=4
-)]
+
+def cases_admissions_deaths_summary():
+    return [SummaryPart(
+        left_series=[new_cases_sum],
+        right_series=[new_admissions_sum, new_deaths_sum],
+        right_formatter='0k',
+        width=28, height=4
+    )]
+
+
+def cases_tests_composition(view, *, start, end):
+    return Composition(
+        [
+            MapPart('cases', "Confirmed Cases", area_type=msoa),
+            MapPart('tested', "People Tested", area_type=ltla),
+        ],
+        cases_admissions_deaths_summary(),
+        footer,
+        start=start, end=end, view=view, dpi=90
+    )
+
 
 compositions = {
     'tested-positivity-cases': Composition(
@@ -257,7 +272,7 @@ compositions = {
             MapPart('positivity', "Test Positivity"),
             MapPart('cases-red', "Confirmed Case Rate"),
         ],
-        cases_admissions_deaths_summary,
+        cases_admissions_deaths_summary(),
         footer,
         area_type=ltla, view='england', start=data_start
     ),
@@ -267,18 +282,12 @@ compositions = {
             MapPart('admissions', "Hospital Admissions", area_type=nhs_region),
             MapPart('deaths', "Deaths"),
         ],
-        cases_admissions_deaths_summary,
+        cases_admissions_deaths_summary(),
         footer,
         area_type=ltla, view='england', start='2020-03-19',
     ),
-    'colwall': Composition(
-        [
-            MapPart('cases', "Confirmed Cases", area_type=msoa),
-            MapPart('tested', "People Tested", area_type=ltla),
-        ],
-        cases_admissions_deaths_summary,
-        footer,
-        start='2020-07-01', end='2020-08-15', view='colwall', dpi=90
+    'colwall': cases_tests_composition(
+        'colwall', start='2020-07-01', end='2020-08-15'
     ),
     'cases-area-type': Composition(
         [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
@@ -293,14 +302,11 @@ compositions = {
         footer,
         start=data_start, view='england', dpi=150
     ),
-    'leicester': Composition(
-        [
-            MapPart('cases', "Confirmed Cases", area_type=msoa),
-            MapPart('tested', "People Tested", area_type=ltla),
-        ],
-        cases_admissions_deaths_summary,
-        footer,
-        start='2020-05-15', end='2020-08-30', view='leicester', dpi=90
+    'leicester': cases_tests_composition(
+        'leicester', start='2020-05-15', end='2020-08-30'
+    ),
+    'luton': cases_tests_composition(
+        'luton', start='2020-07-10', end='2020-09-01'
     ),
 }
 

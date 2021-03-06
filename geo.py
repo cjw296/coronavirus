@@ -303,6 +303,12 @@ views = {
                    outline=places_from_show,
                    label=places_from_show,
                    margin_pct=30),
+    'luton': View(
+        show=Places('Northampton', 'Luton',
+                        geom_source=ltla_geoms_20),
+        outline=places_from_show,
+        label=places_from_show,
+    ),
     'reading': View(
         show=Places('Reading'),
         outline=[Places('Reading'),
