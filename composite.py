@@ -187,7 +187,7 @@ def main():
     parser.add_argument('name')
     parser.add_argument('--threads', type=int, default=cpu_count())
     parser.add_argument('--build', action='store_true')
-    parser.add_argument('--duration', type=float, default=1/fps,
+    parser.add_argument('--duration', type=float, default=0.06,
                         help='fast=0.05, slow=0.3')
     args = parser.parse_args()
 
