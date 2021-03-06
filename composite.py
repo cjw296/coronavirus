@@ -39,7 +39,7 @@ fps = 24
 def run(cmd):
     cmd = [str(c.date()) if isinstance(c, pd.Timestamp) else str(c) for c in cmd]
     print('Running: ', subprocess.list2cmdline(['python']+cmd[1:]))
-    subprocess.run(cmd)
+    subprocess.check_call(cmd)
 
 
 class Part:
