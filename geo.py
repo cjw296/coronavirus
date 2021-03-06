@@ -276,6 +276,13 @@ views = {
         label=places_from_show,
         margin_pct=40
     ),
+    # leicester had a rough time in June, July and August.
+    'leicester': View(
+        show=Places('Leicester'),
+        outline=places_from_show,
+        label=places_from_show,
+        margin_pct=100
+    ),
     'liverpool': View(
         show=Places('Liverpool', 'Wirral', 'Sefton', 'Warrington',
                     geom_source=ltla_geoms_20),

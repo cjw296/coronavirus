@@ -284,6 +284,15 @@ compositions = {
         footer,
         start=data_start, view='england', dpi=150
     ),
+    'leicester': Composition(
+        [
+            MapPart('cases', "Confirmed Cases", area_type=msoa),
+            MapPart('tested', "People Tested", area_type=ltla),
+        ],
+        cases_admissions_deaths_summary,
+        footer,
+        start='2020-05-15', end='2020-08-30', view='leicester', dpi=90
+    ),
 }
 
 
