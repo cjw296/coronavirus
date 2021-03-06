@@ -266,7 +266,7 @@ compositions = {
             [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
                       fontsize=40)],
             [
-                MapPart(ltla, 'england', 'cases', start=data_start),
+                MapPart(ltla, 'england', 'cases-7', start=data_start),
                 MapPart(msoa, 'england', 'cases', start=data_start),
             ],
             [SummaryPart(left_series=[unique_people_tested_sum],

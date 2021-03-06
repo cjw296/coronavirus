@@ -250,6 +250,7 @@ MAPS = {
         ),
         'cases': replace(ltla_cases, cmap='inferno_r'),
         'cases-red': replace(ltla_cases, default_view='england', rolling_days=7),
+        'cases-7': replace(ltla_cases, rolling_days=7, cmap='inferno_r'),
         'deaths': Map(
             s.new_deaths,
             Range(vmin=0, linthresh=3, vmax=9, linticks=4, logticks=4),
