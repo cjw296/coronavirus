@@ -271,6 +271,15 @@ compositions = {
         footer,
         area_type=ltla, view='england', start='2020-03-19',
     ),
+    'colwall': Composition(
+        [
+            MapPart('cases', "Confirmed Cases", area_type=msoa),
+            MapPart('tested', "People Tested", area_type=ltla),
+        ],
+        cases_admissions_deaths_summary,
+        footer,
+        start='2020-07-01', end='2020-08-15', view='colwall', dpi=90
+    ),
     'cases-area-type': Composition(
         [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
                   fontsize=40)],
