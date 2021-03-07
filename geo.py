@@ -343,6 +343,12 @@ views = {
         )],
         label=[Places('Bournemouth', label_location=center)],
     ),
+    'rutland': View(
+        show=Places('Rutland', geom_source=ltla_geoms_20),
+        outline=[Places('Market Overton, Cottesmore & Empingham', geom_source=msoa_geoms_20)],
+        label=places_from_outline,
+        margin_pct=100
+    ),
     'thames-valley': View(
         show=Places('Reading', 'London', 'Oxford'),
         outline=places_from_show,

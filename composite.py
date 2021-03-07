@@ -308,6 +308,9 @@ compositions = {
     'luton': cases_tests_composition(
         'luton', start='2020-07-10', end='2020-09-01'
     ),
+    'rutland': cases_tests_composition(
+        'rutland', start='2021-01-15', end='2021-03-01'
+    ),
 }
 
 
