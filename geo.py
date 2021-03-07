@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import lru_cache, cached_property
+from functools import lru_cache, cached_property, partial
 from typing import Sequence, Union
 
 import geopandas
@@ -378,6 +378,38 @@ views = {
                    colour='white')
         ],
         margin_pct=30,
+    ),
+    'universities': View(
+        show=PlacesLike('University', geom_source=msoa_geoms_20),
+        outline=places_from_show,
+        label=[
+            Places(
+                'Pennsylvania & University',  # Exeter
+                'Highfield & University',  # Southampton
+                "University & Avenues",  # Norwich
+                "Edgbaston South & University",  # Birmingham
+                "Loughborough - University",
+                "Arboretum, Forest & Trent University",  # Nottingham
+                "Wharf & University",  # Lincoln
+                "Salford Central & University",
+                "University, Galgate & Dolphinholme",  # Lancaster
+                "Fulford, Heslington & University",  # York
+                geom_source=msoa_geoms_20,
+                label_location=partial(above, factor=0.4),
+            ),
+            Places(
+                "University Hospital & Queen's Road",
+                "Cannon Park & University", # Coventry
+                geom_source=msoa_geoms_20,
+                label_location=partial(below, factor=1.8),
+            ),
+            Places(
+                "Hulme & University",  # Manchester
+                geom_source=msoa_geoms_20,
+                label_location=partial(below, factor=8),
+            ),
+        ],
+        margin_pct=5,
     ),
     'wokingham': View(show=Places('Wokingham', geom_source=ltla_geoms_20),
                       outline=places_from_show, label=places_from_show,
