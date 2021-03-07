@@ -127,17 +127,17 @@ def convert_df(df, geom_col):
     return GeoDataFrame(df, crs=crs, geometry=geom_col)
 
 
-def above(geometry):
+def above(geometry, factor=0.05):
     x = geometry.centroid.coords[0][0]
     minx, miny, maxx, maxy = geometry.bounds
-    y = maxy + (maxy - miny) * 0.05
+    y = maxy + (maxy - miny) * factor
     return x, y
 
 
-def below(geometry):
+def below(geometry, factor=0.125):
     x = geometry.centroid.coords[0][0]
     minx, miny, maxx, maxy = geometry.bounds
-    y = miny - (maxy - miny) * 0.125
+    y = miny - (maxy - miny) * factor
     return x, y
 
 
