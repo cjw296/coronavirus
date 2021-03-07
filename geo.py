@@ -355,6 +355,12 @@ views = {
         label=places_from_outline,
         margin_pct=100
     ),
+    'surge': View(
+        show=Places('Broxbourne', 'Brentwood', geom_source=ltla_geoms_20),
+        outline=places_from_show,
+        label=places_from_show,
+        margin_pct=20
+    ),
     'thames-valley': View(
         show=Places('Reading', 'London', 'Oxford'),
         outline=places_from_show,

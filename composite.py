@@ -315,6 +315,9 @@ compositions = {
     'rutland': cases_tests_composition(
         'rutland', start='2021-01-15', end='2021-03-01'
     ),
+    'surge': cases_tests_composition(
+        'surge', start='2021-01-30', end='2021-03-01'
+    ),
 }
 
 
