@@ -174,6 +174,18 @@ class Places:
         return filtered
 
 
+class PlacesLike(Places):
+
+    @lru_cache()
+    def frame(self):
+        geoms = self.geom_source()
+        name, = self.names
+        filtered = geoms[geoms['name'].str.contains(name)]
+        if filtered.empty:
+            raise ValueError(f'{self.geom_source} does not contain {name}')
+        return filtered
+
+
 class PlacesFrom:
 
     def __init__(self, plus=(), attr='show'):
