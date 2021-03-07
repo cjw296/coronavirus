@@ -286,9 +286,6 @@ compositions = {
         footer,
         area_type=ltla, view='england', start='2020-03-19',
     ),
-    'colwall': cases_tests_composition(
-        'colwall', start='2020-07-01', end='2020-08-15'
-    ),
     'cases-area-type': Composition(
         [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
                   fontsize=40)],
@@ -301,6 +298,9 @@ compositions = {
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
         start=data_start, view='england', dpi=150
+    ),
+    'colwall': cases_tests_composition(
+        'colwall', start='2020-07-01', end='2020-08-15'
     ),
     'hammersmith': cases_tests_composition(
         'hammersmith', start='2020-10-01', end='2020-11-15',
