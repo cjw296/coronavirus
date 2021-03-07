@@ -197,7 +197,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
     possible_max = [dt for dt in (frame_date, to_date) if dt is not None]
     if possible_max:
-        max_date = max(*possible_max) + timedelta(days=1)
+        max_date = max(possible_max) + timedelta(days=1)
         if max_date and max_date > data.index.max():
             data = data.reindex(pd.date_range(data.index.min(), max_date))
 
