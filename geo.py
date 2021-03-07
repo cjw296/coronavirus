@@ -290,14 +290,20 @@ views = {
     ),
     'colwall': View(
         show=Places('Colwall, Cradley & Wellington Heath',
-                        geom_source=msoa_geoms_20),
+                    geom_source=msoa_geoms_20),
         outline=[Places('Colwall, Cradley & Wellington Heath',
                         geom_source=msoa_geoms_20, outline_width=1),
                  Places("Herefordshire, County of",
                         geom_source=ltla_geoms_20)],
         label=[Places('Colwall, Cradley & Wellington Heath',
-                        geom_source=msoa_geoms_20)],
+                      geom_source=msoa_geoms_20)],
         margin_pct=300,
+    ),
+    'hammersmith': View(
+        show=Places('Hammersmith and Fulham', geom_source=ltla_geoms_20),
+        outline=places_from_show,
+        label=places_from_show,
+        margin_pct=100
     ),
     'leicester': View(
         show=Places('Leicester'),

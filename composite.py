@@ -302,6 +302,9 @@ compositions = {
         footer,
         start=data_start, view='england', dpi=150
     ),
+    'hammersmith': cases_tests_composition(
+        'hammersmith', start='2020-10-01', end='2020-11-15'
+    ),
     'leicester': cases_tests_composition(
         'leicester', start='2020-05-15', end='2020-08-30'
     ),
