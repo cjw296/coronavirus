@@ -244,22 +244,22 @@ footer = [TextPart(
 )]
 
 
-def cases_admissions_deaths_summary():
+def cases_admissions_deaths_summary(width=28, height=4):
     return [SummaryPart(
         left_series=[new_cases_sum],
         right_series=[new_admissions_sum, new_deaths_sum],
         right_formatter='0k',
-        width=28, height=4
+        width=width, height=height
     )]
 
 
-def cases_tests_composition(view, *, start, end):
+def cases_tests_composition(view, *, start, end, summary_width=28, summary_height=4):
     return Composition(
         [
             MapPart('cases', "Confirmed Cases", area_type=msoa),
             MapPart('tested', "People Tested", area_type=ltla),
         ],
-        cases_admissions_deaths_summary(),
+        cases_admissions_deaths_summary(summary_width, summary_height),
         footer,
         start=start, end=end, view=view, dpi=90
     )
@@ -303,7 +303,8 @@ compositions = {
         start=data_start, view='england', dpi=150
     ),
     'hammersmith': cases_tests_composition(
-        'hammersmith', start='2020-10-01', end='2020-11-15'
+        'hammersmith', start='2020-10-01', end='2020-11-15',
+        summary_width=24
     ),
     'leicester': cases_tests_composition(
         'leicester', start='2020-05-15', end='2020-08-30'
