@@ -372,6 +372,15 @@ views = {
         outline=places_from_show,
         label=places_from_show,
     ),
+    'thanet': View(
+        show=Places('Thanet', 'Swale', geom_source=ltla_geoms_20),
+        outline=[
+            Places('Thanet', geom_source=ltla_geoms_20),
+            Places('Sheppey East', geom_source=msoa_geoms_20)
+        ],
+        label=places_from_outline,
+        margin_pct=20
+    ),
     'west-midlands': View(
         show=Places('Sandwell',
                     'Wolverhampton',
