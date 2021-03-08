@@ -45,7 +45,6 @@ def run(cmd):
 class Part:
 
     prefix = ''
-    final_frames = None
 
     def __init__(self, name: str =None):
         self._name = name
@@ -69,11 +68,11 @@ class Part:
             raise ValueError(f'No frames for {self.name}')
         return sorted(self.frames)
 
-    def clip(self, frame_duration):
+    def clip(self, frames_and_durations):
         clips = []
-        for f in tqdm(self.final_frames, desc=self.name):
+        for f, d in tqdm(frames_and_durations.items(), desc=self.name):
             path = self.frames[f]
-            clips.append(ImageClip(imageio.imread(path), duration=frame_duration))
+            clips.append(ImageClip(imageio.imread(path), duration=d))
         return concatenate_videoclips(clips, method="chain")
 
 
@@ -103,12 +102,12 @@ class TextPart(Part):
             return super().discover_frames()
         return self.dates
 
-    def clip(self, frame_duration):
+    def clip(self, frames_and_durations):
         if self.dynamic:
-            clip = super().clip(frame_duration)
+            clip = super().clip(frames_and_durations)
         else:
             clip = ImageClip(imageio.imread(next((output_path / self.dirname).glob('*.png'))),
-                             duration=frame_duration * len(self.final_frames))
+                             duration=sum(frames_and_durations.values()))
         if self.margin:
             params = self.margin.copy()
             params['mar'] = params.pop('margin')
@@ -186,7 +185,7 @@ class SummaryPart(Part):
         run(cmd)
 
 
-def match_dates(parts: Sequence[Part]) -> int:
+def match_dates(parts: Sequence[Part]):
     start = pd.Timestamp.min
     end = pd.Timestamp.max
     for part in parts:
@@ -198,12 +197,10 @@ def match_dates(parts: Sequence[Part]) -> int:
         print(f'{part.name}: {humanize(part_start)} to {humanize(part_end)}')
     print(f'final: {humanize(start)} to {humanize(end)}')
     dates = pd.date_range(start, end)
-    for part in parts:
-        part.final_frames = dates
-    return len(dates)
+    return {p: dates for p in parts}
 
 
-def shortest(parts: Sequence[Part]) -> int:
+def shortest(parts: Sequence[Part]):
     part_frames = {}
     frame_count = None
     for part in parts:
@@ -213,13 +210,14 @@ def shortest(parts: Sequence[Part]) -> int:
         else:
             frame_count = min(frame_count, len(frames))
 
+    final = {}
     for part, frames in part_frames.items():
         if len(frames) > frame_count:
             print(f'{part.name}: shortened by {len(frames) - frame_count} from '
                   f'{humanize(frames[-1])} to {humanize(frames[frame_count-1])}')
             frames = frames[:frame_count]
-        part.final_frames = frames
-    return frame_count
+        final[part] = frames
+    return final
 
 
 class Composition:
@@ -235,7 +233,7 @@ class Composition:
                         setattr(part, attr, value)
         self.organiser = organiser
 
-    def organise(self) -> int:
+    def organise(self):
         return self.organiser(self.parts)
 
 
@@ -246,20 +244,32 @@ def main():
     parser.add_argument('--build', action='store_true')
     parser.add_argument('--duration', type=float, default=0.06,
                         help='fast=0.05, slow=0.3')
+    parser.add_argument('--final-duration', type=float, default=3)
     args = parser.parse_args()
 
     composition = compositions[args.name]
     if args.build:
         for part in composition.parts:
             part.build()
-    length = composition.organise()
+    part_to_frames = composition.organise()
+
+    frame_counts = set(len(frames) for frames in part_to_frames.values())
+    assert len(frame_counts) == 1, repr(frame_counts)
+    length, = frame_counts
+
+    durations = [args.duration] * length
+    if args.final_duration:
+        durations[-1] = args.final_duration
+
+    def frames_and_durations_for(p):
+        return {f: d for (f, d) in zip(part_to_frames[p], durations)}
 
     final = clips_array(
-        [[clips_array([[p.clip(args.duration) for p in row]], bg_color=white)]
+        [[clips_array([[p.clip(frames_and_durations_for(p)) for p in row]], bg_color=white)]
          for row in composition.rows],
         bg_color=white
     )
-    final = final.set_duration(args.duration * length)
+    final = final.set_duration(sum(durations))
 
     # 4k = 3840
     # 1080p = 1920
