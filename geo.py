@@ -375,8 +375,9 @@ views = {
     'thanet': View(
         show=Places('Thanet', 'Swale', geom_source=ltla_geoms_20),
         outline=[
-            Places('Thanet', geom_source=ltla_geoms_20),
-            Places('Sheppey East', geom_source=msoa_geoms_20)
+            Places('Thanet', 'Swale', geom_source=ltla_geoms_20,
+                   label_location=below, outline_width=1),
+            Places('Sheppey East', geom_source=msoa_geoms_20, colour='red')
         ],
         label=places_from_outline,
         margin_pct=20
