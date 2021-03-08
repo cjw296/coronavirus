@@ -438,4 +438,14 @@ views = {
     'wokingham': View(show=Places('Wokingham', geom_source=ltla_geoms_20),
                       outline=places_from_show, label=places_from_show,
                       margin_pct=100),
+    'wave-2': View(
+        -345_000, -135_000, 7_025_000, 7_175_000,
+        outline=[Places('Liverpool', 'Leeds', 'Manchester', 'Sheffield')],
+        label=places_from_outline,
+    ),
+    'wave-3': View(
+        -110_000, 120_000, 6_650_000, 6_800_000,
+        outline=[Places('Sheppey East', geom_source=msoa_geoms_20)],
+        label=places_from_outline,
+    ),
 }

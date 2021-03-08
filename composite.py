@@ -18,7 +18,7 @@ from tqdm.auto import tqdm
 
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
-    new_cases_sum, new_deaths_sum, unique_people_tested_sum
+    new_cases_sum, new_deaths_sum, unique_people_tested_sum, lockdown3
 )
 
 Date = Union[date, str]
@@ -197,6 +197,7 @@ def match_dates(parts: Sequence[Part]):
         print(f'{part.name}: {humanize(part_start)} to {humanize(part_end)}')
     print(f'final: {humanize(start)} to {humanize(end)}')
     dates = pd.date_range(start, end)
+    assert not dates.empty, 'No dates, maybe no overlap in parts?'
     return {p: dates for p in parts}
 
 
@@ -338,6 +339,17 @@ compositions = {
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
         start=data_start, view='england', dpi=150
+    ),
+    'second-vs-third': Composition(
+        [MapPart('cases',
+                 'Second wave as of {frame_date:%d %b %Y}',
+                 view='wave-2', start='2020-09-01', end='2020-11-15')],
+        [MapPart('cases',
+                 'Third wave as of {frame_date:%d %b %Y}',
+                 view='wave-3', start='2020-11-01', end=lockdown3[0])],
+        footer,
+        area_type=msoa,
+        organiser=shortest,
     ),
     'colwall': cases_tests_composition(
         'colwall', start='2020-07-01', end='2020-08-15'
