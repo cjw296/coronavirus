@@ -45,6 +45,7 @@ def run(cmd):
 class Part:
 
     prefix = ''
+    final_frames = None
 
     def __init__(self, name: str =None):
         self._name = name
@@ -68,9 +69,9 @@ class Part:
             raise ValueError(f'No frames for {self.name}')
         return sorted(self.frames)
 
-    def clip(self, frames, frame_duration):
+    def clip(self, frame_duration):
         clips = []
-        for f in tqdm(frames, desc=self.name):
+        for f in tqdm(self.final_frames, desc=self.name):
             path = self.frames[f]
             clips.append(ImageClip(imageio.imread(path), duration=frame_duration))
         return concatenate_videoclips(clips, method="chain")
@@ -102,12 +103,12 @@ class TextPart(Part):
             return super().discover_frames()
         return self.dates
 
-    def clip(self, dates, frame_duration):
+    def clip(self, frame_duration):
         if self.dynamic:
-            clip = super().clip(dates, frame_duration)
+            clip = super().clip(frame_duration)
         else:
             clip = ImageClip(imageio.imread(next((output_path / self.dirname).glob('*.png'))),
-                             duration=frame_duration * len(dates))
+                             duration=frame_duration * len(self.final_frames))
         if self.margin:
             params = self.margin.copy()
             params['mar'] = params.pop('margin')
@@ -185,9 +186,45 @@ class SummaryPart(Part):
         run(cmd)
 
 
+def match_dates(parts: Sequence[Part]) -> int:
+    start = pd.Timestamp.min
+    end = pd.Timestamp.max
+    for part in parts:
+        part_dates = part.discover_frames()
+        part_start = part_dates[0]
+        part_end = part_dates[-1]
+        start = max(start, part_start)
+        end = min(end, part_end)
+        print(f'{part.name}: {humanize(part_start)} to {humanize(part_end)}')
+    print(f'final: {humanize(start)} to {humanize(end)}')
+    dates = pd.date_range(start, end)
+    for part in parts:
+        part.final_frames = dates
+    return len(dates)
+
+
+def shortest(parts: Sequence[Part]) -> int:
+    part_frames = {}
+    frame_count = None
+    for part in parts:
+        part_frames[part] = frames = part.discover_frames()
+        if frame_count is None:
+            frame_count = len(frames)
+        else:
+            frame_count = min(frame_count, len(frames))
+
+    for part, frames in part_frames.items():
+        if len(frames) > frame_count:
+            print(f'{part.name}: shortened by {len(frames) - frame_count} from '
+                  f'{humanize(frames[-1])} to {humanize(frames[frame_count-1])}')
+            frames = frames[:frame_count]
+        part.final_frames = frames
+    return frame_count
+
+
 class Composition:
 
-    def __init__(self, *rows: List[Part], **attrs):
+    def __init__(self, *rows: List[Part], organiser: callable = match_dates, **attrs):
         self.parts: List[Part] = list(chain(*rows))
         self.rows: Tuple[List[Part]] = rows
         for part in self.parts:
@@ -196,6 +233,10 @@ class Composition:
                     current = getattr(part, attr)
                     if current is None:
                         setattr(part, attr, value)
+        self.organiser = organiser
+
+    def organise(self) -> int:
+        return self.organiser(self.parts)
 
 
 def main():
@@ -211,25 +252,14 @@ def main():
     if args.build:
         for part in composition.parts:
             part.build()
-
-    start = pd.Timestamp.min
-    end = pd.Timestamp.max
-    for part in composition.parts:
-        part_dates = part.discover_frames()
-        part_start = part_dates[0]
-        part_end = part_dates[-1]
-        start = max(start, part_start)
-        end = min(end, part_end)
-        print(f'{part.name}: {humanize(part_start)} to {humanize(part_end)}')
-    print(f'final: {humanize(start)} to {humanize(end)}')
-    dates = pd.date_range(start, end)
+    length = composition.organise()
 
     final = clips_array(
-        [[clips_array([[p.clip(dates, args.duration) for p in row]], bg_color=white)]
+        [[clips_array([[p.clip(args.duration) for p in row]], bg_color=white)]
          for row in composition.rows],
         bg_color=white
     )
-    final = final.set_duration(args.duration * len(dates))
+    final = final.set_duration(args.duration * length)
 
     # 4k = 3840
     # 1080p = 1920
