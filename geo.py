@@ -355,6 +355,16 @@ views = {
         label=places_from_outline,
         margin_pct=100
     ),
+    'sefton': View(
+        show=Places('Wyre', 'Wirral', 'Tameside', 'Cheshire West and Chester',
+                    geom_source=ltla_geoms_20),
+        outline=[Places('Sefton', geom_source=ltla_geoms_20,
+                   outline_width=1, colour='red'),
+            Places('Manchester', 'Liverpool', label_location=below),
+        ],
+        label=places_from_outline,
+        margin_pct=0
+    ),
     'sheppey': View(
         show=Places('Sheppey East', geom_source=msoa_geoms_20),
         outline=places_from_show,
