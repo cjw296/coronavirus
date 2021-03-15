@@ -179,8 +179,10 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
                  earliest_date='2020-03-01', to_date=None,
                  left_series: Sequence[s.Series] = (),
                  left_formatter=per1k_formatter,
+                 left_ymax: float = None,
                  right_series: Sequence[s.Series] = (),
                  right_formatter=per1k_formatter,
+                 right_ymax: float = None,
                  title=True, figsize=(16, 5)):
     all_series = list(left_series)+list(right_series)
     if not all_series:
@@ -201,9 +203,9 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
         if max_date and max_date > data.index.max():
             data = data.reindex(pd.date_range(data.index.min(), max_date))
 
-    for series_ax, series, formatter in (
-            (left_ax, left_series, left_formatter),
-            (right_ax, right_series, right_formatter),
+    for series_ax, series, formatter, ymax in (
+            (left_ax, left_series, left_formatter, left_ymax),
+            (right_ax, right_series, right_formatter, right_ymax),
 
     ):
         if not series:
@@ -215,7 +217,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
         series_ax.tick_params(axis='y', labelcolor=series[-1].color)
         series_ax.yaxis.set_major_formatter(formatter)
-        series_ax.set_ylim(ymin=0)
+        series_ax.set_ylim(ymin=0, ymax=ymax)
 
     if not right_series:
         right_ax.xaxis.set_major_locator(left_ax.xaxis.get_major_locator())
