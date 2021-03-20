@@ -74,6 +74,7 @@ england_metrics = [
     new_cases_sum,
     new_deaths_sum,
     unique_people_tested_sum,
+    new_virus_tests,
     in_hospital,
 ]
 
