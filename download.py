@@ -49,12 +49,13 @@ def find_all(glob, date_index=-1, earliest=None) -> List[Tuple[date, Path]]:
     return possible
 
 
-def find_latest(glob, date_index=-1):
+def find_latest(glob, date_index=-1, on_or_before=None):
     possible = find_all(glob, date_index)
-    if not possible:
-        raise FileNotFoundError(glob)
-    dt, path = sorted(possible, reverse=True)[0]
-    return path, dt
+    for dt, path in sorted(possible, reverse=True):
+        if on_or_before is not None and pd.to_datetime(dt) > on_or_before:
+            continue
+        return path, dt
+    raise FileNotFoundError(glob)
 
 
 PHE_URL = 'https://api.coronavirus.data.gov.uk/v1/data'
