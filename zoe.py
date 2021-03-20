@@ -46,11 +46,13 @@ def data_for_date(dt, print_path=False, raise_if_missing=True):
         raise ValueError(f"Nothing matching {uk_active_cases_glob}")
 
 
-def find_previous(curr_date):
+def find_previous(curr_date, print_path=True):
     prev_date = curr_date.date()
     while True:
         prev_date -= timedelta(days=1)
-        prev_uk_active_cases = data_for_date(prev_date, print_path=True, raise_if_missing=False)
+        prev_uk_active_cases = data_for_date(
+            prev_date, print_path=print_path, raise_if_missing=False
+        )
         if prev_uk_active_cases is not None:
             break
     return prev_date, prev_uk_active_cases
