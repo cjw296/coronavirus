@@ -223,16 +223,22 @@ def shortest(parts: Sequence[Part]):
 
 class Composition:
 
-    def __init__(self, *rows: List[Part], organiser: callable = match_dates, **attrs):
-        self.parts: List[Part] = list(chain(*rows))
-        self.rows: Tuple[List[Part]] = rows
+    def _override(self, attrs, *, always: bool):
         for part in self.parts:
             for attr, value in attrs.items():
                 if hasattr(part, attr):
                     current = getattr(part, attr)
-                    if current is None:
+                    if current is None or always:
                         setattr(part, attr, value)
+
+    def __init__(self, *rows: List[Part], organiser: callable = match_dates, **attrs):
+        self.parts: List[Part] = list(chain(*rows))
+        self.rows: Tuple[List[Part]] = rows
         self.organiser = organiser
+        self._override(attrs, always=False)
+
+    def override(self, attrs):
+        self._override(attrs, always=True)
 
     def organise(self):
         return self.organiser(self.parts)
@@ -246,9 +252,21 @@ def main():
     parser.add_argument('--duration', type=float, default=0.06,
                         help='fast=0.05, slow=0.3')
     parser.add_argument('--final-duration', type=float, default=3)
+    # overrides
+    parser.add_argument('--start')
+    parser.add_argument('--end')
+    parser.add_argument('--dpi', type=int)
+
     args = parser.parse_args()
 
     composition = compositions[args.name]
+    overrides = {}
+    for arg in 'start', 'end', 'dpi':
+        value = getattr(args, arg)
+        if value:
+            overrides[arg] = value
+    composition.override(overrides)
+
     if args.build:
         for part in composition.parts:
             part.build()
