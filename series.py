@@ -56,6 +56,15 @@ unique_people_tested_sum = Series(
 )
 
 
+new_virus_tests = Series(
+    metric=c.new_virus_tests,
+    title='tests performed by specimen date',
+    label='tests',
+    color='purple',
+)
+
+new_virus_tests_sum = sum_of(new_virus_tests)
+
 unique_cases_positivity_sum = Series(
     metric=c.unique_cases_positivity_sum,
     title='unique case positivity by specimen date',

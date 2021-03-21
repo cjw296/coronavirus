@@ -2,7 +2,6 @@ import subprocess
 import sys
 from argparse import ArgumentParser
 from datetime import date
-from functools import partial
 from itertools import chain
 from multiprocessing import cpu_count
 from typing import List, Tuple, Union, Sequence
@@ -18,7 +17,7 @@ from tqdm.auto import tqdm
 
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
-    new_cases_sum, new_deaths_sum, unique_people_tested_sum, lockdown3
+    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum
 )
 
 Date = Union[date, str]
@@ -352,7 +351,7 @@ compositions = {
             MapPart('cases-7', area_type=ltla),
             MapPart('cases', area_type=msoa),
         ],
-        [SummaryPart(left_series=[unique_people_tested_sum],
+        [SummaryPart(left_series=[new_virus_tests_sum],
                      left_formatter='1m',
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,

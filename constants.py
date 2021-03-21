@@ -46,6 +46,7 @@ release_timestamp = 'releaseTimestamp'
 new_admissions_sum = 'newAdmissionsRollingSum'
 new_cases_sum = 'newCasesBySpecimenDateRollingSum'
 new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
+new_virus_tests_sum = 'newVirusTestsRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 case_demographics = 'newCasesBySpecimenDateAgeDemographics'
@@ -74,7 +75,7 @@ england_metrics = [
     new_cases_sum,
     new_deaths_sum,
     unique_people_tested_sum,
-    new_virus_tests,
+    new_virus_tests_sum,
     in_hospital,
 ]
 
