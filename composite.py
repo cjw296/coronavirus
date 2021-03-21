@@ -15,6 +15,7 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.margin import margin
 from tqdm.auto import tqdm
 
+from animated import slowing_durations
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
     new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum
@@ -230,10 +231,15 @@ class Composition:
                     if current is None or always:
                         setattr(part, attr, value)
 
-    def __init__(self, *rows: List[Part], organiser: callable = match_dates, **attrs):
+    def __init__(self,
+                 *rows: List[Part],
+                 organiser: callable = match_dates,
+                 durations: callable = None,
+                 **attrs):
         self.parts: List[Part] = list(chain(*rows))
         self.rows: Tuple[List[Part]] = rows
         self.organiser = organiser
+        self.durations = durations
         self._override(attrs, always=False)
 
     def override(self, attrs):
@@ -275,7 +281,10 @@ def main():
     assert len(frame_counts) == 1, repr(frame_counts)
     length, = frame_counts
 
-    durations = [args.duration] * length
+    if composition.durations:
+        durations = composition.durations(length)
+    else:
+        durations = [args.duration] * length
     if args.final_duration:
         durations[-1] = args.final_duration
 
@@ -355,7 +364,7 @@ compositions = {
                      left_formatter='1m',
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
-        start=data_start, view='england', dpi=150
+        durations=slowing_durations, start=data_start, view='england', dpi=150
     ),
     'second-vs-third': Composition(
         [MapPart('cases',

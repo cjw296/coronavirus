@@ -108,8 +108,9 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def slowing_durations(dates, normal=0.05, slow=0.3, period=30):
-    durations = np.full((len(dates)), normal)
+def slowing_durations(dates: Union[int, list], normal=0.05, slow=0.3, period=30):
+    length = dates if isinstance(dates, int) else len(dates)
+    durations = np.full(length, normal)
     period = min(len(durations), period)
     durations[-period:] = np.geomspace(normal, slow, period)
     return list(durations)
