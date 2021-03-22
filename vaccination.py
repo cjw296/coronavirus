@@ -148,7 +148,7 @@ def vaccination_dashboard(savefig=True, show_partial=True):
 
     # pie charts:
     for x, nation in enumerate(pie_data):
-        ax = plt.subplot(gs[0, x])
+        ax: Axes = plt.subplot(gs[0, x])
         ax.add_patch(plt.Circle((0, 0), radius=1, color='k', fill=False))
         pie_data.plot(ax=ax, y=nation,
                       kind='pie', labels=None, legend=False, startangle=-90, counterclock=False,
@@ -158,7 +158,7 @@ def vaccination_dashboard(savefig=True, show_partial=True):
         ax.text(0, 0.5, f"{pct:.1f}%", ha='center', va='top', weight='bold', fontsize=14)
 
     # stack plot for cumulative
-    ax = plt.subplot(gs[1, :])
+    ax: Axes = plt.subplot(gs[1, :])
     ax.yaxis.grid(zorder=-10)
     plt.setp(ax.get_xticklabels(), visible=False)
     ax.set_title('UK population partially or fully vaccinated')
@@ -187,7 +187,7 @@ def vaccination_dashboard(savefig=True, show_partial=True):
     pct.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 100:,.0f}%"))
 
     # bar charts for rates
-    ax = plt.subplot(gs[2, :], sharex=ax)
+    ax: Axes = plt.subplot(gs[2, :], sharex=ax)
     ax.yaxis.grid(zorder=-10)
     ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[10], prune='lower'))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 7 / 1_000_000:.1f}m"))
