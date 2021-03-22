@@ -4,6 +4,7 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib.dates import DateFormatter
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import StrMethodFormatter, FuncFormatter, MaxNLocator, FixedLocator
@@ -15,6 +16,15 @@ from constants import date_col, area_type, area_code, area_name, complete_dose_d
 from download import find_latest
 from phe import read_csv, load_population, current_and_previous_data
 from series import Series
+
+day = pd.to_timedelta(1, 'D')
+
+first_dose = 'first_dose'
+second_dose = 'second_dose'
+
+any_cov = 'any'
+full_cov = 'full'
+partial_cov = 'partial'
 
 
 def raw_vaccination_data(dt='*'):
@@ -39,59 +49,58 @@ def raw_vaccination_data(dt='*'):
     return raw, new_weekly_dt
 
 
-def weekly_data(raw, nation_codes):
-    weekly = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
-
-    # data massaging:
+def initial_data(raw):
     initial = pd.DataFrame(
-        {date_col: pd.to_datetime(first_vaccination), first_dose_weekly: 0, second_dose_weekly: 0},
-        index=nation_codes
+        {date_col: pd.to_datetime(first_vaccination), any_cov: 0, full_cov: 0},
+        index=raw[area_code].unique()
     )
     initial.index.name = area_code
-
-    to_fudge = weekly.set_index(date_col).sort_index().loc[:'2020-12-20'].reset_index()
-    fudged = to_fudge.groupby(area_code).agg(
-        {date_col: 'max', first_dose_weekly: 'sum', second_dose_weekly: 'sum'}
-    )
-
-    normal = weekly.set_index(date_col).sort_index().loc['2020-12-21':]
-    data = pd.concat((df.reset_index() for df in (initial, fudged, normal)))
-    data.rename(columns={first_dose_weekly: 'first_dose', second_dose_weekly: 'second_dose'},
-                  errors='raise', inplace=True)
-    return data
+    return initial.reset_index().set_index([date_col, area_code])
 
 
-def daily_data(raw, weekly):
-    initial = weekly.groupby(area_code).agg({
-        'first_dose': 'sum', 'second_dose': 'sum', date_col: 'max'
-    }).reset_index().set_index([date_col, area_code])
-    weekly_date = initial.index.max()[0]
-
-    daily_rows = raw[[
-        date_col, area_code, first_dose_daily_cum, second_dose_daily_cum
-    ]].dropna().set_index([date_col, area_code])
-    daily_rows.rename(
-        columns={first_dose_daily_cum: 'first_dose', second_dose_daily_cum: 'second_dose'},
+def weekly_data(raw):
+    weekly = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
+    weekly.rename(
+        columns={first_dose_weekly: any_cov, second_dose_weekly: full_cov},
         errors='raise', inplace=True
     )
+    return weekly.set_index([date_col, area_code]).groupby(level=-1).cumsum()
 
-    initial_date = weekly_date + timedelta(days=1)
-    initial_from_daily = daily_rows.loc[initial_date]
-    initial_from_weekly = initial.loc[weekly_date]
-    initial_from_weekly.where(
-        initial_from_daily > initial_from_weekly, initial_from_daily, inplace=True
+
+def daily_data(raw):
+    daily = raw[[
+        date_col, area_code, first_dose_daily_cum, second_dose_daily_cum
+    ]].dropna().set_index([date_col, area_code])
+    daily.rename(
+        columns={first_dose_daily_cum: any_cov, second_dose_daily_cum: full_cov},
+        errors='raise', inplace=True
     )
+    return daily
 
-    daily = pd.concat([initial, daily_rows[initial_date:]])
 
+def combined_data(raw):
+    daily = daily_data(raw)
+    weekly = pd.concat([initial_data(raw), weekly_data(raw)])
+    weekly_grouped = weekly.reset_index(area_code).groupby(area_code)
+    interpolated = weekly_grouped[[any_cov, full_cov]].resample('D').interpolate()
+    sorted_weekly = interpolated.reset_index().set_index([date_col, area_code]).sort_index()
+    return pd.concat([
+        sorted_weekly.loc[:daily.index.min()[0] - day],
+        daily
+    ])
+
+
+def fix_mistakes(data):
     # If we see drops, then use the latest figure and roll it backwards
-    dates = daily.index.levels[0][:-1]
-    for d1, d2 in zip(dates, dates.shift(freq='D')):
-        d1_data = daily.loc[d1]
-        d2_data = daily.loc[d2]
-        d1_data[d1_data > d2_data] = d2_data
+    return data.sort_index(ascending=False).groupby(area_code).cummin().sort_index()
 
-    return daily.groupby(area_code).diff().dropna().reset_index()
+
+def with_derived(data):
+    data = data.copy()
+    data[first_dose] = data.groupby(level=-1)[any_cov].diff().fillna(0)
+    data[second_dose] = data.groupby(level=-1)[full_cov].diff().fillna(0)
+    data[partial_cov] = data[any_cov] - data[full_cov]
+    return data
 
 
 def vaccination_dashboard(savefig=True, show_partial=True):
@@ -102,20 +111,7 @@ def vaccination_dashboard(savefig=True, show_partial=True):
     nation_populations = load_population().loc[nation_codes]
     total_population = nation_populations.sum()[0]
 
-    weekly = weekly_data(raw, nation_codes)
-    daily = daily_data(raw, weekly)
-    all_data = pd.concat([weekly, daily])
-
-    # look out for weirdness
-    assert (all_data['first_dose'] >= 0).all()
-    assert (all_data['second_dose'] >= 0).all()
-
-    all_data['start'] = all_data[date_col].shift(len(nation_codes))
-    all_data['duration'] = all_data[date_col] - all_data['start']
-    all_data = all_data.set_index([date_col, area_code])
-    all_data['any'] = all_data.groupby(level=-1)['first_dose'].cumsum()
-    all_data['full'] = all_data.groupby(level=-1)['second_dose'].cumsum()
-    all_data['partial'] = all_data['any'] - all_data['full']
+    all_data = with_derived(fix_mistakes(combined_data(raw)))
     data = pd.merge(all_data.reset_index(), names_frame, on=area_code)
     max_date = data[date_col].max()
 
@@ -193,18 +189,14 @@ def vaccination_dashboard(savefig=True, show_partial=True):
     # bar charts for rates
     ax = plt.subplot(gs[2, :], sharex=ax)
     ax.yaxis.grid(zorder=-10)
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[10], prune='lower'))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 7 / 1_000_000:.1f}m"))
     ax.set_ylabel('weekly')
     ax.set_xlim(first_vaccination, max_date)
     ax.set_xticks(all_data.index.levels[0], minor=True)
-    major_ticks = list(weekly[date_col].unique())
-    if max_date > major_ticks[-1] + np.timedelta64(1, 'D'):
-        major_ticks.append(max_date.to_datetime64())
-    ax.set_xticks(major_ticks)
     ax.xaxis.set_major_formatter(DateFormatter('%d %b'))
     ax.xaxis.label.set_visible(False)
-    ax.axvline(weekly[date_col].max(), linestyle='dashed', color='lightgrey', zorder=-10)
-    ax.set_title('Rate of injections (weeky by injection date, daily by publish date)')
+    ax.set_title('Rate of injections by publish date')
 
     bottom = None
     for (nation_name, level), color in zip(totals, colors):
@@ -212,22 +204,31 @@ def vaccination_dashboard(savefig=True, show_partial=True):
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
         nation_level_data = nation_data['first_dose' if level == 'partial' else 'second_dose']
-        heights = nation_level_data * 7 / nation_data['duration'].dt.days
+        heights = nation_level_data
         ax.bar(
-            nation_data.index - nation_data['duration'],
+            nation_data.index-day,
             bottom=bottom,
             height=heights,
-            width=nation_data['duration'].dt.days,
+            width=day,
             align='edge',
             color=color,
             zorder=10,
         )
         bottom += heights
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', steps=[10], prune='lower'))
+
+    window_days = 7
+    daily_totals = all_data[[first_dose, second_dose]].groupby(date_col).sum()
+    daily_average = (daily_totals[first_dose]+daily_totals[second_dose]).rolling(window_days).mean()
+    lines = ax.plot(daily_average.index, daily_average, color='black', zorder=1000, )
+
+    latest_average = daily_average.iloc[-1]
+    ax.legend(lines, [f'Latest {window_days} day average: '
+                      f'{7*latest_average/1_000_000:0.1f}m per week, '
+                      f'{latest_average/1_000:.0f}k per day'])
 
     daily = ax.twinx()
-    daily.set_ylim(*(l / 7 for l in ax.get_ylim()))
-    daily.yaxis.set_major_locator(FixedLocator([t / 7 for t in ax.get_yticks()]))
+    daily.set_ylim(*(l for l in ax.get_ylim()))
+    daily.yaxis.set_major_locator(FixedLocator([t for t in ax.get_yticks()]))
     daily.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m"))
     daily.set_ylabel('daily')
 
@@ -256,7 +257,6 @@ def vaccination_changes(dt='*', exclude_okay=False):
     processed2 = process(raw2)
     diff = (processed2 - process(raw1, processed2.index)).fillna(0)
     for type_, okay_date in (
-            ('vaccination', current_date - timedelta(days=4)),
             ('publish', previous_date),
     ):
 
