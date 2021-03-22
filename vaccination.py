@@ -141,7 +141,10 @@ def vaccination_dashboard(savefig=True, show_partial=True):
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')
-    fig.suptitle(f'COVID-19 Vaccination Progress in the UK as of {max_date:%d %b %Y}', fontsize=14)
+    fig.suptitle(
+        f'COVID-19 Vaccination Progress in the Total UK Population as of {max_date:%d %b %Y}',
+        fontsize=14
+    )
 
     gs = GridSpec(3, 4, height_ratios=[0.8, 1, 1])
     gs.update(top=0.95, bottom=0.15, right=0.95, left=0.02, wspace=0, hspace=0.2)
@@ -161,7 +164,7 @@ def vaccination_dashboard(savefig=True, show_partial=True):
     ax: Axes = plt.subplot(gs[1, :])
     ax.yaxis.grid(zorder=-10)
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.set_title('UK population partially or fully vaccinated')
+    ax.set_title('UK total population partially or fully vaccinated')
 
     labels = []
     for nation, level in totals.columns:
