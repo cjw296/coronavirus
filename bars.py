@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
 from statistics import mean
-from typing import List, Union, Optional, Tuple, Iterable
+from typing import List, Union, Optional, Tuple, Iterable, Callable
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -56,7 +56,7 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 
 def plot_stacked_bars(
-        ax, data, label, average_days, average_end, title, testing_data,
+        ax, data, label, average_days, average_end, title, testing: Optional['Testing'],
         ylim, tested_ylim, earliest, colormap='viridis', normalized_values=None,
         legend_loc='upper left', legend_ncol=1
 ):
@@ -74,18 +74,16 @@ def plot_stacked_bars(
             handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
                                     label=f'Latest {average_label}: {latest_average:,.0f}'))
 
-    if testing_data is not None:
+    if testing is not None:
         tested_ax = legend_ax = ax.twinx()
-        tested_label = '% population tested'
+        testing_data = testing.data
         if average_end is not None:
             testing_data = testing_data[:average_end]
-        tested_color = 'darkblue'
         handles.extend(
-            tested_ax.plot(testing_data.index, testing_data, color=tested_color,
-                           label=tested_label, linestyle='dotted')
+            tested_ax.plot(testing_data.index, testing_data, color=testing.color,
+                           label=testing.legend_label, linestyle='dotted')
         )
-        tested_ax.set_ylabel(f'{tested_label} in preceding 7 days',
-                             rotation=-90, labelpad=14)
+        tested_ax.set_ylabel(testing.axis_label, rotation=-90, labelpad=14)
         tested_ax.set_ylim(0, tested_ylim)
         tested_ax.yaxis.tick_left()
         tested_ax.yaxis.set_label_position("left")
@@ -167,7 +165,7 @@ def plot_bars(
         plot_stacked_bars(
             bars_ax, data, config.ylabel,
             config.average_days, average_end, config.title,
-            config.testing_data_for(data_date), config.ylim, config.tested_ylim,
+            config.testing_for(data_date), config.ylim, config.tested_ylim,
             config.earliest, config.colormap, config.colormap_values(),
             config.legend_loc, config.legend_ncol
         )
@@ -179,13 +177,40 @@ def plot_bars(
         plt.show()
 
 
+@dataclass()
+class Testing:
+    data: pd.Series
+    color: str
+    legend_label: str
+    axis_label: str
+
+
+def unique_people_tested(config: 'Bars', dt: date) -> Testing:
+    data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
+    if unique_people_tested_sum in data:
+        data = data.merge(load_population(), on=area_code, how='left')
+        agg = data.groupby(date_col).agg(
+            {unique_people_tested_sum: 'sum', population: 'sum'}
+        )
+        series = 100 * agg[unique_people_tested_sum] / agg[population]
+    else:
+        series = pd.Series(0, index=[pd.to_datetime(dt)])
+    tested_label = '% population tested'
+    return Testing(
+        series,
+        color='darkblue',
+        legend_label=tested_label,
+        axis_label=f'{tested_label} in preceding 7 days',
+    )
+
+
 @dataclass
 class Bars:
     metric: str = new_cases_by_specimen_date
     columns_from: str = area_name
     uncertain_days: int = 5
     average_days: Optional[int] = 7
-    show_testing: bool = True
+    testing_data: Callable[['Bars', date], Testing] = None
     diff_days: int = 1
     diff_ylims: List[float] = None
     diff_log_scale: bool = False
@@ -251,17 +276,9 @@ class Bars:
             data = data.diff().iloc[1:]
         return data, data_date
 
-    def testing_data_for(self, dt):
-        if self.show_testing:
-            data = best_data(dt, self.area_type, self.areas, self.earliest_data)[0]
-            if unique_people_tested_sum in data:
-                data = data.merge(load_population(), on=area_code, how='left')
-                agg = data.groupby(date_col).agg(
-                    {unique_people_tested_sum: 'sum', population: 'sum'}
-                )
-                return 100 * agg[unique_people_tested_sum] / agg[population]
-            else:
-                return pd.Series(0, index=[pd.to_datetime(dt)])
+    def testing_for(self, dt: date) -> Testing:
+        if self.testing_data is not None:
+            return self.testing_data(self, dt)
 
     def colormap_values(self):
         return None
@@ -273,7 +290,6 @@ class DemographicBars(Bars):
     columns_from: str = 'age'
     average_days: int = None
     bands: Iterable[str] = None
-    show_testing: bool = False
     data_file: str = None
     band_centered_colormap: bool = True
     band_max: int = 90
@@ -366,7 +382,6 @@ BARS = dict(
         area_type=nation,
         areas=[scotland, northern_ireland, wales],
         diff_ylims=[-100, 3_000],
-        show_testing=False
     ),
     cases_demographics=DemographicBars(
         'cases',
@@ -384,7 +399,6 @@ BARS = dict(
         title_template='Evolution of PHE new hospital admissions reporting',
         colormap='summer',
         area_type=nation,
-        show_testing=False,
         diff_ylims=[-100, 3_500],
         legend_loc='upper center',
     ),
@@ -399,7 +413,6 @@ BARS = dict(
         title_template='Evolution of PHE deaths reporting in England',
         colormap='cividis',
         area_type=region,
-        show_testing=False,
         diff_ylims=[-10, 300],
         legend_loc='upper center',
         uncertain_days=21,
