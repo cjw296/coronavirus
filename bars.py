@@ -205,6 +205,18 @@ def unique_people_tested(config: 'Bars', dt: date) -> Testing:
     )
 
 
+def tests_carried_out(config: 'Bars', dt: date) -> Testing:
+    data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
+    metric = s.new_virus_tests_sum.metric
+    return Testing(
+        data.groupby(date_col).agg({metric: 'sum'})[metric] / 7,
+        color=s.new_virus_tests_sum.color,
+        legend_label='LFD or PCR tests performed',
+        axis_label='7 day rolling average of '+s.new_virus_tests.title,
+        formatter=per1m_formatter,
+    )
+
+
 @dataclass
 class Bars:
     metric: str = new_cases_by_specimen_date
