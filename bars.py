@@ -7,7 +7,7 @@ from typing import List, Union, Optional, Tuple, Iterable, Callable
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DayLocator, DateFormatter
-from matplotlib.ticker import MaxNLocator, StrMethodFormatter
+from matplotlib.ticker import MaxNLocator, StrMethodFormatter, Formatter
 
 import series as s
 from constants import (
@@ -87,7 +87,7 @@ def plot_stacked_bars(
         tested_ax.set_ylim(0, tested_ylim)
         tested_ax.yaxis.tick_left()
         tested_ax.yaxis.set_label_position("left")
-        tested_ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}%'))
+        tested_ax.yaxis.set_major_formatter(testing.formatter)
     else:
         legend_ax = ax
 
@@ -183,6 +183,7 @@ class Testing:
     color: str
     legend_label: str
     axis_label: str
+    formatter: Formatter
 
 
 def unique_people_tested(config: 'Bars', dt: date) -> Testing:
@@ -201,6 +202,7 @@ def unique_people_tested(config: 'Bars', dt: date) -> Testing:
         color='darkblue',
         legend_label=tested_label,
         axis_label=f'{tested_label} in preceding 7 days',
+        formatter=StrMethodFormatter('{x:,.1f}%'),
     )
 
 
