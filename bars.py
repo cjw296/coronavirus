@@ -18,7 +18,7 @@ from constants import (
     new_admissions, overview, england
 )
 from phe import best_data, current_and_previous_data, load_population
-from plotting import stacked_bar_plot
+from plotting import stacked_bar_plot, nation_colors, per1m_formatter
 from series import Series
 
 
@@ -390,6 +390,11 @@ BARS = dict(
     cases_regions=Bars(
         diff_ylims=[-100, 25_000],
         area_type=region,
+    ),
+    cases_nations=Bars(
+        area_type=nation,
+        colormap=nation_colors,
+        testing_data=tests_carried_out
     ),
     cases_devolved=Bars(
         area_type=nation,
