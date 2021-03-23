@@ -1,4 +1,5 @@
-import geopandas
+from typing import Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ from bokeh.transform import linear_cmap
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import FuncFormatter
 
-from constants import new_cases_by_specimen_date, population, pct_population, base_path
+from constants import new_cases_by_specimen_date, population, pct_population
 from geo import views, old_ltla_geoms
 
 
@@ -138,15 +139,33 @@ def bokeh_zoe_vs_phe_map(
     save_to_disk(p, "zoe_phe.html", title='ZOE modelled estimates versus PHE lab confirmed cases', show_inline=False)
 
 
-def stacked_bar_plot(ax, data, colormap, normalised_values=None):
+nation_tab10_cm_indices = [
+    0,  # England
+    6,  # NI
+    2,  # Scotland
+    3,  # Wales
+]
+
+
+def nation_colors(ncolors):
+    assert ncolors == 4, ncolors
+    return [plt.cm.tab10(i) for i in nation_tab10_cm_indices]
+
+
+def stacked_bar_plot(ax, data, colormap: Union[str, callable], normalised_values=None):
     pos_prior = neg_prior = pd.Series(0, data.index)
-    colormap = get_cmap(colormap)
     ncolors = data.shape[1]
-    if normalised_values:
-        assert len(normalised_values) == ncolors
+
+    if isinstance(colormap, str):
+        colormap = get_cmap(colormap)
+        if normalised_values:
+            assert len(normalised_values) == ncolors
+        else:
+            normalised_values = np.linspace(0, 1, num=ncolors)
+        colors = [colormap(value) for value in normalised_values]
     else:
-        normalised_values = np.linspace(0, 1, num=ncolors)
-    colors = [colormap(value) for value in normalised_values]
+        colors = colormap(ncolors)
+
     handles = []
     for i, (name, series) in enumerate(data.iteritems()):
         mask = series > 0

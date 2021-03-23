@@ -15,6 +15,7 @@ from constants import date_col, area_type, area_code, area_name, complete_dose_d
     complete_dose_daily_new
 from download import find_latest
 from phe import read_csv, load_population, current_and_previous_data
+from plotting import nation_tab10_cm_indices
 from series import Series
 
 day = pd.to_timedelta(1, 'D')
@@ -131,13 +132,8 @@ def vaccination_dashboard(savefig=True, show_partial=True):
     totals = totals.swaplevel(axis='columns').sort_index(axis='columns')
 
     # plotting
-    england_col = 0
-    ni_col = 6
-    scotland_col = 2
-    wales_col = 3
-
     colors = list(chain(*((plt.cm.tab20(i * 2), plt.cm.tab20(i * 2 + (1 if show_partial else 0)))
-                          for i in [england_col, ni_col, scotland_col, wales_col])))
+                          for i in nation_tab10_cm_indices)))
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')

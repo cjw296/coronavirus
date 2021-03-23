@@ -220,7 +220,7 @@ class Bars:
     earliest: Union[str, date, pd.Timestamp] = '2020-10-01'
     area_type: str = ltla
     areas: List[str] = None
-    colormap: str = 'viridis'
+    colormap: Union[str, callable] = 'viridis'
     to_date: Union[date, pd.Timestamp] = None
     title_template: str = 'Evolution of PHE {config.series.label} reporting'
     show_title: bool = False
