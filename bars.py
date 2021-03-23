@@ -4,6 +4,7 @@ from datetime import timedelta, date
 from statistics import mean
 from typing import List, Union, Optional, Tuple, Iterable, Callable
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DayLocator, DateFormatter
@@ -77,8 +78,6 @@ def plot_stacked_bars(
     if testing is not None:
         tested_ax = legend_ax = ax.twinx()
         testing_data = testing.data
-        if average_end is not None:
-            testing_data = testing_data[:average_end]
         handles.extend(
             tested_ax.plot(testing_data.index, testing_data, color=testing.color,
                            label=testing.legend_label, linestyle='dotted')
@@ -193,7 +192,7 @@ def unique_people_tested(config: 'Bars', dt: date) -> Testing:
         agg = data.groupby(date_col).agg(
             {unique_people_tested_sum: 'sum', population: 'sum'}
         )
-        series = 100 * agg[unique_people_tested_sum] / agg[population]
+        series = np.trim_zeros(100 * agg[unique_people_tested_sum] / agg[population])
     else:
         series = pd.Series(0, index=[pd.to_datetime(dt)])
     tested_label = '% population tested'
