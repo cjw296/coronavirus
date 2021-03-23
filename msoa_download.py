@@ -1,3 +1,4 @@
+import sys
 from datetime import date
 
 import pandas as pd
@@ -14,7 +15,7 @@ def is_msoa_data_ready(dt):
     response = requests.head('https://coronavirus.data.gov.uk/downloads/maps/msoa_data_latest.geojson')
     msoa_timestamp = parse_date(response.headers['Last-Modified'])
     print(f'requested: {dt}, release: {release_timestamp}, msoa: {msoa_timestamp}')
-    return dt <= release_timestamp < msoa_timestamp
+    return dt <= release_timestamp and dt < msoa_timestamp
 
 
 def main():
@@ -40,6 +41,9 @@ def main():
                 check_path(path)
                 if start_for_composite is None:
                     start_for_composite = str(dt.date())
+        else:
+            print(f"MSOA NOT DOWNLOADED FOR {dt}!")
+            sys.exit(1)
 
     if start_for_composite:
         print('\nAdding to composite...')
