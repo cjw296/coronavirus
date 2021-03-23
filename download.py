@@ -49,7 +49,7 @@ def find_all(glob, date_index=-1, earliest=None) -> List[Tuple[date, Path]]:
     return possible
 
 
-def find_latest(glob, date_index=-1, on_or_before=None):
+def find_latest(glob, date_index=-1, on_or_before=None) -> Tuple[Path, date]:
     possible = find_all(glob, date_index)
     for dt, path in sorted(possible, reverse=True):
         if on_or_before is not None and pd.to_datetime(dt) > on_or_before:

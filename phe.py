@@ -1,7 +1,7 @@
 import json
 from datetime import timedelta, datetime, date
 from functools import lru_cache
-from typing import Sequence
+from typing import Sequence, List
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -37,7 +37,7 @@ area_type_filters = {
 }
 
 
-def available_dates(metric, area_type=ltla, earliest=None):
+def available_dates(metric, area_type=ltla, earliest=None) -> List[date]:
     dates = set()
     patterns = [f'{area_type}_*.csv']
     if metric == new_cases_by_specimen_date:
