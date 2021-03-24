@@ -96,7 +96,7 @@ def matplotlib_zoe_vs_phe_map(
     geoplot_matplotlib(phe_recent_geo, axes[1],
                        column=pct_population,
                        title=phe_recent_title,
-                       label=f'lab-confirmed cases as % of population (max: {max_value:.2f})',
+                       label=f'cases as % of population (max: {max_value:.2f})',
                        vmax=phe_max,
                        missing_kwds={'color': 'lightgrey'})
 

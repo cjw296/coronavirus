@@ -9,7 +9,7 @@ from matplotlib.ticker import NullLocator
 
 import series as s
 from constants import (
-    base_path, specimen_date, area, cases, per100k, date_col, area_code, population,
+    base_path, specimen_date, area, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, nation, region,
     ltla, utla, code, national_lockdowns, msoa, release_timestamp
 )
@@ -76,7 +76,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
                 area: area_name,
                 code: area_code,
                 specimen_date: date_col,
-                cases: new_cases_by_specimen_date,
+                'Daily lab-confirmed cases': new_cases_by_specimen_date,
             })
         else:
             data = read_csv(data_path)
@@ -157,7 +157,7 @@ def map_data(for_date):
     phe_recent_date = phe_recent_geo[specimen_date].max()
 
     phe_recent_title = (
-        'PHE lab-confirmed cases summed over last '
+        'PHE cases by specimen date summed over last '
         f"{int(phe_recent_geo['recent_days'].iloc[0])} days to {phe_recent_date:%d %b %Y}"
     )
 

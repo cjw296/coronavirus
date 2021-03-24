@@ -26,7 +26,6 @@ area = 'Area name'
 code = 'Area code'
 specimen_date = 'Specimen date'
 date_col = 'date'
-cases = 'Daily lab-confirmed cases'
 people_tested = 'Daily number of people tested'
 per100k = 'per 100,000 people'
 metric = 'metric'  # generic column name for dealing with metrics in abstract
