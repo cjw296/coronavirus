@@ -273,7 +273,7 @@ class Bars:
         if self.earliest is None:
             return None
         else:
-            return pd.to_datetime(self.earliest) - timedelta(days=self.average_days or 0)
+            return pd.to_datetime(self.earliest) - timedelta(days=self.average_days or 1)
 
     @property
     def data_file_stem(self):
