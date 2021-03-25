@@ -183,7 +183,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
                  right_series: Sequence[s.Series] = (),
                  right_formatter=per1k_formatter,
                  right_ymax: float = None,
-                 title=True, figsize=(16, 5)):
+                 title=True, figsize=(16, 5),
+                 show_latest=False):
     all_series = list(left_series)+list(right_series)
     if not all_series:
         return
@@ -203,6 +204,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
         if max_date and max_date > data.index.max():
             data = data.reindex(pd.date_range(data.index.min(), max_date))
 
+    max_values = []
+
     for series_ax, series, formatter, ymax in (
             (left_ax, left_series, left_formatter, left_ymax),
             (right_ax, right_series, right_formatter, right_ymax),
@@ -214,6 +217,10 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
         data.plot(ax=series_ax,
                   y=[s_.metric for s_ in series],
                   color=[s_.color for s_ in series], legend=False)
+
+        if show_latest:
+            for s_ in series:
+                max_values.append((series_ax, s_, data[s_.metric].dropna()[-1]))
 
         series_ax.tick_params(axis='y', labelcolor=series[-1].color)
         series_ax.yaxis.set_major_formatter(formatter)
@@ -227,8 +234,16 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
         lockdown_obj = ax.axvspan(*lockdown, facecolor='black', alpha=0.2, zorder=0)
 
     lines = left_ax.get_lines() + right_ax.get_lines() + [lockdown_obj]
-    ax.legend(lines, [s_.label for s_ in all_series]+['lockdown'],
-              loc='upper left', framealpha=1)
+    if show_latest:
+        labels = []
+        for series_ax, s_, value in max_values:
+            labels.append(f'{s_.label}: {value:,.0f}')
+            if show_latest == 'lines':
+                series_ax.axhline(y=value, color=s_.color, linestyle='dotted')
+    else:
+        labels = [s_.label for s_ in all_series]
+
+    ax.legend(lines, labels+['lockdown'], loc='upper left', framealpha=1)
     if title:
         ax.set_title(f'7 day moving average of PHE data for England as of {data_date:%d %b %Y}')
     if frame_date:
