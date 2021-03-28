@@ -58,7 +58,6 @@ def main():
     to_date = parallel_to_date(args, latest_date)
     dates = pd.date_range(args.from_date, to_date)
 
-    print(latest_date)
     figsize = (args.width, args.height)
     render = partial(
         render_dt, data_date, earliest_date, latest_date, args.dpi, figsize,
