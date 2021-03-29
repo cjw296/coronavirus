@@ -184,7 +184,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
                  right_formatter=per1k_formatter,
                  right_ymax: float = None,
                  title=True, figsize=(16, 5),
-                 show_latest=False):
+                 show_latest=False,
+                 log=False):
     all_series = list(left_series)+list(right_series)
     if not all_series:
         return
@@ -225,6 +226,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
         series_ax.tick_params(axis='y', labelcolor=series[-1].color)
         series_ax.yaxis.set_major_formatter(formatter)
         series_ax.set_ylim(ymin=0, ymax=ymax)
+        if log:
+            series_ax.set_yscale('symlog')
 
     if not right_series:
         right_ax.xaxis.set_major_locator(left_ax.xaxis.get_major_locator())
