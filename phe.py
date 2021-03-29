@@ -225,7 +225,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
         series_ax.tick_params(axis='y', labelcolor=series[-1].color)
         series_ax.yaxis.set_major_formatter(formatter)
-        series_ax.set_ylim(ymin=0, ymax=ymax)
+        series_ax.set_ylim(ymin=10 if log else 0, ymax=ymax)
         if log:
             series_ax.set_yscale('symlog')
 
