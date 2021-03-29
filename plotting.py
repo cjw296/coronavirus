@@ -181,3 +181,4 @@ def stacked_bar_plot(ax, data, colormap: Union[str, callable], normalised_values
 per1m_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m")
 per1k_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000:,.0f}k")
 per0k_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000:,.1f}k")
+per0_formatter = FuncFormatter(lambda y, pos: f"{y:,.0f}")
