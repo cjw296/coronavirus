@@ -13,6 +13,7 @@ from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import clips_array
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.margin import margin
+from pygifsicle import optimize
 from tqdm.auto import tqdm
 
 from animated import slowing_durations
@@ -261,6 +262,7 @@ def main():
     parser.add_argument('--start')
     parser.add_argument('--end')
     parser.add_argument('--dpi', type=int)
+    parser.add_argument('--output', choices=['mp4', 'gif'], default='mp4')
 
     args = parser.parse_args()
 
@@ -300,8 +302,13 @@ def main():
 
     # 4k = 3840
     # 1080p = 1920
-    final.write_videofile(str(output_path / f"{args.name}.mp4"),
-                          fps=24, threads=args.threads, bitrate='10M')
+    path = str(output_path / f"{args.name}.{args.output}")
+    if args.output == 'mp4':
+        final.write_videofile(path, fps=24, threads=args.threads, bitrate='10M')
+    else:
+        final.write_gif(path, fps=24)
+        print('shrinking...')
+        optimize(path)
 
 
 footer = [TextPart(
