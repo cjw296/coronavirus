@@ -37,7 +37,7 @@ def add_date_arg(parser, name='--from-date', **kw):
 
 def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_date=True):
     if from_date:
-        add_date_arg(parser, default=second_wave)
+        add_date_arg(parser, default=second_wave if isinstance(from_date, bool) else from_date)
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--exclude-days', type=int)
