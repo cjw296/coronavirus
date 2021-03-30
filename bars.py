@@ -217,6 +217,9 @@ def tests_carried_out(config: 'Bars', dt: date) -> Testing:
     )
 
 
+BarsLookup = Union['Bars', str]
+
+
 @dataclass
 class Bars:
     metric: str = new_cases_by_specimen_date
@@ -248,7 +251,7 @@ class Bars:
             self.ylabel = self.series.title
 
     @classmethod
-    def get(cls, name_or_instance: Union['Bars', str] = None, **overrides):
+    def get(cls, name_or_instance: BarsLookup = None, **overrides):
         if isinstance(name_or_instance, str):
             bars = BARS[name_or_instance]
         elif name_or_instance:
