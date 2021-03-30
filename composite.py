@@ -19,7 +19,7 @@ from tqdm.auto import tqdm
 from animated import slowing_durations
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
-    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum
+    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum, unique_people_tested_sum
 )
 
 Date = Union[date, str]
@@ -383,6 +383,12 @@ compositions = {
         footer,
         area_type=msoa,
         organiser=shortest,
+    ),
+    'demographics': Composition(
+        [Part('animated_demographics')],
+        cases_admissions_deaths_summary(width=18, height=3),
+        footer,
+        durations=slowing_durations, start='2020-03-15',
     ),
     'colwall': cases_tests_composition(
         'colwall', start='2020-07-01', end='2020-08-15'
