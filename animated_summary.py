@@ -14,7 +14,8 @@ import plotting
 
 
 def formatter_from_string(text):
-    return getattr(plotting, f'per{text}_formatter')
+    exact = getattr(plotting, text, None)
+    return exact or getattr(plotting, f'per{text}_formatter')
 
 
 def render_dt(data_date, earliest_date, latest_date, dpi, figsize,
