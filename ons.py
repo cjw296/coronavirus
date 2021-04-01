@@ -105,7 +105,7 @@ def main():
     parser.add_argument('path', help='xlsx file path', type=Path)
     args = parser.parse_args()
 
-    date_text = re.match(r'covid19infectionsurveydatasets(\d+)', args.path.stem).group(1)
+    date_text = re.match(r'covid19infectionsurveydatasets(\d{8})', args.path.stem).group(1)
     date = datetime.strptime(date_text, '%Y%m%d').date()
     process(
         args.path, '1a', f'ons_weekly_england_{date}.csv',
