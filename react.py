@@ -25,7 +25,10 @@ def fix_number(row, key):
 
 def split_confidence(row, key, name):
     ci = re.search(r'(\d+)% CI', key).group(1)
-    actual, lower, upper = re.match(r'([\d.]+)% \(([\d.]+)%, +([\d.]+)%\)', row.pop(key)).groups()
+    match = re.match(r'([\d.]+)% +\(([\d.]+)%, +([\d.]+)%\)', row.pop(key))
+    if not match:
+        raise ValueError(row, key, name)
+    actual, lower, upper = match.groups()
     row[name] = str(Decimal(actual)/100)
     row[f'{name}-lower-{ci}'] = str(Decimal(lower)/100)
     row[f'{name}-upper-{ci}'] = str(Decimal(upper)/100)
