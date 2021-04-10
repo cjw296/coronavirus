@@ -58,7 +58,8 @@ class Checker:
         if not self.is_composite:
             max_date = datetime.strptime(self.max_date, '%Y-%m-%d').date()
             diff = (self.path_date - max_date).days
-            assert diff == self.expected_gap, f'bad date gap: {diff} days'
+            error = f'bad date gap: {diff} days from {self.path_date} to {max_date}'
+            assert diff == self.expected_gap, error
 
 
 def check_path(path):
