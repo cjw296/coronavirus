@@ -78,20 +78,13 @@ england_metrics = [
     in_hospital,
 ]
 
-vaccination_new_and_weekly = [
+vaccination_metrics = [
     first_dose_daily_new,
     second_dose_daily_new,
     complete_dose_daily_new,
-    first_dose_weekly,
-    second_dose_weekly,
-]
-
-vaccination_cumulative = [
     first_dose_daily_cum,
     second_dose_daily_cum,
     complete_dose_daily_cum,
-    first_dose_weekly_cum,
-    second_dose_weekly_cum,
 ]
 
 standard_metrics = [

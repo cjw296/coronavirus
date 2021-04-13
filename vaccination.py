@@ -33,13 +33,8 @@ def raw_vaccination_data(dt='*'):
         dt = '????-*'
     else:
         dt = pd.to_datetime(dt).date()
-    new_weekly_path, new_weekly_dt = find_latest(f'vaccination_{dt}.csv', date_index=-1)
-    cum_path, cum_dt = find_latest(f'vaccination_cum_{dt}.csv', date_index=-1)
-    assert cum_dt == new_weekly_dt, f'{cum_dt} != {new_weekly_dt}'
-    new_weekly_df = read_csv(new_weekly_path)
-    cum_df = read_csv(cum_path)
-    raw = pd.merge(new_weekly_df, cum_df, how='outer',
-                   on=[date_col, area_type, area_code, area_name])
+    data_path, data_date = find_latest(f'vaccination_{dt}.csv')
+    raw = read_csv(data_path)
     raw.sort_values([date_col, area_code], inplace=True)
     complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
                     complete_dose_daily_new, second_dose_daily_new]].dropna(how='any')
@@ -47,7 +42,7 @@ def raw_vaccination_data(dt='*'):
     new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
     assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
 
-    return raw, new_weekly_dt
+    return raw, data_date
 
 
 def initial_data(raw):
@@ -59,7 +54,10 @@ def initial_data(raw):
     return initial.reset_index().set_index([date_col, area_code])
 
 
-def weekly_data(raw):
+def weekly_data():
+    raw_path, _ = find_latest('vaccination_old_style_2021-04-08.csv')
+    raw = read_csv(raw_path)
+    raw.sort_values([date_col, area_code], inplace=True)
     weekly = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
     weekly.rename(
         columns={first_dose_weekly: any_cov, second_dose_weekly: full_cov},
@@ -81,7 +79,7 @@ def daily_data(raw):
 
 def combined_data(raw):
     daily = daily_data(raw)
-    weekly = pd.concat([initial_data(raw), weekly_data(raw)])
+    weekly = pd.concat([initial_data(raw), weekly_data()])
     weekly_grouped = weekly.reset_index(area_code).groupby(area_code)
     interpolated = weekly_grouped[[any_cov, full_cov]].resample('D').interpolate()
     sorted_weekly = interpolated.reset_index().set_index([date_col, area_code]).sort_index()
