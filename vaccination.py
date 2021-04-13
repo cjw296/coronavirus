@@ -102,9 +102,9 @@ def with_derived(data):
     return data
 
 
-def vaccination_dashboard(savefig=True, show_partial=True):
+def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     # input data:
-    raw, data_date = raw_vaccination_data()
+    raw, data_date = raw_vaccination_data(dt)
     names_frame = raw[[area_code, area_name]].drop_duplicates()
     nation_codes = names_frame[area_code]
     nation_populations = load_population().loc[nation_codes]
