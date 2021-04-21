@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
-from collections import Counter
+from collections import Counter, defaultdict
 from csv import DictReader, DictWriter
 from datetime import date, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Sequence, Tuple, Optional
 
@@ -9,7 +10,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from args import add_date_arg
-from constants import date_col, area_code, base_path, release_timestamp
+from constants import date_col, area_code, base_path, release_timestamp, msoa_metrics
 from download import find_all, find_latest
 
 
@@ -75,11 +76,13 @@ def check_path(path):
     checker.check()
 
 
-def add_from(path: Path, rows: dict, dt: date = None, check: bool = True):
+def add_from(path: Path, rows: dict, dt: date = None,
+             check: bool = True, modifier: callable = None):
     checker = Checker(dt, path)
     reader = tqdm_dict_reader(path)
+    row_generator = modifier(reader) if modifier else reader
     max_date = str(date.min)
-    for row in reader:
+    for row in row_generator:
         if dt:
             row[release_timestamp] = dt
         rows[key(row)] = row
@@ -99,6 +102,28 @@ def msoa_files(earliest) -> Sequence[Tuple[datetime, Path]]:
             desc='source files'
     ):
         yield dt, path
+
+
+@lru_cache
+def msoa_blank_rows():
+    rows = {}
+    with open(base_path / 'msoa_template.csv') as source:
+        for row in DictReader(source):
+            row.update({field: '' for field in msoa_metrics})
+            rows[row[area_code]] = row
+    return rows
+
+
+def add_blank_rows(reader):
+    seen_codes_for_date = defaultdict(lambda: set(msoa_blank_rows()))
+    for row in reader:
+        seen_codes_for_date[row[date_col]].discard(row[area_code])
+        yield row
+    for dt, area_codes in seen_codes_for_date.items():
+        for code in area_codes:
+            row = msoa_blank_rows()[code].copy()
+            row[date_col] = dt
+            yield row
 
 
 def main(args=None):
