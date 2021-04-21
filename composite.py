@@ -363,7 +363,8 @@ compositions = {
         area_type=ltla, view='england', start='2020-03-19',
     ),
     'cases-area-type': Composition(
-        [TextPart('header', 'PHE News Cases by Specimen Date as of {date:%d %b %y}',
+        [TextPart('header',
+                  'New COVID-19 Cases in England by Specimen Date from PHE as of {date:%d %b %y}',
                   fontsize=40)],
         [
             MapPart('cases-7', area_type=ltla),
