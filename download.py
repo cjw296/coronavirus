@@ -187,8 +187,12 @@ def main():
     add_date_arg(parser, '--start')
     add_date_arg(parser, '--end')
     add_date_arg(parser, '--date', default=date.today())
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     if args.start and args.end:
         points = args.start, args.end
