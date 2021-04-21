@@ -81,11 +81,13 @@ class TextPart(Part):
 
     prefix = 'animated_text_'
 
-    def __init__(self, name, template, dates=None, fontsize=20, color="black", **margin):
+    def __init__(self, name, template, fontsize=20, color="black",
+                 start: Date = None, end: Date = None, **margin):
         super().__init__(name)
         self.dynamic = '{' in template
         self.template = template
-        self.dates = dates or pd.date_range(data_start, date.today())
+        self.start = start or data_start
+        self.end = end or date.today()
         self.margin = margin or {'margin': 5}
         self.fontsize = fontsize
         self.color = color
@@ -93,15 +95,15 @@ class TextPart(Part):
     def build(self):
         cmd = [sys.executable, 'animated_text.py', self.name, self.template,
                '--fontsize', self.fontsize, '--color', self.color,
-               '--from', self.dates[0], '--to', self.dates[-1]]
+               '--from', self.start, '--to', self.end]
         if not self.dynamic:
-            cmd.extend(('--single', self.dates[0]))
+            cmd.extend(('--single', self.start))
         run(cmd)
 
     def discover_frames(self):
         if self.dynamic:
             return super().discover_frames()
-        return self.dates
+        return pd.date_range(self.start, self.end)
 
     def clip(self, frames_and_durations):
         if self.dynamic:
