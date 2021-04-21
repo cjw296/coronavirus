@@ -1,13 +1,16 @@
 import concurrent.futures
 import json
+import logging
 from argparse import ArgumentParser
-from csv import DictWriter
+from collections import defaultdict
+from csv import DictWriter, DictReader
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from io import StringIO
 from itertools import chain
 from pathlib import Path
 from time import sleep
-from typing import List, Tuple, Iterable, Mapping
+from typing import List, Tuple, Iterable, Mapping, Optional
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
@@ -21,6 +24,7 @@ from constants import base_path, nation, region, ltla, standard_metrics, new_adm
     vaccination_metrics, england_metrics, case_demographics, \
     overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum
 
+MAX_METRICS = 5
 
 def download(url, path):
     response = requests.get(url)
@@ -129,13 +133,12 @@ class WrongDate(ValueError):
         return f'requested: {self.requested}, actual: {self.actual}'
 
 
-def download_phe(name, area_type, *metrics, area_name=None, release=None, format='csv'):
-    release = release or date.today()
+def download_phe_batch(name, area_type, release: date, area_name: Optional[str], *metrics):
 
     _params = {
         'areaType': area_type,
         'metric': metrics,
-        'format': format,
+        'format': 'csv',
         'release': str(release),
     }
     if area_name:
@@ -155,15 +158,46 @@ def download_phe(name, area_type, *metrics, area_name=None, release=None, format
         )
 
     if response.status_code != 200:
-        raise ValueError(f'{response.status_code}:{response.content}')
+        raise ValueError(f'{response.status_code}: {response.content}')
 
     actual_release = datetime.strptime(
-        response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.{format}"'
+        response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.csv"'
     ).date()
     if str(actual_release) != str(release):
         raise WrongDate(release, actual_release)
-    path = (base_path / f'{name}_{actual_release}.csv')
-    path.write_bytes(response.content)
+    return response.text
+
+
+def download_phe(name, area_type, *metrics, area_name: str = None, release: date = None):
+    release = release or date.today()
+    if len(metrics) <= MAX_METRICS:
+        content = download_phe_batch(name, area_type, release, area_name, *metrics)
+    else:
+        metric_sets = [metrics[i:i + MAX_METRICS] for i in range(0, len(metrics), MAX_METRICS)]
+        rows = defaultdict(dict)
+        columns = set()
+
+        for metrics in metric_sets:
+            content = download_phe_batch(name, area_type, release, area_name, *metrics)
+            reader = DictReader(StringIO(content))
+            for row in reader:
+                rows[row['areaCode'], row['date']].update(row)
+            columns.update(reader.fieldnames)
+
+        output = StringIO()
+        csv_cols = ['areaCode', 'areaName', 'areaType', 'date']
+        for col in csv_cols:
+            columns.remove(col)
+        csv_cols.extend(sorted(columns))
+        writer = DictWriter(output, csv_cols)
+        writer.writeheader()
+        for row in rows.values():
+            writer.writerow(row)
+        content = output.getvalue()
+
+    path = (base_path / f'{name}_{release}.csv')
+    path.write_text(content)
+
     return path
 
 
