@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Sequence, Tuple, Optional
 
+import pandas as pd
 from tqdm.auto import tqdm
 
 from args import add_date_arg
@@ -102,7 +103,7 @@ def msoa_files(earliest) -> Sequence[Tuple[datetime, Path]]:
 
 def main(args=None):
     parser = ArgumentParser()
-    add_date_arg(parser, '--start', default=date.today())
+    add_date_arg(parser, '--start')
     parser.add_argument('--clean', action='store_true')
     parser.add_argument('--output', default=base_path / 'msoa_composite.csv', type=Path)
     parser.add_argument('--no-check', dest='check', action='store_false')
@@ -111,14 +112,18 @@ def main(args=None):
     fieldnames = None
     rows = {}
 
-    if args.start < date(2020, 1, 1):
-        print("It's 2021 now!")
-        return
-
     if args.output.exists() and not args.clean:
         add_from(args.output, rows, check=False)
 
-    for dt, path in msoa_files(args.start):
+    start = args.start
+    if start is None:
+        if rows:
+            max_date = max(key_[0] for key_ in rows)
+            start = (pd.to_datetime(max_date)+pd.Timedelta(Checker.expected_gap+1, 'D')).date()
+        else:
+            start = date(2020, 12, 1)
+
+    for dt, path in msoa_files(start):
         fieldnames = add_from(path, rows, dt, args.check)
 
     if fieldnames is None or not rows:
