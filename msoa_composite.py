@@ -24,6 +24,10 @@ def lines_from(path: Path):
         yield line
 
 
+def tqdm_dict_reader(path: Path):
+    return DictReader(lines_from(path))
+
+
 class Checker:
 
     expected_msoa = 6791
@@ -65,14 +69,14 @@ class Checker:
 def check_path(path):
     path, dt = find_latest(Path(path).name)
     checker = Checker(dt, path)
-    for row in DictReader(lines_from(path)):
+    for row in tqdm_dict_reader(path):
         checker.add_row(row)
     checker.check()
 
 
 def add_from(path: Path, rows: dict, dt: date = None, check: bool = True):
     checker = Checker(dt, path)
-    reader = DictReader(lines_from(path))
+    reader = tqdm_dict_reader(path)
     max_date = str(date.min)
     for row in reader:
         if dt:
