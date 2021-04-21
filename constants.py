@@ -69,6 +69,8 @@ first_dose_daily_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
 second_dose_daily_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
 complete_dose_daily_cum = "cumPeopleVaccinatedCompleteByPublishDate"
 
+msoa_metrics = new_cases_sum, new_cases_rate, new_cases_change, 'release'
+
 england_metrics = [
     new_admissions_sum,
     new_cases_sum,
