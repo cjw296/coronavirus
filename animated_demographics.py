@@ -73,7 +73,10 @@ def main():
 
     assert len(data_dates) == 1, data_dates
 
-    parallel_render(f'animated_demographics',
+    name = 'animated_demographics'
+    if args.pct:
+        name += '_pct'
+    parallel_render(name,
                     partial(
                         plot_date,
                         series=series,
