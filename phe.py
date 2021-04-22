@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta, datetime, date
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import Sequence, List
 
 import matplotlib.pyplot as plt
@@ -164,8 +164,8 @@ def map_data(for_date):
     return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
-def summary_data(series, start=None, end=None, data_date=None):
-    if data_date is None:
+def summary_data(series, data_date=None, start=None, end=None):
+    if data_date in (None, '*'):
         data_path, data_date = find_latest('england_*.csv')
     else:
         data_path = base_path / f'england_{pd.to_datetime(data_date).date()}.csv'
@@ -197,7 +197,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
     left_ax = ax
     right_ax = ax = left_ax.twinx()
 
-    data, data_date = summary_data(all_series, earliest_date, to_date, data_date)
+    data, data_date = summary_data(all_series, data_date, earliest_date, to_date)
 
     possible_max = [dt for dt in (frame_date, to_date) if dt is not None]
     if possible_max:
@@ -255,3 +255,26 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
     xaxis = left_ax.get_xaxis()
     xaxis.label.set_visible(False)
+
+
+def latest_from(data):
+    dates = {}
+    values = {}
+    for metric, series in data.items():
+        dates[metric] = latest_date = series.last_valid_index()
+        values[metric] = series.loc[latest_date]
+    return dates, values
+
+
+def latest_changes(*series):
+    data, _, previous_data, _ = current_and_previous_data(partial(summary_data, series))
+    current_dates, current_values = latest_from(data)
+    previous_dates, previous_values = latest_from(previous_data)
+    print('Latest for England:')
+    for s in series:
+        current = current_values[s.metric]
+        dtc = current_dates[s.metric]
+        dtp = previous_dates[s.metric]
+        diff = current_values[s.metric] - previous_values[s.metric]
+        print(f'{current:,.0f} {s.label} (7 day average) as of {dtc:%a %d %b}, '
+              f'{diff:+,.1f} since {dtp:%a %d %b}')
