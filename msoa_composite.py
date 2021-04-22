@@ -71,7 +71,7 @@ class Checker:
 def check_path(path):
     path, dt = find_latest(Path(path).name)
     checker = Checker(dt, path)
-    for row in tqdm_dict_reader(path):
+    for row in add_blank_rows(tqdm_dict_reader(path)):
         checker.add_row(row)
     checker.check()
 
@@ -149,7 +149,7 @@ def main(args=None):
             start = date(2020, 12, 1)
 
     for dt, path in msoa_files(start):
-        fieldnames = add_from(path, rows, dt, args.check)
+        fieldnames = add_from(path, rows, dt, args.check, modifier=add_blank_rows)
 
     if fieldnames is None or not rows:
         return
