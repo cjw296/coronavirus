@@ -37,7 +37,9 @@ def load_data(data_date=None):
     return (react, ons, zoe, hospital), max(react_date, ons_date, zoe_date, hospital_date)
 
 
-def plot(ax, data, column, label, with_errors=True):
+def plot(ax, data, earliest, column, label, with_errors=True):
+    if earliest:
+        data = data.loc[earliest:]
     ax.plot(data.index, data[column], label=label, linestyle='dotted')
     if with_errors:
         ax.fill_between(data.index, data[f'{column}-lower-95'], data[f'{column}-upper-95'],
@@ -56,6 +58,8 @@ def plot_prevalence(data_date=None, *,
                                    gridspec_kw={'height_ratios': [3, 1]})
     fig.set_facecolor('white')
 
+    if earliest:
+        hospital = hospital.loc[earliest:]
     latest_hospital_date = hospital.index.max()
     latest_hospital_value = hospital.loc[hospital.index.max()]
     axh.plot(hospital.index, hospital)
@@ -63,9 +67,9 @@ def plot_prevalence(data_date=None, *,
                   f'{latest_hospital_value:,.0f} on {latest_hospital_date:%d %b %Y}')
     axh.set_ylim((0, max_hospital))
 
-    plot(axc, react, 'people', label='REACT')
-    plot(axc, ons, 'number', label='ONS')
-    plot(axc, zoe, 'corrected_covid_positive', label='ZOE*', with_errors=False)
+    plot(axc, react, earliest, 'people', label='REACT')
+    plot(axc, ons, earliest, 'number', label='ONS')
+    plot(axc, zoe, earliest, 'corrected_covid_positive', label='ZOE*', with_errors=False)
 
     axc.legend(loc='upper left', framealpha=1)
     axc.set_title(f'Modelled number of people with COVID-19 in England as of {as_of:%d %b %Y}')
