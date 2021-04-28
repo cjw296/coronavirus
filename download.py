@@ -179,6 +179,8 @@ def download_phe(name, area_type, *metrics, area_name: str = None, release: date
 
         for metrics in metric_sets:
             content = download_phe_batch(name, area_type, release, area_name, *metrics)
+            if not content:
+                raise NoContent(name, area_type, release, area_name, metrics)
             reader = DictReader(StringIO(content))
             for row in reader:
                 rows[row['areaCode'], row['date']].update(row)
