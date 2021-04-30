@@ -147,7 +147,7 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
         'https://api.coronavirus.data.gov.uk/v2/data', timeout=20, params=_params
     )
 
-    if response.status_code == 204:
+    if response.status_code == 204 or response.content == b'':
         raise NoContent
 
     if response.status_code in (429, 403):
