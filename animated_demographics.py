@@ -4,10 +4,8 @@ from functools import partial, lru_cache
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
-from matplotlib.ticker import Formatter
 
 from animated import parallel_render
-from animated_summary import formatter_from_string
 from args import add_parallel_args, parallel_params
 from bars import Bars, BarsLookup
 from plotting import per0_formatter, pct_formatter
