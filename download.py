@@ -280,7 +280,7 @@ SETS = {
         Download(area_type, standard_metrics) for area_type in (region, ltla)
     ],
     'demographics': [
-        Download(overview, [case_demographics], name=f'case_demographics_{overview}'),
+        Download(nation, [case_demographics], name=f'case_demographics_{nation}'),
         Download(nation, [death_demographics], name=f'death_demographics_{nation}'),
         Download(nation, [admission_demographics], name=f'admission_demographics_{nation}'),
     ],

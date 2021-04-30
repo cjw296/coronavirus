@@ -406,9 +406,10 @@ BARS = dict(
     ),
     cases_demographics=DemographicBars(
         'cases',
-        data_file=f'case_demographics_{overview}',
-        area_type=overview,
-        title_template='Evolution of COVID-10 {config.series.title} in the UK by age',
+        data_file=f'case_demographics_{nation}',
+        area_type=nation,
+        areas=[england],
+        title_template='Evolution of COVID-10 {config.series.title} in the England by age',
         ylabel=s.new_cases.title,
         legend_ncol=2,
         diff_log_scale=True,
