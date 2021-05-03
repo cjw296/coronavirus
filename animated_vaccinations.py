@@ -45,7 +45,7 @@ def render_plots(to_show, to_date=None, dt='*', size=5, dpi=200, image_path=None
     rows, cols = to_show.shape
     fig, axes = plt.subplots(rows, cols,
                              figsize=(size * cols, size * rows),
-                             gridspec_kw={'hspace': 0.4}, dpi=200)
+                             gridspec_kw={'hspace': 0.4}, dpi=dpi)
     fig.set_facecolor('white')
 
     for r in range(rows):
