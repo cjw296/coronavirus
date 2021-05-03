@@ -53,17 +53,11 @@ def render_plots(to_show, to_date=None, dt='*', size=5, dpi=200, image_path=None
             name, type_ = to_show[r, c]
             ax = axes[r, c] if isinstance(axes, np.ndarray) else axes
             area = indexed.loc[name].sort_index()
-            by_vaccination = f'cumPeopleVaccinated{type_}DoseByVaccinationDate'
             by_publish = f'cumPeopleVaccinated{type_}DoseByPublishDate'
 
             area[by_publish].plot(
                 ax=ax, drawstyle="steps-post", label='Total by Report Date',
-                color='red',
-            )
-
-            area[by_vaccination].fillna(method='ffill', limit=1).dropna().plot(
-                ax=ax, drawstyle="steps-post", label='Total by Vaccination Date',
-                color='blue', title=f'{name} - {type_} Dose as reported {data_dt:%d %b}',
+                color='red', title=f'{name} - {type_} Dose as reported {data_dt:%d %b}'
             )
 
             if end is not None:
@@ -74,7 +68,7 @@ def render_plots(to_show, to_date=None, dt='*', size=5, dpi=200, image_path=None
                 )
                 ax.set_ylim(
                     0,
-                    max(area_end[by_publish].max(), area_end[by_vaccination].max())*1.02
+                    area_end[by_publish].max()*1.02
                 )
 
     for ax in axes.flat if isinstance(axes, np.ndarray) else [axes]:
