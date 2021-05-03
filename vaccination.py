@@ -1,4 +1,5 @@
 from datetime import timedelta
+from functools import partial
 from itertools import chain
 
 import numpy as np
@@ -28,7 +29,7 @@ full_cov = 'full'
 partial_cov = 'partial'
 
 
-def raw_vaccination_data(dt='*'):
+def raw_vaccination_data(dt='*', sanity_checks: bool = True):
     if dt == '*':
         dt = '????-*'
     else:
@@ -36,11 +37,13 @@ def raw_vaccination_data(dt='*'):
     data_path, data_date = find_latest(f'vaccination_{dt}.csv')
     raw = read_csv(data_path)
     raw.sort_values([date_col, area_code], inplace=True)
-    complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
-                    complete_dose_daily_new, second_dose_daily_new]].dropna(how='any')
-    cum_equal = (complete[complete_dose_daily_cum] == complete[second_dose_daily_cum]).all()
-    new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
-    assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
+
+    if sanity_checks:
+        complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
+                        complete_dose_daily_new, second_dose_daily_new]].dropna(how='any')
+        cum_equal = (complete[complete_dose_daily_cum] == complete[second_dose_daily_cum]).all()
+        new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
+        assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
 
     return raw, data_date
 
@@ -249,7 +252,8 @@ def process(raw, index=None):
 
 
 def vaccination_changes(dt='*', exclude_okay=False):
-    result = current_and_previous_data(raw_vaccination_data, start=dt)
+    raw_data = partial(raw_vaccination_data, sanity_checks=False)
+    result = current_and_previous_data(raw_data, start=dt)
     raw2, current_date, raw1, previous_date = result
     processed2 = process(raw2)
     diff = (processed2 - process(raw1, processed2.index)).fillna(0)
