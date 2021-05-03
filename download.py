@@ -1,6 +1,7 @@
 import concurrent.futures
 import json
 import logging
+import sys
 from argparse import ArgumentParser
 from collections import defaultdict
 from csv import DictWriter, DictReader
@@ -238,6 +239,9 @@ def main():
 
     release_timestamp = get_release_timestamp()
 
+    expected = 0
+    downloaded = 0
+
     for dt in reversed(dates):
 
         if pd.to_datetime(dt, utc=True) > release_timestamp:
@@ -248,9 +252,11 @@ def main():
             name = dl.name or dl.area_name or dl.area_type
             if args.name and name != args.name:
                 continue
+            expected += 1
             data_path = (base_path / f'{name}_{dt}.csv')
             if data_path.exists() and not args.overwrite:
                 print('already exists:', data_path)
+                downloaded += 1
                 continue
             try:
                 while True:
@@ -269,6 +275,13 @@ def main():
                 print(f'no content for {name} on {dt}')
             else:
                 print('downloaded: ', data_path)
+                downloaded += 1
+
+    if downloaded != expected:
+        print(f'expected {expected}, but {downloaded} downloaded')
+        return 1
+
+    return 0
 
 
 SETS = {
@@ -291,4 +304,4 @@ SETS = {
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
