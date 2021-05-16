@@ -412,6 +412,20 @@ compositions = {
     'surge': cases_tests_composition(
         'surge', start='2021-01-30', end='2021-03-01'
     ),
+    'may-2021': Composition(
+        [TextPart('header',
+                  'New COVID-19 Cases in England by Specimen Date from PHE as of {date:%d %b %y}',
+                  fontsize=40)],
+        [
+            MapPart('cases', area_type=msoa),
+            MapPart('cases', area_type=msoa, view='2021-may'),
+        ],
+        [SummaryPart(left_series=[new_virus_tests_sum],
+                     left_formatter='1m',
+                     right_series=[new_admissions_sum, new_deaths_sum])],
+        footer,
+        durations=slowing_durations, start='lockdown-3-end', view='england', dpi=150
+    ),
 }
 
 
