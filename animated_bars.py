@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
-    config = Bars.get(args.config)
+    config = Bars.get(args.config, earliest=args.earliest)
 
     from_date = max(args.from_date, args.earliest)
     dates = available_dates(config.metric, config.data_file_stem, earliest=from_date)
@@ -46,7 +46,6 @@ def main():
                     partial(plot_bars,
                             config=config,
                             ylim=args.ylim or max_metric,
-                            earliest=args.earliest,
                             diff_log_scale=args.diff_log_scale,
                             show_title=True,
                             to_date=date.today(),
