@@ -1,6 +1,7 @@
+import csv
 from dataclasses import dataclass
 from functools import lru_cache, cached_property, partial
-from typing import Sequence, Union
+from typing import Sequence, Union, Tuple
 
 import geopandas
 import pandas as pd
@@ -8,6 +9,17 @@ import shapely
 from geopandas import GeoDataFrame
 
 from constants import repo_path, ltla, msoa, nhs_region
+
+
+@lru_cache
+def build_lookups(file_stem, *, code_column, name_column) -> Tuple[dict, dict]:
+    by_code = {}
+    by_name = {}
+    with open(repo_path / 'geodata' / f"{file_stem}.csv") as source:
+        for row in csv.DictReader(source):
+            by_code[row[code_column]] = row[name_column]
+            by_name[row[name_column]] = row[code_column]
+    return by_code, by_name
 
 
 @lru_cache
@@ -19,6 +31,15 @@ def geoportal_geoms(name, code_column=None, name_column=None, suffix='-shp'):
         geoms.rename(columns={code_column: 'code', name_column: 'name'},
                      errors='raise', inplace=True)
     return geoms
+
+
+def ltla_codes(*names: str):
+    _, by_name = build_lookups(
+        "Local_Authority_Districts_(December_2019)_Names_and_Codes_in_the_United_Kingdom",
+        code_column='LAD19CD',
+        name_column='LAD19NM',
+    )
+    return [by_name[name] for name in names]
 
 
 def old_ltla_geoms():
