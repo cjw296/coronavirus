@@ -14,6 +14,7 @@ special_dates = {text: dt for dt, text in (
     (lockdown2[0], 'lockdown-2-start'),
     (lockdown2[1], 'lockdown-2-end'),
     (lockdown3[0], 'lockdown-3-start'),
+    (lockdown3[1], 'lockdown-3-end'),
     (earliest_available_download, 'earliest-download'),
     (earliest_msoa, 'earliest-msoa'),
     (earliest_testing, 'earliest-testing'),
