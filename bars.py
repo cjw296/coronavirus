@@ -15,8 +15,9 @@ from constants import (
     unique_people_tested_sum, national_lockdowns, ltla, my_areas,
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
     scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
-    new_admissions, overview, england
+    new_admissions, england
 )
+from geo import ltla_codes
 from phe import best_data, current_and_previous_data, load_population
 from plotting import stacked_bar_plot, nation_colors, per1m_formatter
 from series import Series
@@ -389,6 +390,10 @@ BARS = dict(
     cases_london=Bars(
         diff_ylims=[-10, 1800],
         areas=london_areas,
+    ),
+    cases_north_may_2021=Bars(
+        areas=ltla_codes('Blackburn with Darwen', 'Bolton'),
+        diff_ylims=[0, 200],
     ),
     cases_regions=Bars(
         diff_ylims=[-100, 25_000],
