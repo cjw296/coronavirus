@@ -6,7 +6,7 @@ import requests
 from dateutil.parser import parse as parse_date
 
 from constants import msoa, msoa_metrics
-from download import download_phe, find_latest, get_release_timestamp, WrongDate
+from download import retrying_phe_download, find_latest, get_release_timestamp, WrongDate
 from msoa_composite import check_path, main as composite
 
 
@@ -26,7 +26,7 @@ def main():
     for dt in pd.date_range(latest, date.today(), closed='right', tz='Europe/London'):
         if is_msoa_data_ready(dt):
             try:
-                path = download_phe(msoa, msoa, msoa_metrics, release=dt.date())
+                path = retrying_phe_download(msoa, msoa, msoa_metrics, release=dt.date())
             except WrongDate as e:
                 if e.requested < e.actual:
                     print(f'Missed {e.requested} :-(')

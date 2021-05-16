@@ -204,6 +204,24 @@ def download_phe(name, area_type, *metrics, area_name: str = None, release: date
     return path
 
 
+def retrying_phe_download(
+        name, area_type, *metrics, area_name: str = None, release: date = None,
+):
+    attempt = 1
+    while True:
+        if attempt > 1:
+            print(f'attempt {attempt} for {name} on {release}')
+        try:
+            return download_phe(name, area_type, *metrics, area_name, release)
+        except RateLimited as e:
+            rldt = datetime.now() + timedelta(seconds=e.retry_after)
+            print(f'retrying after {e.retry_after}s at {rldt:%H:%M:%S} ({e})')
+            sleep(e.retry_after)
+        except ReadTimeout:
+            print('read timeout')
+        attempt += 1
+
+
 def get_release_timestamp():
     response = requests.get('https://api.coronavirus.data.gov.uk/v1/timestamp')
     return parse_date(response.json()['websiteTimestamp'])
@@ -259,18 +277,8 @@ def main():
                 downloaded += 1
                 continue
             try:
-                while True:
-                    try:
-                        data_path = download_phe(name, dl.area_type, *dl.metrics,
-                                                 area_name=dl.area_name, release=dt)
-                    except RateLimited as e:
-                        rldt = datetime.now()+timedelta(seconds=e.retry_after)
-                        print(f'retrying after {e.retry_after}s at {rldt:%H:%M:%S} ({e})')
-                        sleep(e.retry_after)
-                    except ReadTimeout:
-                        print('read timeout')
-                    else:
-                        break
+                data_path = retrying_phe_download(name, dl.area_type, *dl.metrics,
+                                                  area_name=dl.area_name, release=dt)
             except NoContent:
                 print(f'no content for {name} on {dt}')
             else:
