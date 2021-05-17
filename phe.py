@@ -266,8 +266,8 @@ def latest_from(data):
     return dates, values
 
 
-def latest_changes(*series):
-    data, _, previous_data, _ = current_and_previous_data(partial(summary_data, series))
+def latest_changes(*series, start='*'):
+    data, _, previous_data, _ = current_and_previous_data(partial(summary_data, series), start)
     current_dates, current_values = latest_from(data)
     previous_dates, previous_values = latest_from(previous_data)
     print('Latest for England:')
