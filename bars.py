@@ -23,13 +23,18 @@ from plotting import stacked_bar_plot, nation_colors, per1m_formatter
 from series import Series
 
 
+DEFAULT_COLORMAP = 'viridis'
+DEFAULT_DATE_FORMAT = '%d %b %Y'
+
+
 def plot_diff(ax, for_date, data, previous_date, previous_data,
-              diff_ylims=None, diff_log_scale=None, earliest=None, colormap='viridis'):
+              diff_ylims=None, diff_log_scale=None, earliest=None,
+              colormap=DEFAULT_COLORMAP, date_format=DEFAULT_DATE_FORMAT):
     diff = data.sub(previous_data, fill_value=0)
     total_diff = diff.sum().sum()
     stacked_bar_plot(ax, diff, colormap)
     ax.set_title(f'Change between reports on {previous_date} and {for_date}: {total_diff:,.0f}')
-    fix_x_axis(ax, diff, earliest)
+    fix_x_axis(ax, diff, earliest, date_format)
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     ax.yaxis.grid(True)
@@ -43,14 +48,14 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
     ax.axhline(y=0, color='k')
 
 
-def fix_x_axis(ax, data, earliest=None, number_to_show=50):
+def fix_x_axis(ax, data, earliest=None, date_format=DEFAULT_DATE_FORMAT, number_to_show=50):
     ax.axes.set_axisbelow(True)
     ax.xaxis.set_tick_params(rotation=-90)
     ax.xaxis.label.set_visible(False)
     interval = max(1, round(data.shape[0]/number_to_show))
     ax.xaxis.set_minor_locator(DayLocator())
     ax.xaxis.set_major_locator(DayLocator(interval=interval))
-    ax.xaxis.set_major_formatter(DateFormatter('%d %b %Y'))
+    ax.xaxis.set_major_formatter(DateFormatter(date_format))
     ax.set_xlim(
         (pd.to_datetime(earliest) or data.index.min())-timedelta(days=0.5),
         data.index.max()+timedelta(days=0.5)
@@ -59,8 +64,8 @@ def fix_x_axis(ax, data, earliest=None, number_to_show=50):
 
 def plot_stacked_bars(
         ax, data, label, average_days, average_end, title, testing: Optional['Testing'],
-        ylim, tested_ylim, earliest, colormap='viridis', normalized_values=None,
-        legend_loc='upper left', legend_ncol=1
+        ylim, tested_ylim, earliest, colormap=DEFAULT_COLORMAP, normalized_values=None,
+        legend_loc='upper left', legend_ncol=1, date_format=DEFAULT_DATE_FORMAT,
 ):
 
     handles = stacked_bar_plot(ax, data, colormap, normalized_values)
@@ -91,7 +96,7 @@ def plot_stacked_bars(
     else:
         legend_ax = ax
 
-    fix_x_axis(ax, data, earliest)
+    fix_x_axis(ax, data, earliest, date_format)
 
     ax.set_ylabel(label)
     if ylim:
@@ -160,14 +165,15 @@ def plot_bars(
         if config.with_diff:
             plot_diff(
                 diff_ax, data_date, data, previous_data_date, previous_data,
-                config.diff_ylims, config.diff_log_scale, config.earliest, config.colormap
+                config.diff_ylims, config.diff_log_scale, config.earliest,
+                config.colormap, config.date_format
             )
         plot_stacked_bars(
             bars_ax, data, config.ylabel,
             config.average_days, average_end, config.title,
             config.testing_for(data_date), config.ylim, config.tested_ylim,
             config.earliest, config.colormap, config.colormap_values(),
-            config.legend_loc, config.legend_ncol
+            config.legend_loc, config.legend_ncol, config.date_format
         )
 
     if image_path:
@@ -246,6 +252,7 @@ class Bars:
     data_is_cumulative: bool = False
     with_diff: bool = True
     fig_size: Tuple[float, float] = 14, 10
+    date_format: str = DEFAULT_DATE_FORMAT
 
     def __post_init__(self):
         if not self.ylabel:
