@@ -212,7 +212,8 @@ def retrying_phe_download(
         if attempt > 1:
             print(f'attempt {attempt} for {name} on {release}')
         try:
-            return download_phe(name, area_type, *metrics, area_name, release)
+            return download_phe(name, area_type, *metrics,
+                                area_name=area_name, release=release)
         except RateLimited as e:
             rldt = datetime.now() + timedelta(seconds=e.retry_after)
             print(f'retrying after {e.retry_after}s at {rldt:%H:%M:%S} ({e})')
