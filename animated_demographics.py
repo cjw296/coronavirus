@@ -39,15 +39,17 @@ def plot_demographic_bars(
 
 
 def plot_date(dt, *,
-              series, maxes, from_date, pct: bool = False,
+              series, maxes, from_date,
               image_path=None, dpi=100, data_date='*'):
     dt = pd.to_datetime(dt)
-    fig, axes = plt.subplots(nrows=1, ncols=len(series),
+    fig, axes = plt.subplots(nrows=len(series), ncols=2,
                              figsize=(16, 10), constrained_layout=True)
     fig.suptitle(f'PHE data for {dt:%d %b %y}', fontsize=20)
     for i, s in enumerate(series):
-        plot_demographic_bars(s, dt, from_date, axes[i],
-                              max_x=maxes[s], pct=pct, data_date=data_date)
+        plot_demographic_bars(s, dt, from_date, axes[0][i],
+                              max_x=maxes[s, False], pct=False, data_date=data_date)
+        plot_demographic_bars(s, dt, from_date, axes[1][i],
+                              max_x=maxes[s, True], pct=True, data_date=data_date)
 
     if image_path:
         plt.savefig(image_path / f'{dt.date()}.png', bbox_inches='tight', dpi=dpi)
@@ -57,7 +59,6 @@ def plot_date(dt, *,
 def main():
     parser = ArgumentParser()
     add_parallel_args(parser, default_output='gif', from_date='2020-03-15')
-    parser.add_argument('--pct', action='store_true')
     parser.add_argument('--data-date', default='*')
     args = parser.parse_args()
 
@@ -66,24 +67,22 @@ def main():
     maxes = {}
     series = 'deaths_demographics_for_comparison', 'cases_demographics'
     for s in series:
-        data, data_date, _ = data_for(args.data_date, s, earliest=args.from_date, pct=args.pct)
-        data_dates.add(data_date)
-        dates = data.index.values
-        maxes[s] = max(data.max())
+        for pct in False, True:
+            data, data_date, _ = data_for(args.data_date, s, earliest=args.from_date, pct=pct)
+            data_dates.add(data_date)
+            dates = data.index.values
+            maxes[s, pct] = max(data.max())
 
     if len(data_dates) != 1:
         parser.error('--data-date, pick one: '+', '.join(str(d) for d in sorted(data_dates)))
 
     name = 'animated_demographics'
-    if args.pct:
-        name += '_pct'
     parallel_render(name,
                     partial(
                         plot_date,
                         series=series,
                         maxes=maxes,
                         from_date=args.from_date,
-                        pct=args.pct,
                         data_date=args.data_date
                     ),
                     dates, **parallel_params(args))
