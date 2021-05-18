@@ -57,17 +57,19 @@ new_cases_change = 'newCasesBySpecimenDateChange'
 
 in_hospital = 'hospitalCases'
 
-first_dose_weekly = 'weeklyPeopleVaccinatedFirstDoseByVaccinationDate'
-second_dose_weekly = 'weeklyPeopleVaccinatedSecondDoseByVaccinationDate'
-first_dose_daily_new = "newPeopleVaccinatedFirstDoseByPublishDate"
-second_dose_daily_new = "newPeopleVaccinatedSecondDoseByPublishDate"
-complete_dose_daily_new = "newPeopleVaccinatedCompleteByPublishDate"
+first_dose_publish_new = "newPeopleVaccinatedFirstDoseByPublishDate"
+second_dose_publish_new = "newPeopleVaccinatedSecondDoseByPublishDate"
+complete_dose_publish_new = "newPeopleVaccinatedCompleteByPublishDate"
+first_dose_publish_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
+second_dose_publish_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
+complete_dose_publish_cum = "cumPeopleVaccinatedCompleteByPublishDate"
 
-first_dose_weekly_cum = 'cumPeopleVaccinatedFirstDoseByVaccinationDate'
-second_dose_weekly_cum = 'cumPeopleVaccinatedSecondDoseByVaccinationDate'
-first_dose_daily_cum = "cumPeopleVaccinatedFirstDoseByPublishDate"
-second_dose_daily_cum = "cumPeopleVaccinatedSecondDoseByPublishDate"
-complete_dose_daily_cum = "cumPeopleVaccinatedCompleteByPublishDate"
+first_dose_vaccinated_new = 'newPeopleVaccinatedFirstDoseByVaccinationDate'
+second_dose_vaccinated_new = 'newPeopleVaccinatedSecondDoseByVaccinationDate'
+complete_dose_vaccinated_new = 'newPeopleVaccinatedCompleteByVaccinationDate'
+first_dose_vaccinated_cum = 'cumPeopleVaccinatedFirstDoseByVaccinationDate'
+second_dose_vaccinated_cum = 'cumPeopleVaccinatedSecondDoseByVaccinationDate'
+complete_dose_vaccinated_cum = 'cumPeopleVaccinatedCompleteByVaccinationDate'
 
 msoa_metrics = new_cases_sum, new_cases_rate, new_cases_change
 
@@ -80,13 +82,22 @@ england_metrics = [
     in_hospital,
 ]
 
-vaccination_metrics = [
-    first_dose_daily_new,
-    second_dose_daily_new,
-    complete_dose_daily_new,
-    first_dose_daily_cum,
-    second_dose_daily_cum,
-    complete_dose_daily_cum,
+vaccination_publish_date_metrics = [
+    first_dose_publish_new,
+    second_dose_publish_new,
+    complete_dose_publish_new,
+    first_dose_publish_cum,
+    second_dose_publish_cum,
+    complete_dose_publish_cum,
+]
+
+vaccination_vaccination_date_metrics = [
+    first_dose_vaccinated_new,
+    second_dose_vaccinated_new,
+    complete_dose_vaccinated_new,
+    first_dose_vaccinated_cum,
+    second_dose_vaccinated_cum,
+    complete_dose_vaccinated_cum,
 ]
 
 standard_metrics = [

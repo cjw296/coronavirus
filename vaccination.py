@@ -10,10 +10,10 @@ from matplotlib.dates import DateFormatter
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import StrMethodFormatter, FuncFormatter, MaxNLocator, FixedLocator
 
-from constants import date_col, area_type, area_code, area_name, complete_dose_daily_cum, \
-    first_dose_weekly, second_dose_weekly, first_vaccination, first_dose_daily_cum, \
-    second_dose_daily_cum, population, repo_path, second_dose_daily_new, \
-    complete_dose_daily_new
+from constants import date_col, area_type, area_code, area_name, complete_dose_publish_cum, \
+    first_vaccination, first_dose_publish_cum, \
+    second_dose_publish_cum, population, repo_path, second_dose_publish_new, \
+    complete_dose_publish_new
 from download import find_latest
 from phe import read_csv, load_population, current_and_previous_data
 from plotting import nation_tab10_cm_indices
@@ -39,11 +39,11 @@ def raw_vaccination_data(dt='*', sanity_checks: bool = True):
     raw.sort_values([date_col, area_code], inplace=True)
 
     if sanity_checks:
-        complete = raw[[complete_dose_daily_cum, second_dose_daily_cum,
-                        complete_dose_daily_new, second_dose_daily_new]].dropna(how='any')
-        cum_equal = (complete[complete_dose_daily_cum] == complete[second_dose_daily_cum]).all()
-        new_equal = ((complete[complete_dose_daily_new] == complete[second_dose_daily_new]).all())
-        assert raw[complete_dose_daily_cum].isnull().all() or (cum_equal and new_equal)
+        complete = raw[[complete_dose_publish_cum, second_dose_publish_cum,
+                        complete_dose_publish_new, second_dose_publish_new]].dropna(how='any')
+        cum_equal = (complete[complete_dose_publish_cum] == complete[second_dose_publish_cum]).all()
+        new_equal = ((complete[complete_dose_publish_new] == complete[second_dose_publish_new]).all())
+        assert raw[complete_dose_publish_cum].isnull().all() or (cum_equal and new_equal)
 
     return raw, data_date
 
@@ -61,20 +61,25 @@ def weekly_data():
     raw_path, _ = find_latest('vaccination_old_style_2021-04-08.csv')
     raw = read_csv(raw_path)
     raw.sort_values([date_col, area_code], inplace=True)
-    weekly = raw[[date_col, area_code, first_dose_weekly, second_dose_weekly]].dropna()
-    weekly.rename(
-        columns={first_dose_weekly: any_cov, second_dose_weekly: full_cov},
-        errors='raise', inplace=True
-    )
+    weekly = raw[[
+        date_col,
+        area_code,
+        'weeklyPeopleVaccinatedFirstDoseByVaccinationDate',
+        'weeklyPeopleVaccinatedSecondDoseByVaccinationDate'
+    ]].dropna()
+    weekly.rename(errors='raise', inplace=True, columns={
+        'weeklyPeopleVaccinatedFirstDoseByVaccinationDate': any_cov,
+        'weeklyPeopleVaccinatedSecondDoseByVaccinationDate': full_cov
+    })
     return weekly.set_index([date_col, area_code]).groupby(level=-1).cumsum()
 
 
 def daily_data(raw):
     daily = raw[[
-        date_col, area_code, first_dose_daily_cum, second_dose_daily_cum
+        date_col, area_code, first_dose_publish_cum, second_dose_publish_cum
     ]].dropna().set_index([date_col, area_code])
     daily.rename(
-        columns={first_dose_daily_cum: any_cov, second_dose_daily_cum: full_cov},
+        columns={first_dose_publish_cum: any_cov, second_dose_publish_cum: full_cov},
         errors='raise', inplace=True
     )
     return daily

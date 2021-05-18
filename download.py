@@ -22,8 +22,9 @@ from tqdm.notebook import tqdm
 
 from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
-    vaccination_metrics, england_metrics, case_demographics, \
-    overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum
+    vaccination_publish_date_metrics, england_metrics, case_demographics, \
+    overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
+    vaccination_vaccination_date_metrics
 
 MAX_METRICS = 5
 
@@ -296,7 +297,8 @@ def main():
 SETS = {
     'daily': [
         Download(nation, england_metrics, area_name='england'),
-        Download(nation, vaccination_metrics, name='vaccination'),
+        Download(nation, vaccination_publish_date_metrics, name='vaccination'),
+        Download(ltla, vaccination_vaccination_date_metrics, name='vaccination_ltla'),
         Download(nation, [new_admissions, new_virus_tests_sum]+standard_metrics),
     ]+[
         Download(area_type, standard_metrics) for area_type in (region, ltla)

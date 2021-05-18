@@ -104,53 +104,32 @@ new_deaths = Series(
 )
 new_deaths_sum = sum_of(new_deaths)
 
-
-first_dose_weekly = Series(
-    metric=c.first_dose_weekly,
+first_dose_publish_new = Series(
+    metric=c.first_dose_publish_new,
     label='First Dose (New)',
 )
 
-second_dose_weekly = Series(
-    metric=c.second_dose_weekly,
+second_dose_publish_new = Series(
+    metric=c.second_dose_publish_new,
     label='Second Dose (New)',
 )
 
-first_dose_daily_new = Series(
-    metric=c.first_dose_daily_new,
-    label='First Dose (New)',
-)
-
-second_dose_daily_new = Series(
-    metric=c.second_dose_daily_new,
-    label='Second Dose (New)',
-)
-
-complete_dose_daily_new = Series(
-    metric=c.complete_dose_daily_new,
+complete_dose_publish_new = Series(
+    metric=c.complete_dose_publish_new,
     label='Complete (New)',
 )
 
-first_dose_weekly_cum = Series(
-    metric=c.first_dose_weekly_cum,
-    label='First Dose (Total)',
-)
-
-second_dose_weekly_cum = Series(
-    metric=c.second_dose_weekly_cum,
-    label='Second Dose (Total)',
-)
-
-first_dose_daily_cum = Series(
-    metric=c.first_dose_daily_cum,
+first_dose_publish_cum = Series(
+    metric=c.first_dose_publish_cum,
     label='First Dose (Total)'
 )
 
-second_dose_daily_cum = Series(
-    metric=c.second_dose_daily_cum,
+second_dose_publish_cum = Series(
+    metric=c.second_dose_publish_cum,
     label='Second Dose (Total)',
 )
 
-complete_dose_daily_cum = Series(
-    metric=c.complete_dose_daily_cum,
+complete_dose_publish_cum = Series(
+    metric=c.complete_dose_publish_cum,
     label='Complete (Total)',
 )
