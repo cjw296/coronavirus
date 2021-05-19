@@ -40,7 +40,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
         ))
         norm = SymLogNorm(linthresh=r.linthresh, vmin=r.vmin, vmax=r.vmax, base=10)
     elif map.range.linticks:
-        ticks = round_nearest(np.linspace(r.vmin, r.vmax, r.linticks), r.linnearest),
+        ticks = round_nearest(np.linspace(r.vmin, r.vmax, r.linticks), r.linnearest)
 
     plot_kwds = {}
     legend_kwds = {
