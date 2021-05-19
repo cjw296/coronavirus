@@ -166,6 +166,7 @@ class Map:
     area_type: str = None
     per_population: Optional[int] = 100_000
     tick_format: str = None
+    file_prefix: str = None
 
     def __post_init__(self):
         if self.tick_format is None:
@@ -173,6 +174,8 @@ class Map:
                 self.tick_format = '{x:,.0f}%'
             else:
                 self.tick_format = '{x:,.0f}'
+        if self.file_prefix is None:
+            self.file_prefix = self.series.file_prefix
 
     def axis_label(self):
         label = self.series.title
@@ -192,7 +195,9 @@ class Map:
 
     @cached_property
     def data(self):
-        df, data_date = best_data(area_type=self.area_type, metric=self.series.metric)
+        df, data_date = best_data(
+            area_type=self.area_type, metric=self.series.metric, file_prefix=self.file_prefix
+        )
 
         if self.per_population:
             df = with_population(

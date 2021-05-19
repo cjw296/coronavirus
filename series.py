@@ -9,6 +9,7 @@ class Series:
     title: str = None
     color: str = 'black'
     cmap: str = 'viridis'
+    file_prefix: str = None
 
     _lookup = {}
 

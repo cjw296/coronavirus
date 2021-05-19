@@ -54,7 +54,9 @@ class NoData(ValueError): pass
 
 
 def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
-              metric=new_cases_by_specimen_date):
+              metric=new_cases_by_specimen_date, file_prefix: str = None):
+    if file_prefix is None:
+        file_prefix = area_type
     if area_type == msoa:
         assert dt == '*'
         data_path = base_path / 'msoa_composite.csv'
@@ -62,7 +64,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
         data_date = pd.to_datetime(data.iloc[-1][release_timestamp])
     else:
         try:
-            data_path, data_date = find_latest(f'{area_type}_{dt}.csv')
+            data_path, data_date = find_latest(f'{file_prefix}_{dt}.csv')
         except FileNotFoundError:
             if metric != new_cases_by_specimen_date:
                 raise
@@ -90,7 +92,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
         data = data[data[area_code].isin(areas)]
 
     if metric not in data or data.empty:
-        raise NoData(f'No {area_type} for {areas} available in {data_path}')
+        raise NoData(f'No {file_prefix} for {areas} available in {data_path}')
 
     return data, data_date
 
