@@ -57,6 +57,15 @@ unique_people_tested_sum = Series(
 )
 
 
+partially_vaccinated = Series(
+    metric=c.first_dose_vaccinated_cum,
+    title='people at least partially vaccinated',
+    label='vaccinated',
+    color='darkgreen',
+    cmap='Greens',
+)
+
+
 new_virus_tests = Series(
     metric=c.new_virus_tests,
     title='tests performed by specimen date',

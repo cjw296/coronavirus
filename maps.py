@@ -248,6 +248,12 @@ MAPS = {
             Range(linthresh=3, vmax=15, linticks=4, logticks=4, lognearest=1),
             per_population=100,
         ),
+        'partially_vaccinated': Map(
+            s.partially_vaccinated,
+            Range(vmax=100, linticks=6, linnearest=1),
+            per_population=100,
+            default_exclude=0,
+        ),
         'positivity': Map(
             s.unique_cases_positivity_sum,
             Range(linthresh=20, vmax=100, linticks=5, linnearest=5, logticks=5, lognearest=5),

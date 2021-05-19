@@ -376,6 +376,20 @@ compositions = {
         footer,
         durations=slowing_durations, start=data_start, view='england', dpi=150
     ),
+    'cases-vs-vaccinated': Composition(
+        [TextPart('header',
+                  'COVID-19 Cases and Vaccinations from PHE as of {date:%d %b %y}',
+                  fontsize=40)],
+        [
+            MapPart('cases', area_type=ltla),
+            MapPart('partially_vaccinated', area_type=ltla),
+        ],
+        [SummaryPart(left_series=[new_virus_tests_sum],
+                     left_formatter='1m',
+                     right_series=[new_admissions_sum, new_deaths_sum])],
+        footer,
+        durations=slowing_durations, start='2021-01-01', view='england', dpi=150
+    ),
     'second-vs-third': Composition(
         [MapPart('cases',
                  'Second wave as of {frame_date:%d %b %Y}',
