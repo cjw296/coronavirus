@@ -67,7 +67,7 @@ def parallel_params(args, item_is_timestamp=True):
 def parallel_to_date(args, max_date: date, default_exclude=None) -> date:
     if args.to_date:
         return args.to_date
-    exclude_days = default_exclude if args.exclude_days is None else default_exclude
+    exclude_days = default_exclude if args.exclude_days is None else args.exclude_days
     if exclude_days is not None:
         return max_date - timedelta(days=exclude_days)
     return max_date
