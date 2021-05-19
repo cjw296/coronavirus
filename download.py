@@ -298,7 +298,6 @@ SETS = {
     'daily': [
         Download(nation, england_metrics, area_name='england'),
         Download(nation, vaccination_publish_date_metrics, name='vaccination'),
-        Download(ltla, vaccination_vaccination_date_metrics, name='vaccination_ltla'),
         Download(nation, [new_admissions, new_virus_tests_sum]+standard_metrics),
     ]+[
         Download(area_type, standard_metrics) for area_type in (region, ltla)

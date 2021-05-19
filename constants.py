@@ -73,15 +73,6 @@ complete_dose_vaccinated_cum = 'cumPeopleVaccinatedCompleteByVaccinationDate'
 
 msoa_metrics = new_cases_sum, new_cases_rate, new_cases_change
 
-england_metrics = [
-    new_admissions_sum,
-    new_cases_sum,
-    new_deaths_sum,
-    unique_people_tested_sum,
-    new_virus_tests_sum,
-    in_hospital,
-]
-
 vaccination_publish_date_metrics = [
     first_dose_publish_new,
     second_dose_publish_new,
@@ -100,13 +91,22 @@ vaccination_vaccination_date_metrics = [
     complete_dose_vaccinated_cum,
 ]
 
+england_metrics = [
+    new_admissions_sum,
+    new_cases_sum,
+    new_deaths_sum,
+    unique_people_tested_sum,
+    new_virus_tests_sum,
+    in_hospital,
+]+vaccination_vaccination_date_metrics
+
 standard_metrics = [
     new_cases_by_specimen_date,
     new_deaths_by_death_date,
     unique_people_tested_sum,
     unique_cases_positivity_sum,
     new_cases_rate
-]
+]+vaccination_vaccination_date_metrics
 
 lockdown = date(2020, 3, 23)
 testing = date(2020, 4, 30)
