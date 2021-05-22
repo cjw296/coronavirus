@@ -15,11 +15,12 @@ from constants import (
     unique_people_tested_sum, national_lockdowns, ltla, my_areas,
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
     scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
-    new_admissions, england, first_dose_vaccinated_new, second_dose_vaccinated_new
+    new_admissions, england, first_dose_vaccinated_new, second_dose_vaccinated_new,
+    first_dose_vaccinated_cum, complete_dose_vaccinated_cum
 )
 from geo import ltla_codes
 from phe import best_data, current_and_previous_data, load_population
-from plotting import stacked_bar_plot, nation_colors, per1m_formatter, per0_formatter
+from plotting import stacked_bar_plot, nation_colors, per1m_formatter, per0_formatter, pct_formatter
 from series import Series
 
 
@@ -241,6 +242,28 @@ def daily_vaccinations(config: 'Bars', dt: date) -> Iterable[Line]:
             legend_label=legend,
             axis_label='7 day rolling average of vaccinations',
             formatter=per0_formatter,
+            style=style,
+        )
+
+
+def population_vaccinated(config: 'Bars', dt: date) -> Iterable[Line]:
+    data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
+    data = data.merge(load_population(), on=area_code, how='left')
+    agg = data.groupby(date_col).agg({
+        first_dose_vaccinated_cum: 'sum',
+        complete_dose_vaccinated_cum: 'sum',
+        population: 'sum'
+    })
+    for metric, legend, style in (
+            (first_dose_vaccinated_cum, 'Partially vaccination', 'dashed'),
+            (complete_dose_vaccinated_cum, 'Fully Vaccinated', 'solid'),
+    ):
+        yield Line(
+            np.trim_zeros(agg[metric] / agg[population]),
+            color='dodgerblue',
+            legend_label=legend,
+            axis_label='% population vaccinated',
+            formatter=pct_formatter,
             style=style,
         )
 
