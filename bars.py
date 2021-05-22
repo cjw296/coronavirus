@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, replace
 from datetime import timedelta, date
 from statistics import mean
-from typing import List, Union, Optional, Tuple, Iterable, Callable
+from typing import List, Union, Optional, Tuple, Iterable, Callable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -63,8 +63,8 @@ def fix_x_axis(ax, data, earliest=None, date_format=DEFAULT_DATE_FORMAT, number_
 
 
 def plot_stacked_bars(
-        ax, data, label, average_days, average_end, title, testing: Optional['Testing'],
-        ylim, tested_ylim, earliest, colormap=DEFAULT_COLORMAP, normalized_values=None,
+        ax, data, label, average_days, average_end, title, lines: Sequence['Line'],
+        ylim, lines_ylim, earliest, colormap=DEFAULT_COLORMAP, normalized_values=None,
         legend_loc='upper left', legend_ncol=1, date_format=DEFAULT_DATE_FORMAT,
 ):
 
@@ -81,18 +81,19 @@ def plot_stacked_bars(
             handles.append(ax.axhline(y=latest_average, color='red', linestyle='dotted',
                                     label=f'Latest {average_label}: {latest_average:,.0f}'))
 
-    if testing is not None:
-        tested_ax = legend_ax = ax.twinx()
-        testing_data = testing.data
-        handles.extend(
-            tested_ax.plot(testing_data.index, testing_data, color=testing.color,
-                           label=testing.legend_label, linestyle='dotted')
-        )
-        tested_ax.set_ylabel(testing.axis_label, rotation=-90, labelpad=14)
-        tested_ax.set_ylim(0, tested_ylim)
-        tested_ax.yaxis.tick_left()
-        tested_ax.yaxis.set_label_position("left")
-        tested_ax.yaxis.set_major_formatter(testing.formatter)
+    if lines:
+        lines_ax = legend_ax = ax.twinx()
+        for line in lines:
+            line_data = line.data
+            handles.extend(
+                lines_ax.plot(line_data.index, line_data, color=line.color,
+                              label=line.legend_label, linestyle=line.style)
+            )
+        lines_ax.set_ylabel(line.axis_label, rotation=-90, labelpad=14)
+        lines_ax.set_ylim(0, lines_ylim)
+        lines_ax.yaxis.tick_left()
+        lines_ax.yaxis.set_label_position("left")
+        lines_ax.yaxis.set_major_formatter(line.formatter)
     else:
         legend_ax = ax
 
@@ -171,7 +172,7 @@ def plot_bars(
         plot_stacked_bars(
             bars_ax, data, config.ylabel,
             config.average_days, average_end, config.title,
-            config.testing_for(data_date), config.ylim, config.tested_ylim,
+            config.lines_for(data_date), config.ylim, config.line_ylim,
             config.earliest, config.colormap, config.colormap_values(),
             config.legend_loc, config.legend_ncol, config.date_format
         )
@@ -184,15 +185,19 @@ def plot_bars(
 
 
 @dataclass()
-class Testing:
+class Line:
+    """
+    Lines to show over the top of the lar
+    """
     data: pd.Series
     color: str
     legend_label: str
     axis_label: str
     formatter: Formatter
+    style: str = 'dotted'
 
 
-def unique_people_tested(config: 'Bars', dt: date) -> Testing:
+def unique_people_tested(config: 'Bars', dt: date) -> Iterable[Line]:
     data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
     if unique_people_tested_sum in data:
         data = data.merge(load_population(), on=area_code, how='left')
@@ -203,7 +208,7 @@ def unique_people_tested(config: 'Bars', dt: date) -> Testing:
     else:
         series = pd.Series(0, index=[pd.to_datetime(dt)])
     tested_label = '% population tested'
-    return Testing(
+    yield Line(
         series,
         color='darkblue',
         legend_label=tested_label,
@@ -212,10 +217,10 @@ def unique_people_tested(config: 'Bars', dt: date) -> Testing:
     )
 
 
-def tests_carried_out(config: 'Bars', dt: date) -> Testing:
+def tests_carried_out(config: 'Bars', dt: date) -> Iterable[Line]:
     data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
     metric = s.new_virus_tests_sum.metric
-    return Testing(
+    yield Line(
         np.trim_zeros(data.groupby(date_col).agg({metric: 'sum'})[metric] / 7),
         color=s.new_virus_tests_sum.color,
         legend_label='LFD or PCR tests performed',
@@ -233,13 +238,13 @@ class Bars:
     columns_from: str = area_name
     uncertain_days: int = 5
     average_days: Optional[int] = 7
-    testing_data: Callable[['Bars', date], Testing] = None
     diff_days: int = 1
     diff_ylims: List[float] = None
     diff_log_scale: bool = False
     ylim: float = None
     ylabel: str = None
-    tested_ylim: float = None
+    lines: Callable[['Bars', date], Iterable[Line]] = None
+    line_ylim: float = None
     earliest: Union[str, date, pd.Timestamp] = '2020-10-01'
     area_type: str = ltla
     areas: List[str] = None
@@ -300,9 +305,11 @@ class Bars:
             data = data.diff().iloc[1:]
         return data, data_date
 
-    def testing_for(self, dt: date) -> Testing:
-        if self.testing_data is not None:
-            return self.testing_data(self, dt)
+    def lines_for(self, dt: date) -> Sequence[Line]:
+        if self.lines:
+            return list(self.lines(self, dt))
+        else:
+            return ()
 
     def colormap_values(self):
         return None
@@ -409,7 +416,7 @@ BARS = dict(
     cases_nations=Bars(
         area_type=nation,
         colormap=nation_colors,
-        testing_data=tests_carried_out
+        lines=tests_carried_out
     ),
     cases_devolved=Bars(
         area_type=nation,

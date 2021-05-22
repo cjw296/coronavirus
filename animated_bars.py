@@ -38,9 +38,9 @@ def main():
     if args.diff_no_lims:
         params['diff_ylims'] = None
 
-    testing = config.testing_for(latest_date)
-    if testing is not None:
-        params['tested_ylim'] = testing.data.max() * args.y_max_factor
+    lines = config.lines_for(latest_date)
+    if lines:
+        params['line_ylim'] = max(l.data.max() for l in lines) * args.y_max_factor
 
     parallel_render(f'animated_{args.config}',
                     partial(plot_bars,
