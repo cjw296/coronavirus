@@ -110,6 +110,10 @@ def with_derived(data):
     return data
 
 
+def tab20(i, offset: bool = False):
+    return plt.cm.tab20(i * 2 + (1 if offset else 0))
+
+
 def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     # input data:
     raw, data_date = raw_vaccination_data(dt)
@@ -138,8 +142,7 @@ def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     totals = totals.swaplevel(axis='columns').sort_index(axis='columns')
 
     # plotting
-    colors = list(chain(*((plt.cm.tab20(i * 2), plt.cm.tab20(i * 2 + (1 if show_partial else 0)))
-                          for i in nation_tab10_cm_indices)))
+    colors = list(chain(*((tab20(i), tab20(i, show_partial)) for i in nation_tab10_cm_indices)))
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')
