@@ -17,6 +17,7 @@ from pygifsicle import optimize
 from tqdm.auto import tqdm
 
 from animated import slowing_durations
+from args import add_date_arg
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
     new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum, unique_people_tested_sum
@@ -264,8 +265,8 @@ def main():
                         help='fast=0.05, slow=0.3')
     parser.add_argument('--final-duration', type=float, default=3)
     # overrides
-    parser.add_argument('--start')
-    parser.add_argument('--end')
+    add_date_arg(parser, '--start')
+    add_date_arg(parser, '--end')
     parser.add_argument('--dpi', type=int)
     parser.add_argument('--output', choices=['mp4', 'gif'], default='mp4')
 
