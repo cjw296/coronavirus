@@ -432,11 +432,15 @@ compositions = {
     ),
     'may-2021': Composition(
         [TextPart('header',
-                  'New COVID-19 Cases in England by Specimen Date from PHE as of {date:%d %b %y}',
+                  'COVID-19 Cases and PCR Testing from PHE as of {date:%d %b %y}',
                   fontsize=40)],
         [
-            MapPart('cases', area_type=msoa),
-            MapPart('cases', area_type=msoa, view='2021-may'),
+            MapPart('cases', area_type=msoa, view='2021-may-north'),
+            MapPart('cases', area_type=msoa, view='2021-may-mid', dpi=100),
+        ],
+        [
+            MapPart('tested', area_type=ltla, view='2021-may-north'),
+            MapPart('tested', area_type=ltla, view='2021-may-mid', dpi=100),
         ],
         [SummaryPart(left_series=[new_virus_tests_sum],
                      left_formatter='1m',

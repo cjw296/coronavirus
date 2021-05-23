@@ -489,19 +489,23 @@ views = {
         outline=[Places('Sheppey East', geom_source=msoa_geoms_20)],
         label=places_from_outline,
     ),
-    '2021-may': View(
-        show=Places('Preston',
-                    'North Kesteven',
-                    geom_source=ltla_geoms_20),
-        outline=[Places('Bolton',
-                        'Barnsley',
-                        'Sheffield',
-                        'Blackburn',
-                        'Huddersfield',
-                        'Doncaster',
-                        'Derby',
-                        'Nottingham',
-                        'Liverpool')],
-        label=PlacesFrom(attr='outline'),
+    '2021-may-north': View(
+        show=Places(
+            'Blackburn',
+            'Bolton',
+            'Leeds',
+            'Liverpool',
+            'Sheffield',
+        ),
+        outline=PlacesFrom(attr='show'),
+        label=PlacesFrom(attr='show'),
+    ),
+    '2021-may-mid': View(
+        show=Places(
+            'Bedford',
+        ),
+        outline=PlacesFrom(attr='show'),
+        label=PlacesFrom(attr='show'),
+        margin_pct=300,
     ),
 }
