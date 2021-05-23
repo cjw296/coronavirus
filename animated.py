@@ -8,6 +8,7 @@ import imageio
 import numpy as np
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
+from pandas import DatetimeIndex
 from pygifsicle import optimize
 from tqdm import tqdm
 
@@ -108,7 +109,7 @@ def round_nearest(a, nearest):
     return (a/nearest).round(0) * nearest
 
 
-def slowing_durations(dates: Union[int, list], normal=0.05, slow=0.3, period=30):
+def slowing_durations(dates: Union[int, list, DatetimeIndex], normal=0.05, slow=0.3, period=30):
     length = dates if isinstance(dates, int) else len(dates)
     durations = np.full(length, normal)
     period = min(len(durations), period)
