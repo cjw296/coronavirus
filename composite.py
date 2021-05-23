@@ -124,7 +124,7 @@ class MapPart(Part):
     prefix = 'animated_map_'
 
     def __init__(self, map_name: str, title: str = None, area_type: str = None, view: str = None,
-                 start: Date = None, end: Date = None, dpi: int = None):
+                 start: Date = None, end: Date = None, dpi: int = None, legend: bool = True):
         super().__init__()
         self.area_type = area_type
         self.map = map_name
@@ -133,6 +133,7 @@ class MapPart(Part):
         self.start = start
         self.end = end
         self.dpi = dpi
+        self.legend = legend
 
     @property
     def name(self):
@@ -149,6 +150,8 @@ class MapPart(Part):
             cmd.extend(('--to-date', self.end))
         if self.dpi:
             cmd.extend(('--dpi', self.dpi))
+        if not self.legend:
+            cmd.append('--no-legend')
         run(cmd)
 
 

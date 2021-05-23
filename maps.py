@@ -43,16 +43,22 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
         ticks = round_nearest(np.linspace(r.vmin, r.vmax, r.linticks), r.linnearest)
 
     plot_kwds = {}
-    legend_kwds = {
-        'fraction': view.legend_fraction,
-        'format': StrMethodFormatter(map.tick_format),
-        'ticks': ticks,
-        'extend': 'max' if map.range.vmin == 0 else 'both',
-        'label': map.axis_label()
-    }
 
-    if ticks is not None:
-        legend_kwds['ticks'] = ticks
+    if view.legend_fraction:
+        legend = True,
+        legend_kwds = {
+            'fraction': view.legend_fraction,
+            'format': StrMethodFormatter(map.tick_format),
+            'ticks': ticks,
+            'extend': 'max' if map.range.vmin == 0 else 'both',
+            'label': map.axis_label()
+        }
+        if ticks is not None:
+            legend_kwds['ticks'] = ticks
+    else:
+        legend = False
+        legend_kwds = {}
+
 
     if norm is not None:
         plot_kwds['norm'] = norm
@@ -64,7 +70,7 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
     ax = data.plot(
         ax=ax,
         column=metric,
-        legend=True,
+        legend=legend,
         cmap=cmap,
         vmin=r.vmin,
         vmax=r.vmax,
@@ -105,11 +111,13 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
 
 
 def render_dt(
-        data_date, earliest_date, to_date, area_type, map_type, view, bare, title, top, dpi,
+        data_date, earliest_date, area_type, map_type, view, bare, legend, title, top, dpi,
         frame_date, image_path
 ):
     map = get_map(area_type, map_type)
     view = views[view]
+    if not legend:
+        view.legend_fraction = 0
     if bare:
         width, height, _ = view.layout(summary_height=0)
         plt.figure(figsize=(width, height), dpi=map.dpi)

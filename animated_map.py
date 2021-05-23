@@ -16,6 +16,7 @@ def main():
     parser.add_argument('area_type', choices=MAPS.keys())
     parser.add_argument('map')
     parser.add_argument('--bare', action='store_true', help='just the map')
+    parser.add_argument('--no-legend', dest='legend', action='store_false', default=True)
     parser.add_argument('--title', help='override title template')
     parser.add_argument('--view', choices=views.keys())
     parser.add_argument('--dpi', type=int)
@@ -36,8 +37,8 @@ def main():
     dpi = args.dpi or map.dpi
 
     render = partial(
-        render_dt, data_date, earliest_date, to_date, args.area_type, args.map, view,
-        args.bare, args.title, args.top, dpi
+        render_dt, data_date, earliest_date, args.area_type, args.map, view,
+        args.bare, args.legend, args.title, args.top, dpi
     )
 
     if args.raise_errors:
