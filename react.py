@@ -25,6 +25,12 @@ def fix_number(row, key):
 
 def split_confidence(row, key, name):
     ci = re.search(r'(\d+)% CI', key).group(1)
+    for possible_key in row:
+        if possible_key.replace('\n', '') == key:
+            key = possible_key
+            break
+    else:
+        raise ValueError(f'{key} not found in {row}')
     match = re.match(r'([\d.]+)% +\(([\d.]+)%, +([\d.]+)%\)', row.pop(key))
     if not match:
         raise ValueError(row, key, name)

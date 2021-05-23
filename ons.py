@@ -33,6 +33,15 @@ def worksheet_rows(path, sheet):
 
 def confidence(base, header_rows):
     levels = next(header_rows)
+    if len(levels) == 1:
+        parts = levels[0].split()
+        assert parts[0] == '95%', parts
+        yield f'{base}-{parts[1].lower()}-95'
+        levels = next(header_rows)
+        parts = levels[0].split()
+        assert parts[0] == '95%', parts
+        yield f'{base}-{parts[1].lower()}-95'
+        return
     assert levels[0].startswith('95%'), levels[0]
     yield f'{base}-{levels[1].lower()}-95'
     levels = next(header_rows)
@@ -42,7 +51,11 @@ def confidence(base, header_rows):
 
 def extract_headers(rows, rename, header_processing):
     headers = []
-    header_rows = zip(*(next(rows) for _ in range(2)))
+    header_row = next(rows)
+    if any((isinstance(h, str) and 'Lower' in h) for h in header_row):
+        header_rows = iter([[h] for h in header_row])
+    else:
+        header_rows = zip(*(header_row, next(rows)))
     for levels in header_rows:
         if not any(levels):
             break
@@ -112,6 +125,7 @@ def main():
         rename={
             'Estimated average % of the population that had COVID-19': 'percent',
             'Estimate of the number of people testing positive for COVID-19': 'number',
+            'Estimated number of people testing positive for COVID-19': 'number',
             'Estimated average ratio of the population that had COVID-19': 'ratio',
         },
         header_processing={confidence: ['percent', 'number', 'ratio']},
@@ -125,7 +139,9 @@ def main():
         rename={
             'Modelled % testing positive for COVID-19': 'percent',
             'Modelled estimate of the number of people testing positive for COVID-19': 'number',
-            'Ratio of estimated number of people testing positive for COVID-19': 'ratio'
+            'Modelled number of people testing positive for COVID-19': 'number',
+            'Ratio of estimated number of people testing positive for COVID-19': 'ratio',
+            'Modelled ratio of people testing positive for COVID-19': 'ratio',
         },
         header_processing={confidence: ['percent', 'number', 'ratio']},
         row_processing={datetime_to_date: ['Date']},
