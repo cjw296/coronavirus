@@ -114,7 +114,7 @@ def tab20(i, offset: bool = False):
     return plt.cm.tab20(i * 2 + (1 if offset else 0))
 
 
-def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
+def vaccination_dashboard(savefig=True, dt='*'):
     # input data:
     raw, data_date = raw_vaccination_data(dt)
     names_frame = raw[[area_code, area_name]].drop_duplicates()
@@ -139,10 +139,11 @@ def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     pie_data = pie_data[['full_pct', 'partial_pct', 'none_pct']].transpose()
     totals = data.pivot_table(values=['partial', 'full'], index=[date_col],
                               columns=area_name).fillna(0)
-    totals = totals.swaplevel(axis='columns').sort_index(axis='columns')
+    totals = totals.sort_index(axis='columns')
 
     # plotting
-    colors = list(chain(*((tab20(i), tab20(i, show_partial)) for i in nation_tab10_cm_indices)))
+    indices = nation_tab10_cm_indices
+    colors = [tab20(i) for i in indices]+[tab20(i, offset=True) for i in indices]
 
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fig.set_facecolor('white')
@@ -172,9 +173,10 @@ def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     ax.set_title('UK total population partially or fully vaccinated')
 
     labels = []
-    for nation, level in totals.columns:
+    for level, nation in totals.columns:
         if level == 'full':
-            labels.append(f"{nation}: {totals[nation].iloc[-1].sum():,.0f} people")
+            total = totals['full', nation].iloc[-1] + totals['partial', nation].iloc[-1]
+            labels.append(f"{nation}: {total:,.0f} people")
         else:
             labels.append(None)
     ax.stackplot(totals.index, totals.values.transpose(), colors=colors, labels=labels, zorder=10)
@@ -207,7 +209,7 @@ def vaccination_dashboard(savefig=True, show_partial=True, dt='*'):
     ax.set_title('Rate of injections by publish date')
 
     bottom = None
-    for (nation_name, level), color in zip(totals, colors):
+    for (level, nation_name), color in zip(totals, colors):
         nation_data = data[data[area_name] == nation_name].iloc[1:].set_index(date_col)
         if bottom is None:
             bottom = pd.Series(0, nation_data.index)
