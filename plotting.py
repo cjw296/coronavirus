@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import reset_output, output_notebook, show, output_file, save
 from bokeh.layouts import row
-from bokeh.models import GeoJSONDataSource, HoverTool
+from bokeh.models import GeoJSONDataSource, HoverTool, DataRange1d
 from bokeh.palettes import Reds
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
@@ -107,6 +107,10 @@ def matplotlib_zoe_vs_phe_map(
 def bokeh_zoe_vs_phe_map(
         zoe_df, zoe_date, zoe_max, phe_recent_geo, phe_recent_title, phe_max
 ):
+
+    x_range = DataRange1d(bounds="auto")
+    y_range = DataRange1d(bounds="auto")
+
     zoe_new_lad16 = pd.merge(
         old_ltla_geoms(),
         zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
@@ -115,7 +119,8 @@ def bokeh_zoe_vs_phe_map(
     )
     zoe_title = f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}'
     zoe = geoplot_bokeh(
-        zoe_new_lad16.to_crs('EPSG:3857'), zoe_title, 'percentage', vmax=zoe_max, tooltips=[
+        zoe_new_lad16.to_crs('EPSG:3857'), zoe_title, 'percentage',
+        x_range=x_range, y_range=y_range, vmax=zoe_max, tooltips=[
             ('Name', '@lad16nm'),
             ('Percentage', '@{percentage}{1.111}%'),
         ]
@@ -126,7 +131,7 @@ def bokeh_zoe_vs_phe_map(
     ]]
     phe = geoplot_bokeh(
         phe_data, phe_recent_title, pct_population,
-        x_range=zoe.x_range, y_range=zoe.y_range, vmax=phe_max, tooltips=[
+        x_range=x_range, y_range=y_range, vmax=phe_max, tooltips=[
             ('Name', '@name'),
             ('Code', '@code'),
             ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
