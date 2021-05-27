@@ -111,15 +111,21 @@ def query_phe(filters, structure, max_workers=None, **params):
     return pd.DataFrame(result)
 
 
-class RateLimited(ValueError):
+class HttpError(ValueError):
 
-    def __init__(self, status_code, content, retry_after):
+    def __init__(self, status_code, content):
         self.status_code = status_code
         self.content = content
-        self.retry_after = retry_after
 
     def __str__(self):
         return f'{self.status_code}: {self.content}'
+
+
+class RateLimited(ValueError):
+
+    def __init__(self, status_code, content, retry_after):
+        super().__init__(status_code, content)
+        self.retry_after = retry_after
 
 
 class NoContent(ValueError):
@@ -160,7 +166,7 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
         )
 
     if response.status_code != 200:
-        raise ValueError(f'{response.status_code}: {response.content}')
+        raise HttpError(response.status_code, response.content)
 
     actual_release = datetime.strptime(
         response.headers['Content-Disposition'].rsplit('_')[-1], f'%Y-%m-%d.csv"'
@@ -219,6 +225,10 @@ def retrying_phe_download(
             rldt = datetime.now() + timedelta(seconds=e.retry_after)
             print(f'retrying after {e.retry_after}s at {rldt:%H:%M:%S} ({e})')
             sleep(e.retry_after)
+        except HttpError as e:
+            if 400 <= e.status_code < 500:
+               raise
+            print(f'retrying as {e}')
         except ReadTimeout:
             print('read timeout')
         attempt += 1
