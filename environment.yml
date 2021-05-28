@@ -12,6 +12,7 @@ dependencies:
   - jupyter >= 1.0.0
   - matplotlib > 3.4.0
   - moviepy > 1.0
+  - openpyxl
   - pandas > 1.2
   - pip > 21.1
   - picky-conda
