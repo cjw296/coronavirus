@@ -430,7 +430,7 @@ admission_demographics = DemographicBars(
 
 BARS = dict(
     cases_my_areas=Bars(
-        diff_ylims=[-2, 350],
+        diff_ylims=[-10, 40],
         areas=my_areas,
     ),
     cases_oxford=Bars(
