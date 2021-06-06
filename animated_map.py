@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--view', choices=views.keys())
     parser.add_argument('--dpi', type=int)
     parser.add_argument('--top', type=int, help='label the top n areas')
-    add_parallel_args(parser, default_duration=None)
+    add_parallel_args(parser, default_duration='slowing')
     args = parser.parse_args()
 
     map = get_map(args.area_type, args.map)
@@ -45,10 +45,8 @@ def main():
         warnings.filterwarnings('error', category=UserWarning)
         os.environ['PYTHONWARNINGS'] = 'error::UserWarning'
 
-    params = parallel_params(args)
-    params['duration'] = args.duration or slowing_durations(dates)
     parallel_render(f'animated_map_{map.area_type}_{args.map}_{view}',
-                    render, dates, **params)
+                    render, dates, **parallel_params(args, dates))
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ def main():
                         from_date=args.from_date,
                         data_date=args.data_date
                     ),
-                    dates, **parallel_params(args))
+                    dates, **parallel_params(args, dates))
 
 
 if __name__ == '__main__':

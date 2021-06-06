@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from dateutil.parser import parse as parse_date
 import pandas as pd
 
+from animated import slowing_durations
 from constants import (
     data_start, second_wave, lockdown2, earliest_available_download,
     earliest_testing, earliest_msoa, lockdown3
@@ -36,6 +37,16 @@ def add_date_arg(parser, name='--from-date', **kw):
     parser.add_argument(name, type=date_lookup, help=help_text+', '.join(special_dates), **kw)
 
 
+duration_makers = {
+    'slowing': slowing_durations,
+}
+
+
+def duration(text):
+    maker = duration_makers.get(text)
+    return float(text) if maker is None else maker
+
+
 def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_date=True):
     if from_date:
         add_date_arg(parser, default=second_wave if isinstance(from_date, bool) else from_date)
@@ -48,15 +59,15 @@ def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_
     parser.add_argument('--ignore-errors', dest='raise_errors', action='store_false')
 
     parser.add_argument('--max-workers', type=int)
-    parser.add_argument('--duration', type=float, default=default_duration,
+    parser.add_argument('--duration', type=duration, default=default_duration,
                         help='fast=0.05, slow=0.3')
 
     add_date_arg(parser, '--single')
 
 
-def parallel_params(args, item_is_timestamp=True):
+def parallel_params(args, dates=None, item_is_timestamp=True):
     return dict(
-        duration=args.duration,
+        duration=args.duration(dates) if callable(args.duration) else args.duration,
         outputs=args.output,
         raise_errors=args.raise_errors,
         max_workers=args.max_workers,
