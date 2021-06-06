@@ -82,3 +82,9 @@ def parallel_to_date(args, max_date: date, default_exclude=None) -> date:
     if exclude_days is not None:
         return max_date - timedelta(days=exclude_days)
     return max_date
+
+
+def add_choices_arg(parser, name, lookup):
+    def choice(text):
+        return [lookup.get(text)]
+    parser.add_argument(name, type=choice, default=list(lookup.values()))
