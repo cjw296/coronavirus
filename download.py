@@ -24,7 +24,7 @@ from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
     vaccination_publish_date_metrics, england_metrics, case_demographics, \
     overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
-    vaccination_vaccination_date_metrics
+    vaccination_vaccination_date_metrics, utla
 
 MAX_METRICS = 5
 
@@ -319,7 +319,14 @@ SETS = {
     ],
     'healthcare': [
         Download(nhs_region, [new_admissions]),
-    ]
+    ],
+    'deaths': [Download(area_type,
+                        metrics=['newDeathsByDeathDate',
+                                 'cumDeathsByDeathDate',
+                                 'newDeathsByPublishDate',
+                                 'cumDeathsByPublishDate'],
+                        name=f'deaths_archive_{area_type}')
+               for area_type in (nation, region, utla, ltla)]
 }
 
 
