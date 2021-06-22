@@ -35,6 +35,10 @@ pct_population = '% of population'
 area_code = 'areaCode'
 area_name = 'areaName'
 area_type = 'areaType'
+
+# see https://github.com/publichealthengland/coronavirus-dashboard-metadata/tree/master/modals
+# for definitions!
+
 new_cases_by_specimen_date = 'newCasesBySpecimenDate'
 new_admissions = "newAdmissions"
 new_deaths_by_death_date = 'newDeaths28DaysByDeathDate'
