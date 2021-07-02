@@ -20,6 +20,7 @@ special_dates = {text: dt for dt, text in (
     (earliest_msoa, 'earliest-msoa'),
     (earliest_testing, 'earliest-testing'),
     (date.today(), 'today'),
+    (date.today() - timedelta(days=1), 'yesterday'),
 )}
 
 
