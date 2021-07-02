@@ -24,7 +24,7 @@ from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
     vaccination_publish_date_metrics, england_metrics, case_demographics, \
     overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
-    vaccination_vaccination_date_metrics, utla
+    vaccination_vaccination_date_metrics, utla, all_nation_metrics
 
 MAX_METRICS = 5
 
@@ -327,7 +327,7 @@ SETS = {
                                  'cumDeathsByPublishDate'],
                         name=f'deaths_archive_{area_type}')
                for area_type in (nation, region, utla, ltla)],
-    'nations': [Download(nation, england_metrics, area_name=area) for area in
+    'nations': [Download(nation, all_nation_metrics, area_name=area) for area in
                 ('scotland', 'wales', 'northern ireland')]
 }
 

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.dates import DAYS_PER_MONTH
 
-from constants import date_col, in_hospital
+from constants import in_hospital, nation, england, date_col
 from download import find_latest
-from phe import read_csv
+from phe import best_data
 from plotting import per1k_formatter, per0k_formatter
 from zoe import find_previous as load_zoe
 
@@ -28,8 +28,8 @@ def load_data(data_date=None):
     zoe_date, zoe = load_zoe((data_date or pd.to_datetime('now')) + pd.to_timedelta(1, 'D'),
                              print_path=False)
 
-    hospital_data_path, _ = find_latest('england_*.csv')
-    hospital = read_csv(hospital_data_path, index_col=date_col)[in_hospital].dropna()
+    data, _ = best_data(area_type=nation, areas=[england], metric=in_hospital)
+    hospital = data.set_index(date_col).sort_index()[in_hospital].dropna()
     if data_date:
         hospital = hospital.loc[:data_date]
     hospital_date = hospital.index.max()

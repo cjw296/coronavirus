@@ -95,13 +95,15 @@ vaccination_vaccination_date_metrics = [
     complete_dose_vaccinated_cum,
 ]
 
-england_metrics = [
+all_nation_metrics = [
     new_admissions_sum,
     new_cases_sum,
     new_deaths_sum,
+]
+
+england_metrics = all_nation_metrics + [
     unique_people_tested_sum,
     new_virus_tests_sum,
-    in_hospital,
 ]+vaccination_vaccination_date_metrics
 
 standard_metrics = [
@@ -109,6 +111,7 @@ standard_metrics = [
     new_deaths_by_death_date,
     unique_people_tested_sum,
     unique_cases_positivity_sum,
+    in_hospital,
     new_cases_rate
 ]+vaccination_vaccination_date_metrics
 
