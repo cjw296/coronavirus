@@ -166,11 +166,11 @@ def map_data(for_date):
     return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
-def summary_data(series, data_date=None, start=None, end=None):
+def summary_data(series, data_date=None, start=None, end=None, nation='england'):
     if data_date in (None, '*'):
-        data_path, data_date = find_latest('england_*.csv')
+        data_path, data_date = find_latest(f'{nation}_*.csv')
     else:
-        data_path = base_path / f'england_{pd.to_datetime(data_date).date()}.csv'
+        data_path = base_path / f'{nation}_{pd.to_datetime(data_date).date()}.csv'
     data = read_csv(
         data_path, start, end, [s_.metric for s_ in series], index_col=[date_col]
     ) / 7
@@ -187,7 +187,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
                  right_ymax: float = None,
                  title=True, figsize=(16, 5),
                  show_latest=False,
-                 log=False):
+                 log=False,
+                 nation='england'):
     all_series = list(left_series)+list(right_series)
     if not all_series:
         return
@@ -199,7 +200,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
     left_ax = ax
     right_ax = ax = left_ax.twinx()
 
-    data, data_date = summary_data(all_series, data_date, earliest_date, to_date)
+    data, data_date = summary_data(all_series, data_date, earliest_date, to_date, nation)
 
     possible_max = [dt for dt in (frame_date, to_date) if dt is not None]
     if possible_max:
@@ -250,7 +251,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
     ax.legend(lines, labels+['lockdown'], loc='upper left', framealpha=1)
     if title:
-        ax.set_title(f'7 day moving average of PHE data for England as of {data_date:%d %b %Y}')
+        ax.set_title('7 day moving average of PHE data for '
+                     f'{nation.capitalize()} as of {data_date:%d %b %Y}')
     if frame_date:
         ax.axvline(frame_date, color='red')
     ax.minorticks_off()

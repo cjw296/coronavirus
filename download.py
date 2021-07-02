@@ -326,7 +326,9 @@ SETS = {
                                  'newDeathsByPublishDate',
                                  'cumDeathsByPublishDate'],
                         name=f'deaths_archive_{area_type}')
-               for area_type in (nation, region, utla, ltla)]
+               for area_type in (nation, region, utla, ltla)],
+    'nations': [Download(nation, england_metrics, area_name=area) for area in
+                ('scotland', 'wales', 'northern ireland')]
 }
 
 
