@@ -39,7 +39,7 @@ area_type = 'areaType'
 # see https://github.com/publichealthengland/coronavirus-dashboard-metadata/tree/master/modals
 # for definitions!
 
-new_cases_by_specimen_date = 'newCasesBySpecimenDate'
+new_cases_by_specimen_date = new_cases = 'newCasesBySpecimenDate'
 new_admissions = "newAdmissions"
 new_deaths_by_death_date = 'newDeaths28DaysByDeathDate'
 new_tests_by_publish_date = 'newTestsByPublishDate'
