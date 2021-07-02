@@ -185,7 +185,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
                  right_series: Sequence[s.Series] = (),
                  right_formatter=per1k_formatter,
                  right_ymax: float = None,
-                 title=True, figsize=(16, 5),
+                 title=True, figsize=(16, 5), x_labels=True,
                  show_latest=False,
                  log=False,
                  nation='england'):
@@ -259,6 +259,8 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
 
     xaxis = left_ax.get_xaxis()
     xaxis.label.set_visible(False)
+    if not x_labels:
+        xaxis.set_ticklabels([])
 
 
 def latest_from(data):
