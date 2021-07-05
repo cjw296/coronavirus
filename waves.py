@@ -10,10 +10,7 @@ import series as s
 from phe import summary_data
 
 
-def waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15):
-    data, _ = summary_data([phe_series], nation=nation)
-    data.index.name = None
-    metric = phe_series.metric if isinstance(phe_series, s.Series) else phe_series
+def waves(data, metric, title, sax=None, wax=None, rat=None, n=15):
 
     if sax is None:
         fig, (sax, wax, rat) = plt.subplots(nrows=1, ncols=3, figsize=(16, 5), dpi=150)
@@ -56,6 +53,13 @@ def waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15):
     rat.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 100:,.0f}%"))
 
 
+def summary_waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15):
+    data, _ = summary_data([phe_series], nation=nation)
+    data.index.name = None
+    metric = phe_series.metric
+    waves(data, metric, title, sax, wax, rat, n)
+
+
 def plot_all(*, figsize, nation='england', dpi=150, cases=15, admissions=10, deaths=19, **adjust):
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=figsize, dpi=dpi)
     fig.set_facecolor('white')
@@ -67,4 +71,4 @@ def plot_all(*, figsize, nation='england', dpi=150, cases=15, admissions=10, dea
         (s.new_deaths_sum, 'Deaths', deaths),
     )):
         sax, wax, rat = axes.T[i]
-        waves(nation, series, title, sax, wax, rat, n)
+        summary_waves(nation, series, title, sax, wax, rat, n)
