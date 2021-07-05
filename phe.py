@@ -54,7 +54,9 @@ class NoData(ValueError): pass
 
 
 def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
-              metric=new_cases_by_specimen_date, file_prefix: str = None):
+              metric=new_cases_by_specimen_date, file_prefix: str = None,
+              metrics=(), date_index=False):
+    metrics = list(metrics) if metrics else [metric]
     if file_prefix is None:
         file_prefix = area_type
     if area_type == msoa:
@@ -66,7 +68,7 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
         try:
             data_path, data_date = find_latest(f'{file_prefix}_{dt}.csv')
         except FileNotFoundError:
-            if metric != new_cases_by_specimen_date:
+            if metric != [new_cases_by_specimen_date]:
                 raise
             area_type_filter = area_type_filters.get(area_type)
             if area_type_filter is None:
@@ -91,8 +93,20 @@ def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
     if areas:
         data = data[data[area_code].isin(areas)]
 
-    if metric not in data or data.empty:
-        raise NoData(f'No {file_prefix} for {areas} available in {data_path}')
+    missing = []
+    if data.empty:
+        missing = metrics
+    else:
+        for metric in metrics:
+            series = data.get(metric)
+            if series is None or series.empty:
+                missing.append(metric)
+    if missing:
+        missing = ', '.join(missing)
+        raise NoData(f'No {missing} for {file_prefix} in {areas} available in {data_path}')
+
+    if date_index:
+        data = data.set_index(date_col).sort_index()
 
     return data, data_date
 
