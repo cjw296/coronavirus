@@ -150,3 +150,21 @@ def latest_map_data():
     df = read_pickle(path)
     gdf = convert_df(df, 'the_geom_webmercator')
     return dt, gdf
+
+
+def download():
+    uk_active_cases = query("SELECT * FROM uk_active_cases", index='date')
+    uk_active_cases.index = to_datetime(uk_active_cases.index, format='%Y%m%d')
+    curr_date = uk_active_cases.index.max()
+    print(pickle(uk_active_cases, 'uk_active_cases', curr_date))
+
+    prevalence_map = query("SELECT * FROM prevalence_map")
+    prevalence_map['percentage'] = prevalence_map['percentage'].astype(float)
+
+    for_date, = prevalence_map['data_status'].unique()
+    map_date = datetime.strptime(for_date, '%H:%M:%S %d-%m-%Y')
+    print(pickle(prevalence_map, 'prevalence_map', map_date))
+
+
+if __name__ == '__main__':
+    download()
