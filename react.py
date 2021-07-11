@@ -26,7 +26,7 @@ def fix_number(row, key):
 def split_confidence(row, key, name):
     ci = re.search(r'(\d+)% CI', key).group(1)
     for possible_key in row:
-        if possible_key.replace('\n', '') == key:
+        if possible_key.replace('\n', '').rstrip('*').rstrip(' ') == key:
             key = possible_key
             break
     else:
