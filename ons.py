@@ -1,7 +1,6 @@
 import re
 from argparse import ArgumentParser
 from datetime import datetime, date
-from decimal import Decimal
 from pathlib import Path
 from typing import Iterable, Mapping
 
@@ -81,7 +80,12 @@ def fix_pct(row, name):
 
 
 def datetime_to_date(row, name):
-    row[name] = row[name].date()
+    value = row[name]
+    if isinstance(value, str):
+        value = datetime.strptime(value, '%d %B %Y')
+    if not isinstance(value, datetime):
+        import pdb; pdb.set_trace()
+    row[name] = value.date()
 
 
 def extract_dicts(rows, headers, row_processing):
