@@ -12,6 +12,7 @@ from constants import (
 special_dates = {text: dt for dt, text in (
     (data_start, 'start'),
     (second_wave, 'second-wave'),
+    (date(2021, 4, 25), 'fourth-wave'),
     (lockdown2[0], 'lockdown-2-start'),
     (lockdown2[1], 'lockdown-2-end'),
     (lockdown3[0], 'lockdown-3-start'),
