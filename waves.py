@@ -10,7 +10,7 @@ import series as s
 from phe import summary_data
 
 
-def waves(data, metric, title, sax=None, wax=None, rat=None, n=15):
+def waves(data, metric, title, sax=None, wax=None, rat=None, n=15, logy=True):
 
     if sax is None:
         fig, (sax, wax, rat) = plt.subplots(nrows=1, ncols=3, figsize=(16, 5), dpi=150)
@@ -21,7 +21,7 @@ def waves(data, metric, title, sax=None, wax=None, rat=None, n=15):
     maxima = series.index[argrelextrema(series.values, np.greater, order=n)[0]]
     waves = list(zip_longest(minima, maxima[1:]))
 
-    series.plot(logy=True, c='grey', ax=sax, title=title)
+    series.plot(logy=logy, c='grey', ax=sax, title=title)
     series.loc[minima].plot(c='g', style='.', ax=sax)
     series.loc[maxima].plot(c='r', style='.', ax=sax)
     sax.title.set_fontweight('bold')
@@ -42,7 +42,7 @@ def waves(data, metric, title, sax=None, wax=None, rat=None, n=15):
         maxes.append((series.max(), name))
 
     df.index.name = 'days'
-    df.plot(logy=True, title='Relative to Wave Start', ax=wax, color=colours)
+    df.plot(logy=logy, title='Relative to Wave Start', ax=wax, color=colours)
     wax.legend(loc='lower right')
 
     relative_to_name = sorted(maxes)[-1][1]
@@ -53,14 +53,17 @@ def waves(data, metric, title, sax=None, wax=None, rat=None, n=15):
     rat.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: f"{y * 100:,.0f}%"))
 
 
-def summary_waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15):
+def summary_waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15, logy=True):
     data, _ = summary_data([phe_series], nation=nation)
     data.index.name = None
     metric = phe_series.metric
-    waves(data, metric, title, sax, wax, rat, n)
+    waves(data, metric, title, sax, wax, rat, n, logy)
 
 
-def plot_all(*, figsize, nation='england', dpi=150, cases=15, admissions=10, deaths=19, **adjust):
+def plot_all(*, figsize, nation='england', dpi=150,
+             cases=15, admissions=10, deaths=19,
+             logy=True,
+             **adjust):
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=figsize, dpi=dpi)
     fig.set_facecolor('white')
     if adjust:
@@ -71,4 +74,4 @@ def plot_all(*, figsize, nation='england', dpi=150, cases=15, admissions=10, dea
         (s.new_deaths_sum, 'Deaths', deaths),
     )):
         sax, wax, rat = axes.T[i]
-        summary_waves(nation, series, title, sax, wax, rat, n)
+        summary_waves(nation, series, title, sax, wax, rat, n, logy)
