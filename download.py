@@ -264,6 +264,8 @@ def main():
     if args.start and args.end:
         points = args.start, args.end
         dates = [dt.date() for dt in pd.date_range(min(*points), max(*points))]
+    elif args.start or args.end:
+        parser.error('--start and --end must both be specified')
     else:
         dates = [args.date]
 
