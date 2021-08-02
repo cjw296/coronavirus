@@ -11,9 +11,10 @@ from plotting import per1k_formatter, per0k_formatter
 from zoe import find_previous as load_zoe
 
 
-def load_prevalence(source, dates, data_date):
+def load_prevalence(source, dates, data_date, na_values=None):
     data_path, data_date = find_latest(f'{source}_*.csv', on_or_before=data_date)
-    data = pd.read_csv(data_path, parse_dates=[dates], index_col=[dates])
+    data = pd.read_csv(data_path, parse_dates=[dates], index_col=[dates],
+                       na_values=na_values)
     return data.sort_index(), data_date
 
 
@@ -22,7 +23,7 @@ def load_data(data_date=None):
         data_date = pd.to_datetime(data_date)
     react, react_date = load_prevalence('react_england', 'mid', data_date)
     ons_daily, ons_date = load_prevalence('ons_daily_england', 'Date', data_date)
-    ons_weekly, _ = load_prevalence('ons_weekly_england', 'mid', data_date)
+    ons_weekly, _ = load_prevalence('ons_weekly_england', 'mid', data_date, na_values=['no data'])
     ons_weekly = ons_weekly.loc[:ons_daily.index.min()]
     ons = pd.concat([ons_weekly, ons_daily])
     zoe_date, zoe = load_zoe((data_date or pd.to_datetime('now')) + pd.to_timedelta(1, 'D'),
