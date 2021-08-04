@@ -364,6 +364,7 @@ class Bars:
 @dataclass()
 class DemographicBars(Bars):
 
+    uncertain_days: int = None
     columns_from: str = 'age'
     average_days: int = None
     bands: Iterable[str] = None
