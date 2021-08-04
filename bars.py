@@ -162,8 +162,11 @@ def plot_bars(
     else:
         uncertain_start = pd.to_datetime(data_date) - pd.Timedelta(days=config.uncertain_days)
         if config.fade_uncertain:
-            alpha = np.where(data.index > uncertain_start, 0.5, 1)
-    average_end = uncertain_start if config.average_days else None
+            alpha = np.where(data.index >= uncertain_start, 0.5, 1)
+    if config.average_days is None or uncertain_start is None:
+        average_end = None
+    else:
+        average_end = uncertain_start - pd.Timedelta(days=1)
 
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.45)
