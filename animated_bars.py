@@ -49,6 +49,7 @@ def main():
                             diff_log_scale=args.diff_log_scale,
                             show_title=True,
                             to_date=date.today(),
+                            fade_uncertain=False,
                             **params),
                     dates, **parallel_params(args, item_is_timestamp=False))
 

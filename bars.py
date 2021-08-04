@@ -67,9 +67,10 @@ def plot_stacked_bars(
         ax, data, label, average_days, average_end, title, lines: Sequence['Line'],
         ylim, lines_ylim, earliest, colormap=DEFAULT_COLORMAP, normalized_values=None,
         legend_loc='upper left', legend_ncol=1, date_format=DEFAULT_DATE_FORMAT,
+        alpha=None,
 ):
 
-    handles = stacked_bar_plot(ax, data, colormap, normalized_values)
+    handles = stacked_bar_plot(ax, data, colormap, normalized_values, alpha)
 
     if average_end is not None:
         average_label = f'{average_days} day average'
@@ -155,10 +156,14 @@ def plot_bars(
         fig = plt.figure(figsize=config.fig_size)
         bars_ax = plt.gca()
 
-    if config.uncertain_days is None or not config.average_days:
-        average_end = None
+    alpha = None
+    if config.uncertain_days is None:
+        uncertain_start = None
     else:
-        average_end = data_date - timedelta(days=config.uncertain_days)
+        uncertain_start = pd.to_datetime(data_date) - pd.Timedelta(days=config.uncertain_days)
+        if config.fade_uncertain:
+            alpha = np.where(data.index > uncertain_start, 0.5, 1)
+    average_end = uncertain_start if config.average_days else None
 
     fig.set_facecolor('white')
     fig.subplots_adjust(hspace=0.45)
@@ -175,7 +180,8 @@ def plot_bars(
             config.average_days, average_end, config.title,
             config.lines_for(data_date), config.ylim, config.line_ylim,
             config.earliest, config.colormap, config.colormap_values(),
-            config.legend_loc, config.legend_ncol, config.date_format
+            config.legend_loc, config.legend_ncol, config.date_format,
+            alpha
         )
 
     if image_path:
@@ -188,7 +194,7 @@ def plot_bars(
 @dataclass()
 class Line:
     """
-    Lines to show over the top of the lar
+    Lines to show over the top of the bars
     """
     data: pd.Series
     color: str
@@ -276,6 +282,7 @@ class Bars:
     metric: str = new_cases_by_specimen_date
     columns_from: str = area_name
     uncertain_days: int = 5
+    fade_uncertain: bool = True
     average_days: Optional[int] = 7
     diff_days: int = 1
     diff_ylims: List[float] = None

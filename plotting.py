@@ -152,7 +152,17 @@ def nation_colors(ncolors):
     return [plt.cm.tab10(i) for i in nation_tab10_cm_indices]
 
 
-def stacked_bar_plot(ax, data, colormap: Union[str, callable], normalised_values=None):
+def color_with_alpha(color, alpha, size):
+    colors = np.zeros((size, 4))
+    for i, c in enumerate(color):
+        colors[:, i] = c
+    colors[:, -1] = alpha
+    return colors
+
+
+def stacked_bar_plot(ax, data,
+                     colormap: Union[str, callable], normalised_values=None,
+                     alpha=None):
     pos_prior = neg_prior = pd.Series(0, data.index)
     ncolors = data.shape[1]
 
@@ -170,8 +180,9 @@ def stacked_bar_plot(ax, data, colormap: Union[str, callable], normalised_values
     for i, (name, series) in enumerate(data.iteritems()):
         mask = series > 0
         bottom = np.where(mask, pos_prior, neg_prior)
+        color = colors[i] if alpha is None else color_with_alpha(colors[i], alpha, data.index.size)
         handles.append(
-            ax.bar(data.index, series, width=1.001, bottom=bottom, label=name, color=colors[i])
+            ax.bar(data.index, series, width=1.001, bottom=bottom, label=name, color=color)
         )
         pos_prior = pos_prior + np.where(mask, series, 0)
         neg_prior = neg_prior + np.where(mask, 0, series)
