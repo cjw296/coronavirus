@@ -16,7 +16,7 @@ from constants import (
     oxford_areas, london_areas, region, new_cases_by_specimen_date, area_name, date_col, nation,
     scotland, northern_ireland, wales, area_code, population, new_deaths_by_death_date,
     new_admissions, england, first_dose_vaccinated_new, second_dose_vaccinated_new,
-    first_dose_vaccinated_cum, complete_dose_vaccinated_cum
+    first_dose_vaccinated_cum, complete_dose_vaccinated_cum, lockdown3
 )
 from geo import ltla_codes
 from phe import best_data, current_and_previous_data, load_population
@@ -291,7 +291,7 @@ class Bars:
     ylabel: str = None
     lines: Callable[['Bars', date], Iterable[Line]] = None
     line_ylim: float = None
-    earliest: Union[str, date, pd.Timestamp] = '2020-10-01'
+    earliest: Union[str, date, pd.Timestamp] = lockdown3[1]
     area_type: str = ltla
     areas: List[str] = None
     colormap: Union[str, callable] = 'viridis'
