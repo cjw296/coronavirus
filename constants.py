@@ -53,6 +53,8 @@ new_virus_tests_sum = 'newVirusTestsRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 case_demographics = 'newCasesBySpecimenDateAgeDemographics'
+case_demographics_male = 'maleCases'
+case_demographics_female = 'femaleCases'
 death_demographics = 'newDeaths28DaysByDeathDateAgeDemographics'
 admission_demographics = 'cumAdmissionsByAge'
 

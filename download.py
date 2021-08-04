@@ -24,7 +24,8 @@ from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
     vaccination_publish_date_metrics, england_metrics, case_demographics, \
     overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
-    vaccination_vaccination_date_metrics, utla, all_nation_metrics
+    vaccination_vaccination_date_metrics, utla, all_nation_metrics, case_demographics_male, \
+    case_demographics_female
 
 MAX_METRICS = 5
 
@@ -316,6 +317,8 @@ SETS = {
     ],
     'demographics': [
         Download(nation, [case_demographics], name=f'case_demographics_{nation}'),
+        Download(nation, [case_demographics_male], name=f'case_demographics_male'),
+        Download(nation, [case_demographics_female], name=f'case_demographics_female'),
         Download(nation, [death_demographics], name=f'death_demographics_{nation}'),
         Download(nation, [admission_demographics], name=f'admission_demographics_{nation}'),
     ],
