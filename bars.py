@@ -420,7 +420,6 @@ death_demographics = DemographicBars(
     ylabel=s.new_deaths.title,
     legend_loc='upper center',
     legend_ncol=2,
-    uncertain_days=16,
     diff_log_scale=True,
     diff_ylims=[-10, 1000],
 )
@@ -516,7 +515,6 @@ BARS = dict(
         bands=reversed(DemographicBars.detail_above_60),
         band_centered_colormap=False,
         legend_loc='upper center',
-        uncertain_days=16,
         diff_log_scale=True,
         diff_ylims=[-10, 1000],
     ),
