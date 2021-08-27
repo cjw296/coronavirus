@@ -1,4 +1,5 @@
-from typing import Union
+from itertools import zip_longest
+from typing import Union, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -187,6 +188,23 @@ def stacked_bar_plot(ax, data,
         pos_prior = pos_prior + np.where(mask, series, 0)
         neg_prior = neg_prior + np.where(mask, 0, series)
     return handles
+
+
+def stacked_area_plot(ax, series: List[pd.Series], colors: List = None, vertical: bool = False):
+
+    current_neg = current_pos = pd.Series(0.0, index=series[0].index)
+    fill_between = ax.fill_betweenx if vertical else ax.fill_between
+    for series, color in zip_longest(series, colors or ()):
+        color = color or ax._get_lines.get_next_color()
+
+        next_pos = current_pos + series.where(series > 0, 0)
+        fill_between(series.index, current_pos, next_pos, color=color, linewidth=0,
+                     label=series.name)
+        current_pos = next_pos
+
+        next_neg = current_neg + series.where(series < 0, 0)
+        fill_between(series.index, current_neg, next_neg, color=color, linewidth=0)
+        current_neg = next_neg
 
 
 per1m_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m")
