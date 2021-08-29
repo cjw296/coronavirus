@@ -140,6 +140,9 @@ def bokeh_zoe_vs_phe_map(
     save_to_disk(p, "zoe_phe.html", title='ZOE modelled estimates versus PHE lab confirmed cases', show_inline=False)
 
 
+male_colour = '#1fc3aa'
+female_colour = '#8624f5'
+
 nation_tab10_cm_indices = [
     0,  # England
     6,  # NI
