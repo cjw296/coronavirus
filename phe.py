@@ -18,7 +18,8 @@ from constants import (
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import per1k_formatter, male_colour, female_colour, stacked_area_plot
+from plotting import per1k_formatter, male_colour, female_colour, stacked_area_plot, \
+    matplotlib_phe_map, bokeh_phe_map
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -401,3 +402,9 @@ def demographic_stream_plot(
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
              color='darkgrey',
              zorder=1000)
+
+
+def summed_maps(for_date, vmax=None):
+    phe_recent_date, phe_recent_geo, phe_recent_title = map_data(for_date)
+    matplotlib_phe_map(phe_recent_geo, phe_recent_title, vmax)
+    bokeh_phe_map(phe_recent_geo, phe_recent_title, vmax)

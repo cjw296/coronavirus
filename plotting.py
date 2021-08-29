@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from bokeh.io import reset_output, output_notebook, show, output_file, save
-from bokeh.layouts import row
 from bokeh.models import GeoJSONDataSource, HoverTool
 from bokeh.palettes import Reds
 from bokeh.plotting import figure
@@ -15,7 +14,7 @@ from matplotlib.cm import get_cmap
 from matplotlib.ticker import FuncFormatter
 
 from constants import new_cases_by_specimen_date, population, pct_population
-from geo import views, old_ltla_geoms
+from geo import views
 
 
 def show_area(ax, view=views['uk']):
@@ -80,21 +79,13 @@ def geoplot_bokeh(data, title, column, tooltips, x_range=None, y_range=None, vma
     return p
 
 
-def matplotlib_zoe_vs_phe_map(
-        zoe_df, zoe_date, zoe_max, phe_recent_geo, phe_recent_title, phe_max
+def matplotlib_phe_map(
+        phe_recent_geo, phe_recent_title, phe_max
 ):
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 10))
-
-    max_value = zoe_df['percentage'].max()
-    geoplot_matplotlib(zoe_df, axes[0],
-                       column='percentage',
-                       title=f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}',
-                       label=f'Estimated Symptomatic Percentage (max: {max_value:.1f})',
-                       vmax=zoe_max,
-                       missing_kwds={'color': 'lightgrey'})
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(16, 9))
 
     max_value = phe_recent_geo[pct_population].max()
-    geoplot_matplotlib(phe_recent_geo, axes[1],
+    geoplot_matplotlib(phe_recent_geo, ax,
                        column=pct_population,
                        title=phe_recent_title,
                        label=f'cases as % of population (max: {max_value:.2f})',
@@ -105,29 +96,15 @@ def matplotlib_zoe_vs_phe_map(
     plt.show()
 
 
-def bokeh_zoe_vs_phe_map(
-        zoe_df, zoe_date, zoe_max, phe_recent_geo, phe_recent_title, phe_max
+def bokeh_phe_map(
+        phe_recent_geo, phe_recent_title, phe_max
 ):
-    zoe_new_lad16 = pd.merge(
-        old_ltla_geoms(),
-        zoe_df[['lad16cd', 'lad16nm', 'percentage', 'percentage_string']],
-        how='left',
-        left_on='code', right_on='lad16cd',
-    )
-    zoe_title = f'ZOE COVID Symptom Study data for {zoe_date:%d %b %Y}'
-    zoe = geoplot_bokeh(
-        zoe_new_lad16.to_crs('EPSG:3857'), zoe_title, 'percentage', vmax=zoe_max, tooltips=[
-            ('Name', '@lad16nm'),
-            ('Percentage', '@{percentage}{1.111}%'),
-        ]
-    )
-
     phe_data = phe_recent_geo[[
         'geometry', 'name', 'code', new_cases_by_specimen_date, population, pct_population
     ]]
     phe = geoplot_bokeh(
         phe_data, phe_recent_title, pct_population,
-        x_range=zoe.x_range, y_range=zoe.y_range, vmax=phe_max, tooltips=[
+        vmax=phe_max, tooltips=[
             ('Name', '@name'),
             ('Code', '@code'),
             ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
@@ -136,8 +113,7 @@ def bokeh_zoe_vs_phe_map(
         ]
     )
 
-    p = row(zoe, phe)
-    save_to_disk(p, "zoe_phe.html", title='ZOE modelled estimates versus PHE lab confirmed cases', show_inline=False)
+    save_to_disk(phe, "phe.html", title='PHE new cases by specimen date', show_inline=False)
 
 
 male_colour = '#1fc3aa'

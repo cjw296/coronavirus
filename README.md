@@ -13,5 +13,5 @@ often when code changes.
 
 Code is here: [https://github.com/cjw296/coronavirus](https://github.com/cjw296/coronavirus)
 
-Interactive plot is available on [here](https://cjw296.github.io/coronavirus/zoe_phe.html), 
+Interactive plot is available on [here](https://cjw296.github.io/coronavirus/phe.html), 
 but I'd recommend Russ Garrett's [excellent map](https://russss.github.io/covidtracker/map.html) instead.
