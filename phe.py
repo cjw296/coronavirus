@@ -365,14 +365,17 @@ def demographic_stream_plot(
     dates = set()
     for gender in genders:
         data[gender], data_date = load_demographic_data(
-            f'case_demographics_{gender}', nation, variable, band_size, start, end
+            f'case_demographics_{gender}', nation, variable, band_size
         )
         dates.add(data_date)
     assert len(dates) == 1
 
     for _ in range(order):
         for gender, gender_data in tuple(data.items()):
-            data[gender] = gender_data.diff().rolling(7).mean().dropna()
+            data[gender] = gender_data.diff().rolling(7).mean()
+
+    for gender, gender_data in tuple(data.items()):
+        data[gender] = gender_data.loc[start:end]
 
     columns = data['male'].columns
     fig, axes = plt.subplots(ncols=len(columns), figsize=figsize,
