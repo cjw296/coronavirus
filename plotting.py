@@ -193,16 +193,19 @@ def stacked_bar_plot(ax, data,
     return handles
 
 
-def stacked_area_plot(ax, series: List[pd.Series], colors: List = None, vertical: bool = False):
+def stacked_area_plot(
+        ax, series: List[pd.Series], colors: List = None, labels: List[str] = None,
+        vertical: bool = False
+):
 
     current_neg = current_pos = pd.Series(0.0, index=series[0].index)
     fill_between = ax.fill_betweenx if vertical else ax.fill_between
-    for series, color in zip_longest(series, colors or ()):
+    for series, color, label in zip_longest(series, colors or (), labels or ()):
         color = color or ax._get_lines.get_next_color()
 
         next_pos = current_pos + series.where(series > 0, 0)
         fill_between(series.index, current_pos, next_pos, color=color, linewidth=0,
-                     label=series.name)
+                     label=label or series.name)
         current_pos = next_pos
 
         next_neg = current_neg + series.where(series < 0, 0)
