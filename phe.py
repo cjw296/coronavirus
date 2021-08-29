@@ -1,21 +1,24 @@
 import json
+import re
+from collections import defaultdict
 from datetime import timedelta, datetime, date
-from functools import lru_cache, partial
+from functools import lru_cache, partial, reduce
 from typing import Sequence, List
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.dates import DateFormatter
 from matplotlib.ticker import NullLocator
 
 import series as s
 from constants import (
     base_path, specimen_date, area, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, nation, region,
-    ltla, utla, code, national_lockdowns, msoa, release_timestamp
+    ltla, utla, code, national_lockdowns, msoa, release_timestamp, lockdown3
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import per1k_formatter
+from plotting import per1k_formatter, male_colour, female_colour, stacked_area_plot
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -343,3 +346,58 @@ def load_demographic_data(prefix, nation_name, value, band_size=None, start=None
         pd.DataFrame({key: reduce(pd.Series.add, series) for (key, series) in new_bands.items()}),
         data_date
     )
+
+
+genders = 'male', 'female'
+
+
+def demographic_stream_plot(
+        title, nation='England', variable='rate', band_size=10, start=None, end=None,
+        order=2, log=False, figsize=(16, 9)
+):
+    if start is None:
+        start = date.today() - timedelta(days=30)
+        date_formatter = DateFormatter('%d %b')
+    else:
+        date_formatter = DateFormatter('%b %y')
+    data = {}
+    dates = set()
+    for gender in genders:
+        data[gender], data_date = load_demographic_data(
+            f'case_demographics_{gender}', nation, variable, band_size, start, end
+        )
+        dates.add(data_date)
+    assert len(dates) == 1
+
+    for _ in range(order):
+        for gender, gender_data in tuple(data.items()):
+            data[gender] = gender_data.diff().rolling(7).mean().dropna()
+
+    columns = data['male'].columns
+    fig, axes = plt.subplots(ncols=len(columns), figsize=figsize,
+                             constrained_layout=True, sharex=True, sharey=True, dpi=150)
+    if log:
+        colours = ['black' for _ in genders]
+    else:
+        colours = [male_colour, female_colour]
+    for i, bucket in enumerate(columns):
+        ax = axes[i]
+        ax.set_title(bucket)
+        series = [data[gender][bucket] for gender in genders]
+        stacked_area_plot(ax, series, colours, genders, vertical=True)
+    ax.invert_yaxis()
+    ax.yaxis.set_major_formatter(date_formatter)
+    fig.suptitle(f'{title} for {nation}', fontsize=16)
+    if log:
+        ax.set_xscale('symlog')
+    else:
+        handles, labels = ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=2)
+    ax.margins(x=0, y=0)
+    ax.autoscale_view()
+
+    fig.text(0, -0.03,
+             f'@chriswithers13 - '
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
+             color='darkgrey',
+             zorder=1000)
