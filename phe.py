@@ -298,3 +298,48 @@ def latest_changes(*series, start='*'):
         diff = current_values[s.metric] - previous_values[s.metric]
         print(f'{current:,.0f} {s.label} (7 day average) as of {dtc:%a %d %b}, '
               f'{diff:+,.1f} since {dtp:%a %d %b}')
+
+
+def parse_bands(text):
+    return [int(g) for g in re.match('(\d+)_to_(\d+)', text).groups()]
+
+
+def load_demographic_data(prefix, nation_name, value, band_size=None, start=None, end=None):
+    path, data_date = find_latest(f'{prefix}_*')
+    raw = pd.read_csv(path, parse_dates=[date_col])
+    data = raw[raw[area_name] == nation_name].pivot(index='date', columns='age', values=value)
+
+    band_low, band_high = parse_bands(data.columns[0])
+    existing_band_size = band_high - band_low + 1
+
+    if band_size is None:
+        band_size = existing_band_size
+    elif band_size < existing_band_size or band_size % existing_band_size:
+        raise ValueError(f'band_size must be a multiple of {existing_band_size}')
+
+    new_bands = defaultdict(list)
+
+    new_lower = existing_lower = 0
+
+    while True:
+        existing_upper = existing_lower + existing_band_size - 1
+        new_upper = new_lower + band_size - 1
+        try:
+            existing = data[f'{existing_lower}_to_{existing_upper}']
+        except KeyError:
+            existing = data[f'{existing_lower}+']
+            new_bands[f'{new_lower}+'].append(existing.loc[start:end])
+            done = True
+        else:
+            new_bands[f'{new_lower} to {new_upper}'].append(existing.loc[start:end])
+            done = False
+        existing_lower += existing_band_size
+        if existing_lower > new_upper:
+            new_lower += band_size
+        if done:
+            break
+
+    return (
+        pd.DataFrame({key: reduce(pd.Series.add, series) for (key, series) in new_bands.items()}),
+        data_date
+    )
