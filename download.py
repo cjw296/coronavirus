@@ -312,6 +312,8 @@ SETS = {
         Download(nation, england_metrics, area_name='england'),
         Download(nation, vaccination_publish_date_metrics, name='vaccination'),
         Download(nation, [new_admissions, new_virus_tests_sum]+standard_metrics),
+        Download(nation, [case_demographics_male], name=f'case_demographics_male'),
+        Download(nation, [case_demographics_female], name=f'case_demographics_female'),
     ]+[
         Download(area_type, standard_metrics) for area_type in (region, ltla)
     ],
