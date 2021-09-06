@@ -212,3 +212,5 @@ england = 'E92000001'
 wales = 'W92000004'
 scotland = 'S92000003'
 northern_ireland = 'N92000002'
+
+nations = ('England', 'Scotland', 'Wales', 'Northern Ireland')
