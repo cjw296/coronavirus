@@ -12,7 +12,7 @@ from itertools import chain
 from pathlib import Path
 from time import sleep
 from typing import List, Tuple, Iterable, Mapping, Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urlencode, quote
 
 import pandas as pd
 import requests
@@ -153,7 +153,8 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
     if area_name:
         _params['areaName'] = area_name
     response = requests.get(
-        'https://api.coronavirus.data.gov.uk/v2/data', timeout=20, params=_params
+        'https://api.coronavirus.data.gov.uk/v2/data', timeout=20,
+        params=urlencode(_params, quote_via=quote, doseq=True)
     )
 
     if response.status_code == 204 or response.content == b'':
@@ -178,6 +179,7 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
 
 
 def download_phe(name, area_type, *metrics, area_name: str = None, release: date = None):
+    area_name = ' '.join(part.capitalize() for part in area_name.split())
     release = release or date.today()
     if len(metrics) <= MAX_METRICS:
         content = download_phe_batch(name, area_type, release, area_name, *metrics)
