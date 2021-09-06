@@ -184,7 +184,8 @@ def map_data(for_date):
     return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
-def nation_data(series, data_date=None, start=None, end=None, nation_name='england'):
+def nation_data(series, data_date=None, start=None, end=None, nation_name='England'):
+    nation_name = nation_name.lower()
     if data_date in (None, '*'):
         data_path, data_date = find_latest(f'{nation_name}_*.csv')
     else:
@@ -273,7 +274,7 @@ def plot_summary(ax=None, data_date=None, frame_date=None,
     ax.legend(lines, labels+['lockdown'], loc='upper left', framealpha=1)
     if title:
         ax.set_title('7 day moving average of PHE data for '
-                     f'{nation.capitalize()} as of {data_date:%d %b %Y}')
+                     f'{nation} as of {data_date:%d %b %Y}')
     if frame_date:
         ax.axvline(frame_date, color='red')
     ax.minorticks_off()
