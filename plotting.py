@@ -11,6 +11,7 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
 from matplotlib.cm import get_cmap
+from matplotlib.dates import DAYS_PER_MONTH
 from matplotlib.ticker import FuncFormatter
 
 from constants import new_cases_by_specimen_date, population, pct_population
@@ -187,6 +188,15 @@ def stacked_area_plot(
         next_neg = current_neg + series.where(series < 0, 0)
         fill_between(series.index, current_neg, next_neg, color=color, linewidth=0)
         current_neg = next_neg
+
+
+def xaxis_months(ax):
+    xaxis = ax.xaxis
+    xaxis.label.set_visible(False)
+    xaxis.set_tick_params(labelbottom=True)
+    formatter = xaxis.get_major_formatter()
+    formatter.scaled[1] = '%d %b'
+    formatter.scaled[DAYS_PER_MONTH] = '%b %y'
 
 
 per1m_formatter = FuncFormatter(lambda y, pos: f"{y / 1_000_000:.1f}m")

@@ -7,7 +7,7 @@ from matplotlib.dates import DAYS_PER_MONTH
 from constants import in_hospital, nation, england, date_col
 from download import find_latest
 from phe import best_data
-from plotting import per1k_formatter, per0k_formatter
+from plotting import per1k_formatter, per0k_formatter, xaxis_months
 from zoe import find_previous as load_zoe
 
 
@@ -83,12 +83,7 @@ def plot_prevalence(data_date=None, *,
             per0k_formatter if ylim and ylim < 10_000 else per1k_formatter
         )
 
-        xaxis = ax.xaxis
-        xaxis.label.set_visible(False)
-        xaxis.set_tick_params(labelbottom=True)
-        formatter = xaxis.get_major_formatter()
-        formatter.scaled[1] = '%d %b'
-        formatter.scaled[DAYS_PER_MONTH] = '%b %y'
+        xaxis_months(ax)
 
         ax.set_ylim((0, ylim))
         ax.margins(x=0.01)
