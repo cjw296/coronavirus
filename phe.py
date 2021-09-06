@@ -14,12 +14,13 @@ import series as s
 from constants import (
     base_path, specimen_date, area, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, nation, region,
-    ltla, utla, code, national_lockdowns, msoa, release_timestamp, lockdown3
+    ltla, utla, code, national_lockdowns, msoa, release_timestamp, lockdown3, nations, in_hospital,
+    new_admissions
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
 from plotting import per1k_formatter, male_colour, female_colour, stacked_area_plot, \
-    matplotlib_phe_map, bokeh_phe_map
+    matplotlib_phe_map, bokeh_phe_map, per0k_formatter, xaxis_months
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):
@@ -415,3 +416,38 @@ def summed_maps(for_date, vmax=None):
     phe_recent_date, phe_recent_geo, phe_recent_title = map_data(for_date)
     matplotlib_phe_map(phe_recent_geo, phe_recent_title, vmax)
     bokeh_phe_map(phe_recent_geo, phe_recent_title, vmax)
+
+
+def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs=None):
+    if nation_name:
+        nation_names = (nation_name,)
+        figs = 1, 1
+    else:
+        nation_names = nations
+        figs = figs or (2, 2)
+    fig, axes = plt.subplots(*figs, figsize=figsize, dpi=150, sharex=True, constrained_layout=True)
+    fig.set_facecolor('white')
+    for ax, nation_name in zip(
+            axes.reshape(-1) if len(nation_names) > 1 else [axes],
+            nation_names
+    ):
+        data, data_date = nation_data([s.new_admissions, s.in_hospital], '*', start, end,
+                                      nation_name)
+        ax.fill_between(data.index, 0, data[in_hospital], label=s.in_hospital.title,
+                        color=s.in_hospital.color)
+        ax.fill_between(data.index, data[in_hospital] - data[new_admissions], data[in_hospital],
+                        label=s.new_admissions.title, color=s.new_admissions.color)
+        ax.set_ylim(0, None)
+        ax.margins(x=0, y=0)
+        ax.yaxis.set_major_formatter(per0k_formatter)
+        xaxis_months(ax)
+        ax.set_title(nation_name)
+        ax.autoscale_view()
+
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower right', ncol=2)
+    fig.text(0, -0.04,
+             f'@chriswithers13 - '
+             f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
+             color='darkgrey',
+             zorder=1000)
