@@ -143,3 +143,10 @@ complete_dose_publish_cum = Series(
     metric=c.complete_dose_publish_cum,
     label='Complete (Total)',
 )
+
+in_hospital = Series(
+    metric=c.in_hospital,
+    title='patients in hospital',
+    label='patients',
+    color='lightblue',
+)

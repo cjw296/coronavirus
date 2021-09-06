@@ -101,6 +101,8 @@ all_nation_metrics = [
     new_admissions_sum,
     new_cases_sum,
     new_deaths_sum,
+    in_hospital,
+    new_admissions,
 ]
 
 england_metrics = all_nation_metrics + [

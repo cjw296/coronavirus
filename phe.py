@@ -184,15 +184,18 @@ def map_data(for_date):
     return phe_recent_date, phe_recent_geo, phe_recent_title
 
 
-def summary_data(series, data_date=None, start=None, end=None, nation='england'):
+def nation_data(series, data_date=None, start=None, end=None, nation_name='england'):
     if data_date in (None, '*'):
-        data_path, data_date = find_latest(f'{nation}_*.csv')
+        data_path, data_date = find_latest(f'{nation_name}_*.csv')
     else:
-        data_path = base_path / f'{nation}_{pd.to_datetime(data_date).date()}.csv'
-    data = read_csv(
-        data_path, start, end, [s_.metric for s_ in series], index_col=[date_col]
-    ) / 7
+        data_path = base_path / f'{nation_name}_{pd.to_datetime(data_date).date()}.csv'
+    data = read_csv(data_path, start, end, [s_.metric for s_ in series], index_col=[date_col])
     return data, data_date
+
+
+def summary_data(series, data_date=None, start=None, end=None, nation_name='england'):
+    data, data_date = nation_data(series, data_date, start, end, nation_name)
+    return data / 7, data_date
 
 
 def plot_summary(ax=None, data_date=None, frame_date=None,

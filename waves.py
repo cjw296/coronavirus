@@ -54,7 +54,7 @@ def waves(data, metric, title, sax=None, wax=None, rat=None, n=15, logy=True):
 
 
 def summary_waves(nation, phe_series, title, sax=None, wax=None, rat=None, n=15, logy=True):
-    data, _ = summary_data([phe_series], nation=nation)
+    data, _ = summary_data([phe_series], nation_name=nation)
     data.index.name = None
     metric = phe_series.metric
     waves(data, metric, title, sax, wax, rat, n, logy)

@@ -316,6 +316,9 @@ SETS = {
         Download(nation, [case_demographics_female], name=f'case_demographics_female'),
     ]+[
         Download(area_type, standard_metrics) for area_type in (region, ltla)
+    ]+[
+        Download(nation, all_nation_metrics, area_name=area)
+        for area in ('scotland', 'wales', 'northern ireland')
     ],
     'demographics': [
         Download(nation, [case_demographics], name=f'case_demographics_{nation}'),
@@ -334,8 +337,6 @@ SETS = {
                                  'cumDeathsByPublishDate'],
                         name=f'deaths_archive_{area_type}')
                for area_type in (nation, region, utla, ltla)],
-    'nations': [Download(nation, all_nation_metrics, area_name=area) for area in
-                ('scotland', 'wales', 'northern ireland')]
 }
 
 
