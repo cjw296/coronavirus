@@ -160,13 +160,14 @@ dependencies:
   - openh264=2.1.1=hfd3ada9_0
   - openjpeg=2.4.0=h6e7aa92_1
   - openpyxl=3.0.7=pyhd8ed1ab_0
-  - openssl=1.1.1k=h0d85af4_1
+  - openssl=1.1.1l=h0d85af4_0
   - packaging=20.9=pyh44b312d_0
   - pandas=1.2.4=py38h1f261ad_0
   - pandoc=2.13=h0d85af4_0
   - pandocfilters=1.4.2=py_1
   - pango=1.48.5=ha05cd14_0
   - parso=0.8.2=pyhd8ed1ab_0
+  - patsy=0.5.1=py_0
   - pcre=8.45=he49afe7_0
   - perl=5.32.0=hbcb3906_0
   - pexpect=4.8.0=pyh9f0ad1d_2
@@ -211,11 +212,14 @@ dependencies:
   - requests=2.25.1=pyhd3deb0d_0
   - rtree=0.9.7=py38hc59ffc2_1
   - scipy=1.6.3=py38h431c0a8_0
+  - seaborn=0.11.2=hd8ed1ab_0
+  - seaborn-base=0.11.2=pyhd8ed1ab_0
   - send2trash=1.5.0=py_0
   - setuptools=49.6.0=py38h50d1736_3
   - shapely=1.7.1=py38h5786f56_4
   - six=1.16.0=pyh6c4a22f_0
   - sqlite=3.35.5=h44b9ce1_0
+  - statsmodels=0.12.2=py38hbe852b5_0
   - terminado=0.10.0=py38h50d1736_0
   - testpath=0.5.0=pyhd8ed1ab_0
   - texlive-core=20180414=h43a267d_7
