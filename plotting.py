@@ -10,6 +10,7 @@ from bokeh.palettes import Reds
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
+from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.dates import DAYS_PER_MONTH
 from matplotlib.ticker import FuncFormatter
@@ -171,11 +172,11 @@ def stacked_bar_plot(ax, data,
 
 
 def stacked_area_plot(
-        ax, series: List[pd.Series], colors: List = None, labels: List[str] = None,
-        vertical: bool = False
+        ax: Axes, series: List[pd.Series], colors: List = None, labels: List[str] = None,
+        uncertain_days: int = 0, vertical: bool = False
 ):
-
-    current_neg = current_pos = pd.Series(0.0, index=series[0].index)
+    index = series[0].index
+    current_neg = current_pos = pd.Series(0.0, index=index)
     fill_between = ax.fill_betweenx if vertical else ax.fill_between
     for series, color, label in zip_longest(series, colors or (), labels or ()):
         color = color or ax._get_lines.get_next_color()
@@ -188,6 +189,10 @@ def stacked_area_plot(
         next_neg = current_neg + series.where(series < 0, 0)
         fill_between(series.index, current_neg, next_neg, color=color, linewidth=0)
         current_neg = next_neg
+
+    if uncertain_days:
+        span = ax.axhspan if vertical else ax.axvspan
+        span(index[-uncertain_days], index[-1], color='white', alpha=0.5)
 
 
 def xaxis_months(ax):

@@ -359,7 +359,7 @@ genders = 'male', 'female'
 
 def demographic_stream_plot(
         title, nation='England', variable='rate', band_size=10, start=None, end=None,
-        order=2, log=False, figsize=(16, 9)
+        order=2, log=False, figsize=(16, 9), uncertain_days: int = 5
 ):
     if start is None:
         start = date.today() - timedelta(days=30)
@@ -393,7 +393,7 @@ def demographic_stream_plot(
         ax = axes[i]
         ax.set_title(bucket)
         series = [data[gender][bucket] for gender in genders]
-        stacked_area_plot(ax, series, colours, genders, vertical=True)
+        stacked_area_plot(ax, series, colours, genders, uncertain_days, vertical=True)
     ax.invert_yaxis()
     ax.yaxis.set_major_formatter(date_formatter)
     fig.suptitle(f'{title} for {nation}', fontsize=16)
