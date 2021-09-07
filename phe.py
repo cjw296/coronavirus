@@ -19,8 +19,10 @@ from constants import (
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
-from plotting import per1k_formatter, male_colour, female_colour, stacked_area_plot, \
+from plotting import (
+    per1k_formatter, male_colour, female_colour, stacked_area_plot,
     matplotlib_phe_map, bokeh_phe_map, per0k_formatter, xaxis_months
+)
 
 
 def read_csv(data_path, start=None, end=None, metrics=None, index_col=None):

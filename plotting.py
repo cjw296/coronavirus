@@ -12,6 +12,7 @@ from bokeh.resources import INLINE
 from bokeh.transform import linear_cmap
 from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
+from matplotlib.colors import to_rgba
 from matplotlib.dates import DAYS_PER_MONTH
 from matplotlib.ticker import FuncFormatter
 
@@ -136,7 +137,7 @@ def nation_colors(ncolors):
 
 def color_with_alpha(color, alpha, size):
     colors = np.zeros((size, 4))
-    for i, c in enumerate(color):
+    for i, c in enumerate(to_rgba(color)):
         colors[:, i] = c
     colors[:, -1] = alpha
     return colors
