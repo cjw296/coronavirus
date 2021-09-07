@@ -312,7 +312,8 @@ def latest_changes(*series, start='*'):
 
 
 def parse_bands(text):
-    return [int(g) for g in re.match('(\d+)_to_(\d+)', text).groups()]
+    pref, low, sep, high = re.match(r'(0?)(\d+)((?:_to)?_)(\d+)', text).groups()
+    return bool(pref), int(low), sep, int(high)
 
 
 def load_demographic_data(prefix, nation_name, value, band_size=None, start=None, end=None):
@@ -320,7 +321,7 @@ def load_demographic_data(prefix, nation_name, value, band_size=None, start=None
     raw = pd.read_csv(path, parse_dates=[date_col])
     data = raw[raw[area_name] == nation_name].pivot(index='date', columns='age', values=value)
 
-    band_low, band_high = parse_bands(data.columns[0])
+    band_pref, band_low, band_sep, band_high = parse_bands(data.columns[0])
     existing_band_size = band_high - band_low + 1
 
     if band_size is None:
@@ -336,7 +337,11 @@ def load_demographic_data(prefix, nation_name, value, band_size=None, start=None
         existing_upper = existing_lower + existing_band_size - 1
         new_upper = new_lower + band_size - 1
         try:
-            existing = data[f'{existing_lower}_to_{existing_upper}']
+            if band_pref:
+                key = f'{existing_lower:02d}{band_sep}{existing_upper:02d}'
+            else:
+                key = f'{existing_lower}{band_sep}{existing_upper}'
+            existing = data[key]
         except KeyError:
             existing = data[f'{existing_lower}+']
             new_bands[f'{new_lower}+'].append(existing.loc[start:end])
