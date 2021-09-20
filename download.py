@@ -179,7 +179,7 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
 
 
 def download_phe(name, area_type, *metrics, area_name: str = None, release: date = None):
-    area_name = ' '.join(part.capitalize() for part in area_name.split())
+    area_name = ' '.join(part.capitalize() for part in area_name.split()) if area_name else None
     release = release or date.today()
     if len(metrics) <= MAX_METRICS:
         content = download_phe_batch(name, area_type, release, area_name, *metrics)
