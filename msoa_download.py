@@ -36,7 +36,7 @@ def main():
     for dt in pd.date_range(latest, date.today(), closed='right', tz='Europe/London'):
         if is_msoa_data_ready(dt):
             try:
-                path = retrying_phe_download(msoa, msoa, msoa_metrics, release=dt.date())
+                path = retrying_phe_download(msoa, msoa, *msoa_metrics, release=dt.date())
             except WrongDate as e:
                 if e.requested < e.actual:
                     print(f'Missed {e.requested} :-(')
