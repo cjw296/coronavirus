@@ -23,6 +23,7 @@ def is_msoa_data_ready(dt):
 def main():
     parser = ArgumentParser()
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--no-composite', dest='composite', action='store_false')
     args = parser.parse_args()
 
     if args.debug:
@@ -50,7 +51,7 @@ def main():
             print(f"MSOA NOT DOWNLOADED FOR {dt}!")
             sys.exit(1)
 
-    if start_for_composite:
+    if args.composite and start_for_composite:
         print('\nAdding to composite...')
         composite(['--start', start_for_composite])
 
