@@ -1,4 +1,6 @@
+import logging
 import sys
+from argparse import ArgumentParser
 from datetime import date
 
 import pandas as pd
@@ -19,6 +21,13 @@ def is_msoa_data_ready(dt):
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument('--debug', action='store_true')
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     _, latest = find_latest('msoa_????-*')
 
     start_for_composite = None
