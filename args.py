@@ -88,5 +88,5 @@ def parallel_to_date(args, max_date: date, default_exclude=None) -> date:
 
 def add_choices_arg(parser, name, lookup):
     def choice(text):
-        return [lookup.get(text)]
+        return [lookup[text]]
     parser.add_argument(name, type=choice, default=list(lookup.values()))
