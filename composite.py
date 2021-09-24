@@ -20,7 +20,7 @@ from animated import slowing_durations
 from args import add_date_arg
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
-    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum, unique_people_tested_sum
+    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum
 )
 
 Date = Union[date, str]
@@ -48,7 +48,7 @@ class Part:
 
     prefix = ''
 
-    def __init__(self, name: str =None):
+    def __init__(self, name: str = None):
         self._name = name
         self.frames = {}
 
