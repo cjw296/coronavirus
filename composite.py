@@ -192,6 +192,29 @@ class SummaryPart(Part):
         run(cmd)
 
 
+class DemographicPart(Part):
+
+    def __init__(self,
+                 series: Sequence[str] = ('cases', ),
+                 types: Sequence[str] = ('abs', ),
+                 start: Date = None,
+                 width: int = 12, height: float = 15):
+        super().__init__('animated_demographics')
+        self.series = series
+        self.types = types
+        self.start = start
+        self.width = width
+        self.height = height
+
+    def build(self):
+        cmd = [sys.executable, 'animated_demographics.py', '--bare',
+               '--series', *self.series, '--type', *self.types,
+               '--width', self.width, '--height', self.height]
+        if self.start:
+            cmd.extend(('--from-date', self.start))
+        run(cmd)
+
+
 def match_dates(parts: Sequence[Part]):
     start = pd.Timestamp.min
     end = pd.Timestamp.max
@@ -379,6 +402,18 @@ compositions = {
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
         durations=slowing_durations, start=data_start, view='england', dpi=150
+    ),
+    'cases-area-ages': Composition(
+        [TextPart('header',
+                  'New COVID-19 Cases in England by Specimen Date from PHE as of {date:%d %b %y}',
+                  fontsize=40, start='2021-06-01')],
+        [
+            MapPart('cases', area_type=msoa, view='england', dpi=150),
+            DemographicPart(),
+        ],
+        cases_admissions_deaths_summary(),
+        footer,
+        durations=slowing_durations, start='2021-06-01'
     ),
     'cases-vs-vaccinated': Composition(
         [TextPart('header',

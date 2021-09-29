@@ -23,15 +23,16 @@ def data_for(data_date, series, earliest, pct: bool):
 
 def plot_demographic_bars(
         bars: BarsLookup, dt: pd.Timestamp, from_date: pd.Timestamp, ax:
-        Axes, max_x: int = None, pct: bool = False, data_date='*',
+        Axes, max_x: int = None, pct: bool = False, data_date='*', bare=False,
 ):
     data, _, bars = data_for(data_date, bars, earliest=from_date, pct=pct)
     data.loc[dt].plot.barh(ax=ax, width=0.9)
     ax.get_yaxis().label.set_visible(False)
-    label = bars.series.label.capitalize()
-    if pct:
-        label = f'{label} (% of daily total)'
-    ax.set_xlabel(label)
+    if not bare:
+        label = bars.series.label.capitalize()
+        if pct:
+            label = f'{label} (% of daily total)'
+        ax.set_xlabel(label)
     xaxis = ax.get_xaxis()
     xaxis.label.set_fontsize(16)
     xaxis.set_major_formatter(pct_formatter if pct else per0_formatter)
@@ -40,15 +41,16 @@ def plot_demographic_bars(
 
 def plot_date(dt, *,
               series, types, maxes, from_date,
-              image_path=None, dpi=100, data_date='*'):
+              image_path=None, dpi=100, data_date='*', bare=False, width=16, height=10):
     dt = pd.to_datetime(dt)
     fig, axes = plt.subplots(nrows=len(types), ncols=len(series), squeeze=False,
-                             figsize=(16, 10), constrained_layout=True)
-    fig.suptitle(f'PHE data for {dt:%d %b %y}', fontsize=20)
+                             figsize=(width, height), constrained_layout=True)
+    if not bare:
+        fig.suptitle(f'PHE data for {dt:%d %b %y}', fontsize=20)
     for i, s in enumerate(series):
         for j, t in enumerate(types):
             plot_demographic_bars(s, dt, from_date, axes[j, i],
-                                  max_x=maxes[s, t], pct=t, data_date=data_date)
+                                  max_x=maxes[s, t], pct=t, data_date=data_date, bare=bare)
 
     if image_path:
         plt.savefig(image_path / f'{dt.date()}.png', bbox_inches='tight', dpi=dpi)
@@ -67,6 +69,9 @@ def main():
         'abs': False,
         'pct': True,
     })
+    parser.add_argument('--width', type=float, default=16)
+    parser.add_argument('--height', type=float, default=10)
+    parser.add_argument('--bare', action='store_true')
     args = parser.parse_args()
 
     data_dates = set()
@@ -91,6 +96,9 @@ def main():
                         maxes=maxes,
                         from_date=args.from_date,
                         data_date=args.data_date,
+                        bare=args.bare,
+                        width=args.width,
+                        height=args.height,
                     ),
                     dates, **parallel_params(args, dates))
 
