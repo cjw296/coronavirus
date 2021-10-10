@@ -214,3 +214,10 @@ scotland = 'S92000003'
 northern_ireland = 'N92000002'
 
 nations = ('England', 'Scotland', 'Wales', 'Northern Ireland')
+
+area_code_lookup = {
+    'England': england,
+    'Wales': wales,
+    'Scotland': scotland,
+    'Northern Ireland': northern_ireland,
+}

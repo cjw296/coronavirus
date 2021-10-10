@@ -23,9 +23,10 @@ from tqdm.notebook import tqdm
 from args import add_date_arg
 from constants import base_path, nation, region, ltla, standard_metrics, new_admissions, \
     vaccination_publish_date_metrics, england_metrics, case_demographics, \
-    overview, death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
-    vaccination_vaccination_date_metrics, utla, all_nation_metrics, case_demographics_male, \
-    case_demographics_female
+    death_demographics, admission_demographics, nhs_region, new_virus_tests_sum, \
+    utla, all_nation_metrics, case_demographics_male, \
+    case_demographics_female, area_code_lookup
+
 
 MAX_METRICS = 5
 
@@ -151,7 +152,11 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
         'release': str(release),
     }
     if area_name:
-        _params['areaName'] = area_name
+        area_code = area_code_lookup[area_name]
+        if area_code:
+            _params['areaCode'] = area_code
+        else:
+            _params['areaName'] = area_name
     response = requests.get(
         'https://api.coronavirus.data.gov.uk/v2/data', timeout=20,
         params=urlencode(_params, quote_via=quote, doseq=True)
