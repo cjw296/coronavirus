@@ -223,7 +223,7 @@ def retrying_phe_download(
         name, area_type, *metrics, area_name: str = None, release: date = None,
 ):
     attempt = 1
-    while True:
+    while attempt < 10_000:
         if attempt > 1:
             print(f'attempt {attempt} for {name} on {release}')
         try:
