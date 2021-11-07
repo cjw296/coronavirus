@@ -405,15 +405,15 @@ compositions = {
     ),
     'cases-area-ages': Composition(
         [TextPart('header',
-                  'New COVID-19 Cases in England by Specimen Date from PHE as of {date:%d %b %y}',
-                  fontsize=40, start='2021-06-01')],
+                  'New COVID-19 Cases in England by Specimen Date as of {date:%d %b %y}',
+                  fontsize=40)],
         [
             MapPart('cases', area_type=msoa, view='england', dpi=150),
             DemographicPart(),
         ],
         cases_admissions_deaths_summary(),
         footer,
-        durations=slowing_durations, start='2021-06-01'
+        durations=slowing_durations, start='2021-08-01'
     ),
     'cases-vs-vaccinated': Composition(
         [TextPart('header',
