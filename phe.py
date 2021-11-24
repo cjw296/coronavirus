@@ -361,6 +361,10 @@ def load_demographic_data(prefix, nation_name, value, band_size=None, start=None
     )
 
 
+def diff(data: pd.DataFrame, *, days: int):
+    return (data - data.shift(days)).iloc[days:]
+
+
 genders = 'male', 'female'
 
 
