@@ -59,7 +59,6 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
         legend = False
         legend_kwds = {}
 
-
     if norm is not None:
         plot_kwds['norm'] = norm
 
