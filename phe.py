@@ -14,14 +14,14 @@ import series as s
 from constants import (
     base_path, specimen_date, area, per100k, date_col, area_code, population,
     area_name, new_cases_by_specimen_date, pct_population, nation, region,
-    ltla, utla, code, national_lockdowns, msoa, release_timestamp, lockdown3, nations, in_hospital,
+    ltla, utla, code, national_lockdowns, msoa, release_timestamp, nations, in_hospital,
     new_admissions
 )
 from download import find_latest, find_all
 from geo import ltla_geoms
 from plotting import (
     per1k_formatter, male_colour, female_colour, stacked_area_plot,
-    matplotlib_phe_map, bokeh_phe_map, per0k_formatter, xaxis_months
+    per0k_formatter, xaxis_months
 )
 
 
@@ -179,12 +179,7 @@ def map_data(for_date):
 
     phe_recent_date = phe_recent_geo[specimen_date].max()
 
-    phe_recent_title = (
-        'PHE cases by specimen date summed over last '
-        f"{int(phe_recent_geo['recent_days'].iloc[0])} days to {phe_recent_date:%d %b %Y}"
-    )
-
-    return phe_recent_date, phe_recent_geo, phe_recent_title
+    return phe_recent_date, phe_recent_geo
 
 
 def nation_data(series, data_date=None, start=None, end=None, nation_name='England'):
@@ -421,12 +416,6 @@ def demographic_stream_plot(
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
              color='darkgrey',
              zorder=1000)
-
-
-def summed_maps(for_date, vmax=None):
-    phe_recent_date, phe_recent_geo, phe_recent_title = map_data(for_date)
-    matplotlib_phe_map(phe_recent_geo, phe_recent_title, vmax)
-    bokeh_phe_map(phe_recent_geo, phe_recent_title, vmax)
 
 
 def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs=None):

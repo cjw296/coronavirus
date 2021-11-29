@@ -5,6 +5,10 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+from bokeh.models import GeoJSONDataSource, HoverTool
+from bokeh.palettes import Reds
+from bokeh.plotting import figure
+from bokeh.transform import linear_cmap
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
 from matplotlib.colors import SymLogNorm
@@ -12,10 +16,11 @@ from matplotlib.ticker import StrMethodFormatter
 
 import series as s
 from animated import round_nearest
-from constants import area_code, metric, date_col, ltla, msoa, nhs_region
+from constants import area_code, metric, date_col, ltla, msoa, nhs_region, pct_population, \
+    new_cases_by_specimen_date, population
 from geo import View, area_type_to_geoms, above, views
-from phe import plot_summary, best_data, with_population
-from plotting import show_area, per1m_formatter, per1k_formatter
+from phe import plot_summary, best_data, with_population, map_data
+from plotting import show_area, per1m_formatter, per1k_formatter, save_to_disk
 from series import Series
 
 
@@ -58,6 +63,8 @@ def render_map(ax, frame_date, map: 'Map', view: View, top: int = None,
     else:
         legend = False
         legend_kwds = {}
+    if map.legend_kwds is not None:
+        legend_kwds.update(map.legend_kwds)
 
     if norm is not None:
         plot_kwds['norm'] = norm
@@ -174,6 +181,7 @@ class Map:
     per_population: Optional[int] = 100_000
     tick_format: str = None
     file_prefix: str = None
+    legend_kwds: dict = None
 
     def __post_init__(self):
         if self.tick_format is None:
@@ -289,3 +297,121 @@ MAPS = {
         )
     }
 }
+
+
+def geoplot_matplotlib(df, ax, column, title, legend_kwds, vmax=None, missing_kwds=None):
+    df.plot(ax=ax,
+        column=column,
+        k=10,
+        cmap='Reds',
+        legend=True,
+        legend_kwds=legend_kwds,
+        missing_kwds=missing_kwds,
+        vmax=vmax,
+    )
+    show_area(ax)
+    ax.set_title(title)
+
+
+def geoplot_bokeh(data, title, column, tooltips, x_range=None, y_range=None, vmax=None):
+    p = figure(title=title,
+               plot_height=800,
+               plot_width=600,
+               toolbar_location='below',
+               tools="pan, wheel_zoom, box_zoom, reset",
+               active_scroll='wheel_zoom',
+               match_aspect=True,
+               x_range=x_range,
+               y_range=y_range)
+
+    if vmax is None:
+        vmax = data[column].max()
+    areas = p.patches(
+        'xs', 'ys', source=GeoJSONDataSource(geojson=data.to_json()),
+        fill_color=linear_cmap(column, tuple(reversed(Reds[256])), 0, vmax, nan_color='gray'),
+        line_color='gray',
+        line_width=0,
+        fill_alpha=1
+    )
+
+    p.add_tools(HoverTool(
+        renderers=[areas],
+        tooltips=tooltips,
+    ))
+
+    return p
+
+
+COMMON_LEGEND_KWDS = {
+    'fraction': 0.02,
+    'anchor': (0, 0),
+    'location': 'bottom',
+    'pad': 0.05,
+}
+
+
+def matplotlib_phe_map(ax, phe_recent_geo, phe_recent_date, phe_max):
+    days = int(phe_recent_geo['recent_days'].iloc[0])
+    max_value = phe_recent_geo[pct_population].max()
+    legend_kwds = COMMON_LEGEND_KWDS.copy()
+    legend_kwds['label'] = f'{days} day sum of cases as % of population (max: {max_value:.2f})'
+    geoplot_matplotlib(phe_recent_geo, ax,
+                       column=pct_population,
+                       title=f"COVID-19 cases to {phe_recent_date:%d %b %Y}",
+                       legend_kwds=legend_kwds,
+                       vmax=phe_max,
+                       missing_kwds={'color': 'lightgrey'})
+
+
+def render_inline_map(ax, area_type, view_name, label):
+    map_ = get_map(area_type, 'cases')
+    legend_kwds = COMMON_LEGEND_KWDS.copy()
+    legend_kwds['label'] = label
+    map_ = replace(map_, legend_kwds=legend_kwds)
+    frame_date = map_.data[0].index.max()
+    render_map(ax, frame_date, map_, views[view_name])
+
+
+def bokeh_phe_map(
+        phe_recent_geo, phe_recent_date, phe_max
+):
+    phe_recent_title = (
+        'PHE cases by specimen date summed over last '
+        f"{int(phe_recent_geo['recent_days'].iloc[0])} days to {phe_recent_date:%d %b %Y}"
+    )
+    phe_data = phe_recent_geo[[
+        'geometry', 'name', 'code', new_cases_by_specimen_date, population, pct_population
+    ]]
+    phe = geoplot_bokeh(
+        phe_data, phe_recent_title, pct_population,
+        vmax=phe_max, tooltips=[
+            ('Name', '@name'),
+            ('Code', '@code'),
+            ('Cases', '@{'+new_cases_by_specimen_date+'}{1}'),
+            ('Population', '@{population}{1}'),
+            ('Percentage', '@{'+pct_population+'}{1.111}%'),
+        ]
+    )
+
+    save_to_disk(phe, "phe.html", title='PHE new cases by specimen date', show_inline=False)
+
+
+def case_maps(for_date, sum_vmax=None):
+    phe_recent_date, phe_recent_geo = map_data(for_date)
+
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(16, 9), dpi=150)
+    fig.set_facecolor('white')
+
+    matplotlib_phe_map(ax[0], phe_recent_geo, phe_recent_date, sum_vmax)
+    render_inline_map(ax[1], ltla, 'uk',
+                      label='14 day avg of cases per 100k people')
+    render_inline_map(ax[2], msoa, 'england',
+                      label='7 day avg of cases per 100k people')
+
+    for ax in plt.gcf().get_axes():
+        if ax.get_label() == '<colorbar>':
+            ax.tick_params(rotation=-90)
+
+    plt.show()
+
+    bokeh_phe_map(phe_recent_geo, phe_recent_date, sum_vmax)
