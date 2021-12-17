@@ -294,7 +294,7 @@ class Bars:
     ylabel: str = None
     lines: Callable[['Bars', date], Iterable[Line]] = None
     line_ylim: float = None
-    earliest: Union[str, date, pd.Timestamp] = lockdown3[1]
+    earliest: Union[str, date, pd.Timestamp] = '2021-06'
     area_type: str = ltla
     areas: List[str] = None
     colormap: Union[str, callable] = 'viridis'
