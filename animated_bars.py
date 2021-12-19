@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--diff-log-scale', action='store_true')
     parser.add_argument('--diff-no-lims', action='store_true')
     parser.add_argument('--ylim', type=float)
+    parser.add_argument('--ylim-no-lims', action='store_true')
     parser.add_argument('--y-max-factor', type=float, default=1.02)
     args = parser.parse_args()
 
@@ -45,7 +46,7 @@ def main():
     parallel_render(f'animated_{args.config}',
                     partial(plot_bars,
                             config=config,
-                            ylim=args.ylim or max_metric,
+                            ylim=None if args.ylim_no_lims else (args.ylim or max_metric),
                             diff_log_scale=args.diff_log_scale,
                             show_title=True,
                             to_date=date.today(),
