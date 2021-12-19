@@ -455,7 +455,7 @@ BARS = dict(
 
     ),
     cases_london=Bars(
-        diff_ylims=[-10, 1800],
+        diff_ylims=[-10, 7000],
         areas=london_areas,
     ),
     cases_north_may_2021=Bars(
