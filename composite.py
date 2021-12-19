@@ -20,7 +20,7 @@ from animated import slowing_durations
 from args import add_date_arg
 from constants import (
     output_path, ltla, data_start, nhs_region, msoa, new_admissions_sum,
-    new_cases_sum, new_deaths_sum, lockdown3, new_virus_tests_sum
+    new_cases_sum, new_deaths_sum, lockdown3, reported_virus_tests_sum
 )
 
 Date = Union[date, str]
@@ -397,7 +397,7 @@ compositions = {
             MapPart('cases-7', area_type=ltla),
             MapPart('cases', area_type=msoa),
         ],
-        [SummaryPart(left_series=[new_virus_tests_sum],
+        [SummaryPart(left_series=[reported_virus_tests_sum],
                      left_formatter='1m',
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
@@ -423,7 +423,7 @@ compositions = {
             MapPart('cases', area_type=ltla),
             MapPart('partially_vaccinated', area_type=ltla),
         ],
-        [SummaryPart(left_series=[new_virus_tests_sum],
+        [SummaryPart(left_series=[reported_virus_tests_sum],
                      left_formatter='1m',
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,
@@ -477,7 +477,7 @@ compositions = {
             MapPart('tested', area_type=ltla, view='2021-may-north'),
             MapPart('tested', area_type=ltla, view='2021-may-mid', dpi=100),
         ],
-        [SummaryPart(left_series=[new_virus_tests_sum],
+        [SummaryPart(left_series=[reported_virus_tests_sum],
                      left_formatter='1m',
                      right_series=[new_admissions_sum, new_deaths_sum])],
         footer,

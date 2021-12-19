@@ -20,7 +20,8 @@ from constants import (
 )
 from geo import ltla_codes
 from phe import best_data, current_and_previous_data, load_population
-from plotting import stacked_bar_plot, nation_colors, per1m_formatter, per0_formatter, pct_formatter
+from plotting import stacked_bar_plot, nation_colors, per1m_formatter, per0_formatter, \
+    pct_formatter, per1k_formatter
 from series import Series
 
 
@@ -229,13 +230,16 @@ def unique_people_tested(config: 'Bars', dt: date) -> Iterable[Line]:
 
 def tests_carried_out(config: 'Bars', dt: date) -> Iterable[Line]:
     data = best_data(dt, config.area_type, config.areas, config.earliest_data)[0]
-    metric = s.new_virus_tests_sum.metric
+    series = s.new_virus_tests
+    sum_for_area = np.trim_zeros(data.groupby(date_col).agg({series.metric: 'sum'}))
+    mean_for_area = sum_for_area.rolling(7).mean().iloc[:-3]  # assume last few days are incomplete
+    max_of_mean = mean_for_area[series.metric].max()
     yield Line(
-        np.trim_zeros(data.groupby(date_col).agg({metric: 'sum'})[metric] / 7),
-        color=s.new_virus_tests_sum.color,
+        mean_for_area,
+        color=series.color,
         legend_label='LFD or PCR tests performed',
-        axis_label='7 day rolling average of '+s.new_virus_tests.title,
-        formatter=per1m_formatter,
+        axis_label='7 day rolling average of '+series.title,
+        formatter=per1m_formatter if max_of_mean > 500_000 else per1k_formatter,
     )
 
 

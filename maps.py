@@ -140,7 +140,7 @@ def render_dt(
             kw['title'] = title
         render_map(map_ax, frame_date, map, view, top, **kw)
         plot_summary(lines_ax, data_date, frame_date, earliest_date,
-                     left_series=(s.new_virus_tests_sum,),
+                     left_series=(s.reported_virus_tests_sum,),
                      left_formatter=per1m_formatter,
                      right_series=(s.new_admissions_sum, s.new_deaths_sum),
                      right_formatter=per1k_formatter,

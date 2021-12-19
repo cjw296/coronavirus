@@ -73,7 +73,17 @@ new_virus_tests = Series(
     color='purple',
 )
 
-new_virus_tests_sum = sum_of(new_virus_tests)
+
+reported_virus_tests = Series(
+    metric=c.reported_virus_tests,
+    title='tests performed by report date',
+    label='tests',
+    color='purple',
+)
+
+
+reported_virus_tests_sum = sum_of(reported_virus_tests)
+
 
 unique_cases_positivity_sum = Series(
     metric=c.unique_cases_positivity_sum,

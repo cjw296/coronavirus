@@ -43,13 +43,14 @@ new_cases_by_specimen_date = new_cases = 'newCasesBySpecimenDate'
 new_admissions = "newAdmissions"
 new_deaths_by_death_date = 'newDeaths28DaysByDeathDate'
 new_tests_by_publish_date = 'newTestsByPublishDate'
-new_virus_tests = 'newVirusTests'
+new_virus_tests = 'newVirusTestsBySpecimenDate'
+reported_virus_tests = 'newVirusTestsByPublishDate'
 release_timestamp = 'releaseTimestamp'
 
 new_admissions_sum = 'newAdmissionsRollingSum'
 new_cases_sum = 'newCasesBySpecimenDateRollingSum'
 new_deaths_sum = 'newDeaths28DaysByDeathDateRollingSum'
-new_virus_tests_sum = 'newVirusTestsRollingSum'
+reported_virus_tests_sum = 'newVirusTestsByPublishDateRollingSum'
 unique_people_tested_sum = 'uniquePeopleTestedBySpecimenDateRollingSum'
 unique_cases_positivity_sum = 'uniqueCasePositivityBySpecimenDateRollingSum'
 case_demographics = 'newCasesBySpecimenDateAgeDemographics'
@@ -101,13 +102,15 @@ all_nation_metrics = [
     new_admissions_sum,
     new_cases_sum,
     new_deaths_sum,
+    reported_virus_tests_sum,
     in_hospital,
     new_admissions,
 ]
 
 england_metrics = all_nation_metrics + [
     unique_people_tested_sum,
-    new_virus_tests_sum,
+    new_virus_tests,
+    reported_virus_tests_sum,
 ]+vaccination_vaccination_date_metrics
 
 standard_metrics = [
@@ -116,7 +119,8 @@ standard_metrics = [
     unique_people_tested_sum,
     unique_cases_positivity_sum,
     in_hospital,
-    new_cases_rate
+    new_cases_rate,
+    new_virus_tests,
 ]+vaccination_vaccination_date_metrics
 
 lockdown = date(2020, 3, 23)
