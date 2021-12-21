@@ -66,7 +66,7 @@ def main():
     )
 
     parallel_render(f'animated_summary_{args.width}_{args.height}',
-                    render, dates, **parallel_params(args))
+                    render, dates, **parallel_params(args, dates))
 
 
 if __name__ == '__main__':

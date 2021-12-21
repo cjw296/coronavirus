@@ -41,7 +41,7 @@ def main():
     to_date = parallel_to_date(args, date.today())
     dates = pd.date_range(args.from_date, to_date)
 
-    params = parallel_params(args)
+    params = parallel_params(args, dates)
     parallel_render(f'animated_text_{args.name}', render, dates, **params)
 
 

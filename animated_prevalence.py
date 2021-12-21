@@ -23,7 +23,7 @@ def main():
                             max_cases=args.max_cases,
                             max_hospital=args.max_hospital,
                             latest=latest_date),
-                    dates, **parallel_params(args))
+                    dates, **parallel_params(args, dates))
 
 
 if __name__ == '__main__':

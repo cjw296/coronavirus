@@ -67,7 +67,7 @@ def add_parallel_args(parser, default_duration=1/24, default_output='mp4', from_
     add_date_arg(parser, '--single')
 
 
-def parallel_params(args, dates=None, item_is_timestamp=True):
+def parallel_params(args, dates, item_is_timestamp=True):
     return dict(
         duration=args.duration(dates) if callable(args.duration) else args.duration,
         outputs=args.output,

@@ -52,7 +52,7 @@ def main():
                             to_date=date.today(),
                             fade_uncertain=False,
                             **params),
-                    dates, **parallel_params(args, item_is_timestamp=False))
+                    dates, **parallel_params(args, dates, item_is_timestamp=False))
 
 
 if __name__ == '__main__':
