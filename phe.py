@@ -418,7 +418,7 @@ def demographic_stream_plot(
              zorder=1000)
 
 
-def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs=None):
+def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs=None, ymin=0):
     if nation_name:
         nation_names = (nation_name,)
         figs = 1, 1
@@ -433,11 +433,12 @@ def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs
     ):
         data, data_date = nation_data([s.new_admissions, s.in_hospital], '*', start, end,
                                       nation_name)
-        ax.fill_between(data.index, 0, data[in_hospital], label=s.in_hospital.title,
+        nation_ymin = data[in_hospital].min()-data[new_admissions].max() if ymin is None else ymin
+        ax.fill_between(data.index, nation_ymin, data[in_hospital], label=s.in_hospital.title,
                         color=s.in_hospital.color)
         ax.fill_between(data.index, data[in_hospital] - data[new_admissions], data[in_hospital],
                         label=s.new_admissions.title, color=s.new_admissions.color)
-        ax.set_ylim(0, None)
+        ax.set_ylim(nation_ymin, None)
         ax.margins(x=0, y=0)
         ax.yaxis.set_major_formatter(per0k_formatter)
         xaxis_months(ax)
@@ -446,7 +447,7 @@ def hospital_plot(nation_name=None, start=None, end=None, figsize=(16, 10), figs
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower right', ncol=2)
-    fig.text(0, -0.04,
+    fig.text(0, -0.06,
              f'@chriswithers13 - '
              f'data from https://coronavirus.data.gov.uk/ retrieved on {data_date:%d %b %Y}',
              color='darkgrey',
