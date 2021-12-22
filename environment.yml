@@ -18,9 +18,9 @@ dependencies:
   - brotlipy=0.7.0=py38h5406a74_1001
   - bzip2=1.0.8=h0d85af4_4
   - c-ares=1.17.1=h0d85af4_1
-  - ca-certificates=2021.5.30=h033912b_0
+  - ca-certificates=2021.10.8=h033912b_0
   - cairo=1.16.0=he43a7df_1008
-  - certifi=2021.5.30=py38h50d1736_0
+  - certifi=2021.10.8=py38h50d1736_1
   - cffi=1.14.5=py38ha97d567_0
   - cfitsio=3.470=h01dc385_7
   - chardet=4.0.0=py38h50d1736_1
@@ -155,6 +155,7 @@ dependencies:
   - notebook=6.4.0=pyha770c72_0
   - nspr=4.30=hcd9eead_0
   - nss=3.65=h31e2bf1_0
+  - numexpr=2.8.0=py38ha53d530_0
   - numpy=1.20.3=py38had91d27_0
   - olefile=0.46=pyh9f0ad1d_1
   - openh264=2.1.1=hfd3ada9_0
