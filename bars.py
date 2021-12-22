@@ -300,7 +300,7 @@ class Bars:
     line_ylim: float = None
     earliest: Union[str, date, pd.Timestamp] = '2021-06'
     area_type: str = ltla
-    areas: List[str] = None
+    areas: Sequence[str] = None
     colormap: Union[str, callable] = 'viridis'
     to_date: Union[date, pd.Timestamp] = None
     title_template: str = 'Evolution of PHE {config.series.label} reporting'
@@ -315,6 +315,8 @@ class Bars:
     def __post_init__(self):
         if not self.ylabel:
             self.ylabel = self.series.title
+        if self.areas:
+            self.areas = tuple(self.areas)
 
     @classmethod
     def get(cls, name_or_instance: BarsLookup = None, **overrides):

@@ -60,6 +60,7 @@ def available_dates(metric, area_type=ltla, earliest=None) -> List[date]:
 class NoData(ValueError): pass
 
 
+@lru_cache
 def best_data(dt='*', area_type=ltla, areas=None, earliest=None, days=None,
               metric=new_cases_by_specimen_date, file_prefix: str = None,
               metrics=(), date_index=False):
