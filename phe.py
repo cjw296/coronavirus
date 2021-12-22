@@ -153,8 +153,11 @@ def with_population(df,
     return df
 
 
-def recent_phe_data_summed(latest_date, days=7):
-    recent, _ = best_data(latest_date, days=days)
+def recent_cases_summed(days: int, exclude_days: int):
+    # used for maps below and "top 10" stuff in workbook.
+    recent, _ = best_data(days=days+exclude_days)
+    recent = recent[recent[date_col] <= (recent[date_col].max()-pd.Timedelta(days=exclude_days))]
+
     recent_grouped = recent.groupby([area_code, area_name]).agg(
         {new_cases_by_specimen_date: 'sum', date_col: 'max'}
     )
@@ -168,18 +171,18 @@ def recent_phe_data_summed(latest_date, days=7):
     return recent_pct
 
 
-def map_data(for_date):
+def summed_map_data(days, exclude_days):
 
-    recent_pct = recent_phe_data_summed(for_date)
+    recent_pct = recent_cases_summed(days, exclude_days)
 
     geoms = ltla_geoms()
-    phe_recent_geo = pd.merge(
+    summed_with_geoms = pd.merge(
         geoms, recent_pct, how='outer', left_on='code', right_on=area_code
     )
 
-    phe_recent_date = phe_recent_geo[specimen_date].max()
+    summed_date = summed_with_geoms[specimen_date].max()
 
-    return phe_recent_date, phe_recent_geo
+    return summed_date, summed_with_geoms
 
 
 def nation_data(series, data_date=None, start=None, end=None, nation_name='England'):

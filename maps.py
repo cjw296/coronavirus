@@ -19,7 +19,7 @@ from animated import round_nearest
 from constants import area_code, metric, date_col, ltla, msoa, nhs_region, pct_population, \
     new_cases_by_specimen_date, population
 from geo import View, area_type_to_geoms, above, views
-from phe import plot_summary, best_data, with_population, map_data
+from phe import plot_summary, best_data, with_population, summed_map_data
 from plotting import show_area, per1m_formatter, per1k_formatter, save_to_disk
 from series import Series
 
@@ -363,12 +363,12 @@ def matplotlib_phe_map(ax, phe_recent_geo, phe_recent_date, phe_max):
                        missing_kwds={'color': 'lightgrey'})
 
 
-def render_inline_map(ax, area_type, view_name, label):
+def render_inline_map(ax, area_type, view_name, exclude_days, label):
     map_ = get_map(area_type, 'cases')
     legend_kwds = COMMON_LEGEND_KWDS.copy()
     legend_kwds['label'] = label
     map_ = replace(map_, legend_kwds=legend_kwds)
-    frame_date = map_.data[0].index.max()
+    frame_date = map_.data[0].index.max() - pd.Timedelta(days=exclude_days)
     render_map(ax, frame_date, map_, views[view_name])
 
 
@@ -396,16 +396,19 @@ def bokeh_phe_map(
     save_to_disk(phe, "phe.html", title='PHE new cases by specimen date', show_inline=False)
 
 
-def case_maps(for_date, sum_vmax=None):
-    phe_recent_date, phe_recent_geo = map_data(for_date)
+def case_maps(sum_vmax=None, exclude_days=0):
+    sum_days = 7
+    summed_date, summed_with_geoms = summed_map_data(sum_days, exclude_days)
 
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(16, 9), dpi=150)
     fig.set_facecolor('white')
 
-    matplotlib_phe_map(ax[0], phe_recent_geo, phe_recent_date, sum_vmax)
-    render_inline_map(ax[1], ltla, 'uk',
+    matplotlib_phe_map(ax[0], summed_with_geoms, summed_date, sum_vmax)
+    render_inline_map(ax[1], ltla, 'uk', exclude_days,
                       label='14 day avg of cases per 100k people')
-    render_inline_map(ax[2], msoa, 'england',
+    # MSOA data is already averaged, so only goes up to a 4 days ago
+    msoa_exclude_days = max(0, exclude_days-4)
+    render_inline_map(ax[2], msoa, 'england', msoa_exclude_days,
                       label='7 day avg of cases per 100k people')
 
     for ax in plt.gcf().get_axes():
@@ -414,4 +417,4 @@ def case_maps(for_date, sum_vmax=None):
 
     plt.show()
 
-    bokeh_phe_map(phe_recent_geo, phe_recent_date, sum_vmax)
+    bokeh_phe_map(summed_with_geoms, summed_date, sum_vmax)
