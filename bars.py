@@ -470,7 +470,7 @@ BARS = dict(
         area_type=nation,
         colormap=nation_colors,
         lines=tests_carried_out,
-        diff_ylims=[-50, 30_000],
+        diff_ylims=[-50, 50_000],
     ),
     cases_devolved=Bars(
         area_type=nation,
