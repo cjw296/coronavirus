@@ -8,6 +8,7 @@ utla = 'utla'
 ltla = 'ltla'
 msoa = 'msoa'
 nhs_region = 'nhsRegion'
+nhs_trust = 'nhsTrust'
 
 earliest_available_download = date(2020, 8, 12)
 earliest_msoa = date(2020, 12, 18)
@@ -63,6 +64,7 @@ new_cases_rate = 'newCasesBySpecimenDateRollingRate'
 new_cases_change = 'newCasesBySpecimenDateChange'
 
 in_hospital = 'hospitalCases'
+in_mv_beds = 'covidOccupiedMVBeds'
 
 first_dose_publish_new = "newPeopleVaccinatedFirstDoseByPublishDate"
 second_dose_publish_new = "newPeopleVaccinatedSecondDoseByPublishDate"

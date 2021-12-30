@@ -25,7 +25,8 @@ from constants import base_path, nation, region, ltla, standard_metrics, new_adm
     vaccination_publish_date_metrics, england_metrics, case_demographics, \
     death_demographics, admission_demographics, nhs_region, new_virus_tests, \
     utla, all_nation_metrics, case_demographics_male, \
-    case_demographics_female, area_code_lookup, reported_virus_tests_sum
+    case_demographics_female, area_code_lookup, reported_virus_tests_sum, in_hospital, in_mv_beds, \
+    nhs_trust, new_cases_by_specimen_date, new_deaths_by_death_date
 
 MAX_METRICS = 5
 
@@ -332,7 +333,11 @@ SETS = {
         Download(nation, [admission_demographics], name=f'admission_demographics_{nation}'),
     ],
     'healthcare': [
-        Download(nhs_region, [new_admissions]),
+        Download(nhs_region, [new_admissions, in_hospital, in_mv_beds]),
+        Download(nhs_trust, [new_admissions, in_hospital, in_mv_beds]),
+    ],
+    'regions': [
+        Download(region, [new_cases_by_specimen_date, new_deaths_by_death_date]),
     ],
     'deaths': [Download(area_type,
                         metrics=['newDeathsByDeathDate',
