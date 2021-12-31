@@ -322,6 +322,7 @@ SETS = {
         Download(nation, [case_demographics], name=f'case_demographics_{nation}'),
         Download(nation, [case_demographics_male], name=f'case_demographics_male'),
         Download(nation, [case_demographics_female], name=f'case_demographics_female'),
+        Download(nhs_region, [new_admissions, in_hospital, in_mv_beds]),
     ]+[
         Download(area_type, standard_metrics) for area_type in (region, ltla)
     ]+[
@@ -333,11 +334,7 @@ SETS = {
         Download(nation, [admission_demographics], name=f'admission_demographics_{nation}'),
     ],
     'healthcare': [
-        Download(nhs_region, [new_admissions, in_hospital, in_mv_beds]),
         Download(nhs_trust, [new_admissions, in_hospital, in_mv_beds]),
-    ],
-    'regions': [
-        Download(region, [new_cases_by_specimen_date, new_deaths_by_death_date]),
     ],
     'deaths': [Download(area_type,
                         metrics=['newDeathsByDeathDate',
