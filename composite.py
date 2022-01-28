@@ -413,7 +413,7 @@ compositions = {
         ],
         cases_admissions_deaths_summary(),
         footer,
-        durations=slowing_durations, start='2021-08-01'
+        durations=slowing_durations, start='2021-11-01'
     ),
     'cases-vs-vaccinated': Composition(
         [TextPart('header',
