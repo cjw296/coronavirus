@@ -31,7 +31,8 @@ DEFAULT_DATE_FORMAT = '%d %b %Y'
 
 def plot_diff(ax, for_date, data, previous_date, previous_data,
               diff_ylims=None, diff_log_scale=None, earliest=None,
-              colormap=DEFAULT_COLORMAP, date_format=DEFAULT_DATE_FORMAT):
+              colormap=DEFAULT_COLORMAP, date_format=DEFAULT_DATE_FORMAT,
+              diff_xlims=None):
     diff = data.sub(previous_data, fill_value=0)
     total_diff = diff.sum().sum()
     stacked_bar_plot(ax, diff, colormap)
@@ -42,6 +43,8 @@ def plot_diff(ax, for_date, data, previous_date, previous_data,
     ax.yaxis.grid(True)
     if diff_ylims:
         ax.set_ylim(diff_ylims)
+    if diff_xlims:
+        ax.set_xlim(diff_xlims)
     if diff_log_scale:
         ax.set_yscale('symlog')
     else:
