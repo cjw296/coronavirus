@@ -468,14 +468,13 @@ BARS = dict(
         diff_ylims=[0, 200],
     ),
     cases_regions=Bars(
-        diff_ylims=[-100, 25_000],
+        diff_ylims=[-100, 110_000],
         area_type=region,
     ),
     cases_nations=Bars(
         area_type=nation,
         colormap=nation_colors,
-        lines=tests_carried_out,
-        diff_ylims=[-50, 50_000],
+        diff_ylims=[-50, 120_000],
     ),
     cases_devolved=Bars(
         area_type=nation,
