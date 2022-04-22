@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 from dateutil.parser import parse as parse_date
 
+from args import add_date_arg
 from constants import msoa, msoa_metrics
 from download import retrying_phe_download, find_latest, get_release_timestamp, WrongDate
 from msoa_composite import check_path, main as composite
@@ -24,6 +25,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--no-composite', dest='composite', action='store_false')
+    add_date_arg(parser, '--today', default=date.today())
     args = parser.parse_args()
 
     if args.debug:
@@ -33,7 +35,10 @@ def main():
 
     start_for_composite = None
 
-    for dt in pd.date_range(latest, date.today(), closed='right', tz='Europe/London'):
+    for dt in pd.date_range(latest, args.today, closed='right', tz='Europe/London'):
+        if dt != args.today:
+            print(f"MSOA NOT DOWNLOADED FOR {dt}, release no longer supported :-(")
+            continue
         if is_msoa_data_ready(dt):
             try:
                 path = retrying_phe_download(msoa, msoa, *msoa_metrics, release=dt.date())

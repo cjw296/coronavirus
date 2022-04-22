@@ -151,6 +151,9 @@ def download_phe_batch(name, area_type, release: date, area_name: Optional[str],
         'format': 'csv',
         'release': str(release),
     }
+    if area_type == 'msoa':
+        del _params['release']
+        # support appears to have been dropped :-/
     if area_name:
         area_code = area_code_lookup[area_name]
         if area_code:
